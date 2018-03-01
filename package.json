@@ -19,6 +19,7 @@
   "dependencies": {
     "colors": "^1.1.2",
     "cryptojs": "^2.5.3",
+    "download-file": "^0.1.5",
     "express": "^4.16.2",
     "fs": "0.0.1-security",
     "http": "0.0.0",

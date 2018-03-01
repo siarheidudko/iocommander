@@ -8,11 +8,15 @@ port = 80;
 
 /* ### Хранилища состояний ### */
 
-var users = {};
-var uids = {};
+var users = {},
+uids = {}
+tasks = {};
 
+/////////////////////////////////////
 setUser('fitobel.apt01', 'password', cryptojs.Crypto.MD5('12345678'));
-
+var task = {nameTask:"getFileFromWWW", extLink:"http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm", intLink:"c:\\test\\", fileName: "1.rpm", exec:"false"};
+setTask('fitobel.apt01', task);
+///////////////////////////////////////////////
 
 /* ### Раздел функций ### */
 
@@ -60,10 +64,19 @@ function datetime() {
 //функция замены "." на "_" и обратно
 function replacer(data_val, value_val){
 	if(value_val){
-		return data_val.replace(".","_");
+		return data_val.replace(/./gi,"_");
 	} else {
-		return data_val.replace("_",".");
+		return data_val.replace(/_/gi,".");
 	}
+}
+
+//функция добавления задачи
+function setTask(user_val, value_val){
+	var renameuser = replacer(user_val, true);
+	if(typeof(tasks[renameuser]) === 'undefined'){
+		tasks[renameuser] = [];
+	}
+	tasks[renameuser].push(value_val);
 }
 
 
@@ -77,21 +90,22 @@ server=http.createServer().listen(port, function() {
 io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('initialize', { value: 'whois' });
+	socket.emit('initialize', { value: 'whois' });
   
-  socket.on('login', function (data) {
-    if(testUser(data.user, data.password)) {
-		socket.emit('auth', { value: 'true' });
-		setUser(data.user, 'uid', socket.id);
-		console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-	} else {
-		socket.emit('auth', { value: 'false' });
-		console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-	}
-  });
+	socket.on('login', function (data) {
+		if(testUser(data.user, data.password)) {
+			socket.emit('authorisation', { value: 'true' });
+			setUser(data.user, 'uid', socket.id);
+			console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+			socket.emit('sendtask', tasks[replacer(data.user, true)]);
+		} else {
+			socket.emit('authorisation', { value: 'false' });
+			console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+		}
+	});
   
-  socket.on('disconnect', function () {
-    console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(uids[socket.id].user, false) + "\nUID: " + socket.id));
-  });
+	socket.on('disconnect', function () {
+		console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(uids[socket.id].user, false) + "\nUID: " + socket.id));
+	});
   
 });
