@@ -25,19 +25,19 @@ firebase.initializeApp(config);
 
 function editStore(state = {users:{}, uids:{}, tasks: {}}, action){
 	if(action.type === 'ADD_USER'){
-		var state_new = {users:{}, uids:{}, tasks: {}};
+		var state_new = {};
 		state_new = lodash.clone(state);
 		state_new.users[action.payload.user] = action.payload.password;
 		return state_new;
 	}
 	if(action.type === 'ADD_UID'){
-		var state_new = {users:{}, uids:{}, tasks: {}};
+		var state_new = {};
 		state_new = lodash.clone(state);
 		state_new.uids[action.payload.uid] = action.payload.user;
 		return state_new;
 	}
 	if(action.type === 'ADD_TASK'){
-		var state_new = {users:{}, uids:{}, tasks: {}};
+		var state_new = {};
 		state_new = lodash.clone(state);
 		if(typeof(state_new.tasks[action.payload.user]) === 'undefined'){
 			state_new.tasks[action.payload.user] = {};
@@ -46,13 +46,15 @@ function editStore(state = {users:{}, uids:{}, tasks: {}}, action){
 		return state_new;
 	}
 	if(action.type === 'COMPLETE_TASK'){
-		var state_new = {users:{}, uids:{}, tasks: {}};
+		var state_new = {};
 		state_new = lodash.clone(state);
+		console.log(action.payload.user + ':' + state_new.tasks[action.payload.user]);
+		console.log(state_new.tasks.fitobel_apt03);
 		state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
 		return state_new;
 	}
 	if(action.type === 'SYNC'){
-		var state_new = [action.payload];
+		var state_new = action.payload;
 		return state_new;
 	}
 	return state;
@@ -68,26 +70,23 @@ serverStorage.subscribe(function(){
 });
 
 //грузим данные из firebase в redux при старте, если они не null
-AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
-	if(value === 'auth'){
-		GetFirebaseData().then(function(value_child){
-			if(value_child !== null){ console.log(JSON.parse(value_child))
-				//serverStorage.dispatch({type:'SYNC', payload: JSON.parse(value_child)});			
-			}
-		});
-	}
-})
-
-/////////////////////////////////////
-setUser('fitobel.apt01', 'password', cryptojs.Crypto.MD5('12345678'));
-var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false'}};
-var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false'}};
-var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', complete:'false'}};
-setTask('fitobel.apt01', task1);
-setTask('fitobel.apt01', task2);
-setTask('fitobel.apt01', task3);
-setTask('fitobel.apt03', task3);
-///////////////////////////////////////////////
+var preInitialize = new Promise(function(resolve){
+	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
+		if(value === 'auth'){
+			GetFirebaseData().then(function(value_child){
+				if(value_child !== null){
+					var value_child_obj = JSON.parse(value_child);
+					if((typeof(value_child_obj.users) !== 'undefined') && (typeof(value_child_obj.tasks) !== 'undefined') && (typeof(value_child_obj.uids) !== 'undefined')){
+						serverStorage.dispatch({type:'SYNC', payload: value_child_obj});
+					}
+				}
+				resolve('okay');
+			});
+		}
+	})
+}, function(error){
+	console.log(colors.red(datetime() + "Проблема с загрузкой данных из firebase: " + error));
+});
 
 
 
@@ -96,9 +95,14 @@ setTask('fitobel.apt03', task3);
 //функция проверки имени пользователя и пароля
 function testUser(user_val, password_val){
 	var renameuser = replacer(user_val, true);
-	if (serverStorage.getState().users[renameuser] === password_val) {
-		return true;
+	if(typeof(serverStorage.getState().users) !== 'undefined'){
+		if (serverStorage.getState().users[renameuser] === password_val) {
+			return true;
+		} else {
+			return false;
+		}
 	} else {
+		console.log(serverStorage.getState().users);
 		return false;
 	}
 }
@@ -164,6 +168,8 @@ function AuthUserFirebase(email,pass){
 			resolve('noauth');
 			console.log(colors.red(datetime() + "Проблема с авторизацией в firebase: " + error.message));
 		});
+	}, function(error){
+		console.log(colors.red(datetime() + "Проблема с авторизацией в firebase: " + error));
 	});
 };
 
@@ -173,6 +179,8 @@ function GetFirebaseData(){
 		firebase.database().ref('/').once('value', function(snapshot) {
 			resolve(JSON.stringify(snapshot.val()));
 		});
+	}, function(error){
+		console.log(colors.red(datetime() + "Проблема получения данных из firebase: " + error));
 	});
 }
 
@@ -190,33 +198,48 @@ function SendData(DataBody){
 
 
 /* ### Раздел работы с SOCKET.IO ### */
-	
-server=http.createServer().listen(port, function() {
-	console.log(colors.gray(datetime() + 'listening on *:' + port));
-	}); 
-	
-io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
+preInitialize.then(function(value){
+	if(value === 'okay'){
+		
+		/////////////////////////////////////
+		setUser('fitobel.apt01', 'password', cryptojs.Crypto.MD5('12345678'));
+		var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false'}};
+		var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false'}};
+		var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', complete:'false'}};
+		//setTask('fitobel.apt01', task1);
+		//setTask('fitobel.apt01', task2);
+		setTask('fitobel.apt03', task3);
+		setTask('fitobel.apt01', task3);
+		///////////////////////////////////////////////
+		
+		server=http.createServer().listen(port, function() {
+			console.log(colors.gray(datetime() + 'listening on *:' + port));
+			}); 
+			
+		io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 
-io.sockets.on('connection', function (socket) {
-	socket.emit('initialize', { value: 'whois' });
-  
-	socket.on('login', function (data) {
-		if(testUser(data.user, data.password)) {
-			socket.emit('authorisation', { value: 'true' });
-			setUser(data.user, 'uid', socket.id);
-			console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-			socket.emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
-			socket.on('completetask', function (data) {
-				serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:serverStorage.getState().uids[socket.id], task:data.uid}});
+		io.sockets.on('connection', function (socket) {
+			socket.emit('initialize', { value: 'whois' });
+		  
+			socket.on('login', function (data) {
+				if(testUser(data.user, data.password)) {
+					socket.emit('authorisation', { value: 'true' });
+					setUser(data.user, 'uid', socket.id);
+					console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+					socket.emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
+					socket.on('completetask', function (data) {
+						serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:serverStorage.getState().uids[socket.id], task:data.uid}});
+					});
+				} else {
+					socket.emit('authorisation', { value: 'false' });
+					console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+				}
 			});
-		} else {
-			socket.emit('authorisation', { value: 'false' });
-			console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-		}
-	});
-  
-	socket.on('disconnect', function () {
-		console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(serverStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
-	});
-  
+		  
+			socket.on('disconnect', function () {
+				console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(serverStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
+			});
+		  
+		});
+	}
 });

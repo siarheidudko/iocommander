@@ -34,13 +34,13 @@ getSettings().then(function(value){
 			socket.on('authorisation', function (data) {
 				if(data.value === 'true'){
 					console.log(colors.green(datetime() + "Авторизация пройдена!"));
-					listenSocket(socket);
 				} else {
 					//если авторизация неудачна, пробую каждые 5 минут
 					console.log(colors.red(datetime() + "Авторизация не пройдена!"));
 					setTimeout(login, 300000);
 				}
 			});
+			listenSocket(socket);
 		}
 	} while (typeof(socket) === 'undefined');
 });
@@ -79,7 +79,7 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 var clientStorage = redux.createStore(editStore);
 
 clientStorage.subscribe(function(){
-	console.log(clientStorage.getState());
+	//console.log(clientStorage.getState());
 });
 
 
