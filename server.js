@@ -21,19 +21,13 @@ firebase.initializeApp(config);
 
 
 
-/* ### Хранилище состояний REDUX ### */
+/* ### Хранилища состояний REDUX ### */
 
-function editStore(state = {users:{}, uids:{}, tasks: {}}, action){
+function editServerStore(state = {users:{}, tasks: {}}, action){
 	if(action.type === 'ADD_USER'){
 		var state_new = {};
 		state_new = lodash.clone(state);
 		state_new.users[action.payload.user] = action.payload.password;
-		return state_new;
-	}
-	if(action.type === 'ADD_UID'){
-		var state_new = {};
-		state_new = lodash.clone(state);
-		state_new.uids[action.payload.uid] = action.payload.user;
 		return state_new;
 	}
 	if(action.type === 'ADD_TASK'){
@@ -48,8 +42,6 @@ function editStore(state = {users:{}, uids:{}, tasks: {}}, action){
 	if(action.type === 'COMPLETE_TASK'){
 		var state_new = {};
 		state_new = lodash.clone(state);
-		console.log(action.payload.user + ':' + state_new.tasks[action.payload.user]);
-		console.log(state_new.tasks.fitobel_apt03);
 		state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
 		return state_new;
 	}
@@ -59,7 +51,7 @@ function editStore(state = {users:{}, uids:{}, tasks: {}}, action){
 	}
 	return state;
 }
-var serverStorage = redux.createStore(editStore);
+var serverStorage = redux.createStore(editServerStore);
 
 serverStorage.subscribe(function(){
 	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
@@ -69,6 +61,18 @@ serverStorage.subscribe(function(){
 	})
 });
 
+function editConnectionStore(state = {uids:{}}, action){
+	if(action.type === 'ADD_UID'){
+		var state_new = {};
+		state_new = lodash.clone(state);
+		state_new.uids[action.payload.uid] = action.payload.user;
+		return state_new;
+	}
+	return state;
+}
+
+var connectionStorage = redux.createStore(editConnectionStore); 
+
 //грузим данные из firebase в redux при старте, если они не null
 var preInitialize = new Promise(function(resolve){
 	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
@@ -76,7 +80,7 @@ var preInitialize = new Promise(function(resolve){
 			GetFirebaseData().then(function(value_child){
 				if(value_child !== null){
 					var value_child_obj = JSON.parse(value_child);
-					if((typeof(value_child_obj.users) !== 'undefined') && (typeof(value_child_obj.tasks) !== 'undefined') && (typeof(value_child_obj.uids) !== 'undefined')){
+					if((typeof(value_child_obj.users) !== 'undefined') && (typeof(value_child_obj.tasks) !== 'undefined')){
 						serverStorage.dispatch({type:'SYNC', payload: value_child_obj});
 					}
 				}
@@ -116,7 +120,7 @@ function setUser(user_val, param_val, value_val){
 			console.log(colors.green(datetime() + "Регистрация пользователя\nLogin: " + user_val));
 			break;
 		case 'uid':
-			serverStorage.dispatch({type:'ADD_UID', payload: {uid:value_val, user:renameuser}});
+			connectionStorage.dispatch({type:'ADD_UID', payload: {uid:value_val, user:renameuser}});
 			console.log(colors.green(datetime() + "Установка идентификатора пользователя\nLogin: " + user_val + "\nUID:" + value_val));
 			break;
 		default:
@@ -228,7 +232,7 @@ preInitialize.then(function(value){
 					console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
 					socket.emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
 					socket.on('completetask', function (data) {
-						serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:serverStorage.getState().uids[socket.id], task:data.uid}});
+						serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid}});
 					});
 				} else {
 					socket.emit('authorisation', { value: 'false' });
@@ -237,7 +241,7 @@ preInitialize.then(function(value){
 			});
 		  
 			socket.on('disconnect', function () {
-				console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(serverStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
+				console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(connectionStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
 			});
 		  
 		});
