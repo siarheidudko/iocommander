@@ -3,7 +3,7 @@
 const fs=require("fs"),
 colors=require("colors"),
 cryptojs=require("cryptojs"),
-download = require("download-file")
+download = require("download-file"),
 os = require("os"),
 child_process = require("child_process"),
 redux=require("redux"),
@@ -11,39 +11,41 @@ lodash=require("lodash");
 var user_val = '', 
 password_val = '';
 
-getSettings().then(function(value){ 
-	user_val = value.login; 
-	password_val = cryptojs.Crypto.MD5(value.password);
-	if(typeof(socket) !== 'undefined'){
-		socket.close();
-	}
-	var protocol_val = value.protocol,
-	server_val = value.server,	
-	port_val = value.port,
-	socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
-	do {
-		if (typeof(socket) !== 'undefined'){
-			socket.on('connect', () => {
-				console.log(colors.green(datetime() + "Соединение установлено!"));
-			});
-			socket.on('initialize', function (data) {
-				if(data.value === 'whois'){
-					login(socket);
-				}
-			});
-			socket.on('authorisation', function (data) {
-				if(data.value === 'true'){
-					console.log(colors.green(datetime() + "Авторизация пройдена!"));
-				} else {
-					//если авторизация неудачна, пробую каждые 5 минут
-					console.log(colors.red(datetime() + "Авторизация не пройдена!"));
-					setTimeout(login, 300000);
-				}
-			});
-			listenSocket(socket);
+getSettings().then(function(value){
+	if(value !== 'error'){
+		user_val = value.login; 
+		password_val = cryptojs.Crypto.MD5(value.password);
+		if(typeof(socket) !== 'undefined'){
+			socket.close();
 		}
-	} while (typeof(socket) === 'undefined');
-});
+		var protocol_val = value.protocol,
+		server_val = value.server,	
+		port_val = value.port,
+		socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
+		do {
+			if (typeof(socket) !== 'undefined'){
+				socket.on('connect', () => {
+					console.log(colors.green(datetime() + "Соединение установлено!"));
+				});
+				socket.on('initialize', function (data) {
+					if(data.value === 'whois'){
+						login(socket);
+					}
+				});
+				socket.on('authorisation', function (data) {
+					if(data.value === 'true'){
+						console.log(colors.green(datetime() + "Авторизация пройдена!"));
+					} else {
+						//если авторизация неудачна, пробую каждые 5 минут
+						console.log(colors.red(datetime() + "Авторизация не пройдена!"));
+						setTimeout(login, 300000);
+					}
+				});
+				listenSocket(socket);
+			}
+		} while (typeof(socket) === 'undefined');
+	}
+}).catch(function(reason){console.log(colors.red(datetime() + "Ошибка инициализации!"));});
 
 
 
@@ -89,21 +91,28 @@ clientStorage.subscribe(function(){
 //функция чтения файла конфигурации
 function getSettings(){
 	return new Promise(function (resolve){
-		fs.readFile("syncftp.conf", "utf8", function(error,data){
-			if(error) throw error; 
-			try {
-				resolve(JSON.parse(data));
-			} catch(e){
-				console.log(colors.red(datetime() + "Конфигурационный файл испорчен!"));
-				resolve('error');
-			}
-		});
+		try {
+			fs.readFile(".\\src-user\\syncftp-usr.conf", "utf8", function(error,data){
+				if(error) throw error; 
+				try {
+					resolve(JSON.parse(data));
+				} catch(e){
+					console.log(colors.red(datetime() + "Конфигурационный файл испорчен!"));
+					resolve('error');
+				}
+			});
+		} catch (e) {
+			console.log(colors.red(datetime() + "Конфигурационный файл недоступен!"));
+			resolve('error');
+		}
 	});
 }
 
 //функция авторизации в сокете
 function login(socket) {
-	socket.emit('login', { user: user_val, password: password_val });
+	if(typeof(socket) === 'object'){
+		socket.emit('login', { user: user_val, password: password_val });
+	}
 }
 
 //функция для таймштампа
