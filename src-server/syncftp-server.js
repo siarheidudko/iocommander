@@ -81,23 +81,28 @@ function editConnectionStore(state = {uids:{}, users:{}}, action){
 	try {
 		if(action.type === 'ADD_UID'){
 			var state_new = {};
+			var useruid = state.users[action.payload.user];
 			state_new = lodash.clone(state);
+			delete state_new.users[action.payload.user]; //на всякий случай чистим объект от старых данных
+			delete state_new.uids[useruid];
 			state_new.uids[action.payload.uid] = action.payload.user;
 			state_new.users[action.payload.user] = action.payload.uid;
 			return state_new;
 		}
 		if(action.type === 'REMOVE_UID'){
 			var state_new = {};
+			var username = state.uids[action.payload.uid];
 			state_new = lodash.clone(state);
 			delete state_new.uids[action.payload.uid];
-			delete state_new.users[connectionStorage.getState().uids[action.payload.uid]];
+			delete state_new.users[username];
 			return state_new;
 		}
 		if(action.type === 'REMOVE_USER'){
 			var state_new = {};
+			var useruid = state.users[action.payload.user];
 			state_new = lodash.clone(state);
 			delete state_new.users[action.payload.user];
-			delete state_new.uids[connectionStorage.getState().users[action.payload.user]];
+			delete state_new.uids[useruid];
 			return state_new;
 		}
 	} catch(e){
