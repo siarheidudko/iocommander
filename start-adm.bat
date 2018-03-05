@@ -1,1 +1,0 @@
-node .\src-adm\syncftp-adm.js

@@ -17,49 +17,53 @@ var connectionStorage = redux.createStore(editConnectionStore);
 
 function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try{
-		if(action.type === 'ADD_USER'){
-			var state_new = {};
-			state_new = lodash.clone(state);
-			state_new.users[action.payload.user] = action.payload.password;
-			return state_new;
-		}
-		if(action.type === 'REMOVE_USER'){
-			var state_new = {};
-			state_new = lodash.clone(state);
-			delete state_new.users[action.payload.user];
-			return state_new;
-		}
-		if(action.type === 'ADD_ADMIN'){
-			var state_new = {};
-			state_new = lodash.clone(state);
-			state_new.admins[action.payload.user] = action.payload.password;
-			return state_new;
-		}
-		if(action.type === 'REMOVE_ADMIN'){
-			var state_new = {};
-			state_new = lodash.clone(state);
-			delete state_new.admins[action.payload.user];
-			return state_new;
-		}
-		if(action.type === 'ADD_TASK'){
-			var state_new = {};
-			state_new = lodash.clone(state);
-			if(typeof(state_new.tasks[action.payload.user]) === 'undefined'){
-				state_new.tasks[action.payload.user] = {};
-			}
-			state_new.tasks[action.payload.user][action.payload.task.uid] = action.payload.task.task;
-			return state_new;
-		}
-		if(action.type === 'COMPLETE_TASK'){
-			var state_new = {};
-			state_new = lodash.clone(state);
-			state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
-			state_new.tasks[action.payload.user][action.payload.task].answer = action.payload.answer;
-			return state_new;
-		}
-		if(action.type === 'SYNC'){
-			var state_new = action.payload;
-			return state_new;
+		switch (action.type){
+			case 'ADD_USER':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				state_new.users[action.payload.user] = action.payload.password;
+				return state_new;
+				break;
+			case 'REMOVE_USER':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				delete state_new.users[action.payload.user];
+				return state_new;
+				break;
+			case 'ADD_ADMIN':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				state_new.admins[action.payload.user] = action.payload.password;
+				return state_new;
+				break;
+			case 'REMOVE_ADMIN':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				delete state_new.admins[action.payload.user];
+				return state_new;
+				break;
+			case 'ADD_TASK':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				if(typeof(state_new.tasks[action.payload.user]) === 'undefined'){
+					state_new.tasks[action.payload.user] = {};
+				}
+				state_new.tasks[action.payload.user][action.payload.task.uid] = action.payload.task.task;
+				return state_new;
+				break;
+			case 'COMPLETE_TASK':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
+				state_new.tasks[action.payload.user][action.payload.task].answer = action.payload.answer;
+				return state_new;
+				break;
+			case 'SYNC':
+				var state_new = action.payload;
+				return state_new;
+				break;
+			default:
+				break;
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка при обновлении основного хранилища:" + e));
@@ -79,31 +83,35 @@ serverStorage.subscribe(function(){
 
 function editConnectionStore(state = {uids:{}, users:{}}, action){
 	try {
-		if(action.type === 'ADD_UID'){
-			var state_new = {};
-			var useruid = state.users[action.payload.user];
-			state_new = lodash.clone(state);
-			delete state_new.users[action.payload.user]; //на всякий случай чистим объект от старых данных
-			delete state_new.uids[useruid];
-			state_new.uids[action.payload.uid] = action.payload.user;
-			state_new.users[action.payload.user] = action.payload.uid;
-			return state_new;
-		}
-		if(action.type === 'REMOVE_UID'){
-			var state_new = {};
-			var username = state.uids[action.payload.uid];
-			state_new = lodash.clone(state);
-			delete state_new.uids[action.payload.uid];
-			delete state_new.users[username];
-			return state_new;
-		}
-		if(action.type === 'REMOVE_USER'){
-			var state_new = {};
-			var useruid = state.users[action.payload.user];
-			state_new = lodash.clone(state);
-			delete state_new.users[action.payload.user];
-			delete state_new.uids[useruid];
-			return state_new;
+		switch (action.type){
+			case 'ADD_UID':
+				var state_new = {};
+				var useruid = state.users[action.payload.user];
+				state_new = lodash.clone(state);
+				delete state_new.users[action.payload.user]; //на всякий случай чистим объект от старых данных
+				delete state_new.uids[useruid];
+				state_new.uids[action.payload.uid] = action.payload.user;
+				state_new.users[action.payload.user] = action.payload.uid;
+				return state_new;
+				break;
+			case 'REMOVE_UID':
+				var state_new = {};
+				var username = state.uids[action.payload.uid];
+				state_new = lodash.clone(state);
+				delete state_new.uids[action.payload.uid];
+				delete state_new.users[username];
+				return state_new;
+				break;
+			case 'REMOVE_USER':
+				var state_new = {};
+				var useruid = state.users[action.payload.user];
+				state_new = lodash.clone(state);
+				delete state_new.users[action.payload.user];
+				delete state_new.uids[useruid];
+				return state_new;
+				break;
+			default:
+				break;
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка при обновлении хранилища состояний:" + e));

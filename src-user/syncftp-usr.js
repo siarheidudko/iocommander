@@ -53,32 +53,36 @@ getSettings().then(function(value){
 var clientStorage = redux.createStore(editStore);
 function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 	try {
-		if(action.type === 'ADD_TASK'){
-			var state_new = {tasks: {}, complete: [], incomplete:[]};
-			state_new = lodash.clone(state);
-			state_new.tasks[action.payload.uid] = action.payload.task;
-			return state_new;
-		}
-		if(action.type === 'TASK_COMPLETE'){
-			var state_new = {tasks: {}, complete: [], incomplete:[]};
-			state_new = lodash.clone(state);
-			if((typeof(action.payload.answer) !== 'undefined') && (action.payload.answer !== '')){
-				state_new.tasks[action.payload.uid].answer = action.payload.answer;
-			}
-			state_new.complete.push(action.payload.uid);
-			if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
-				state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
-			}
-			return state_new;
-		}
-		if(action.type === 'TASK_INCOMPLETE'){
-			var state_new = {tasks: {}, complete: [], incomplete:[]};
-			state_new = lodash.clone(state);
-			state_new.incomplete.push(action.payload.uid);
-			if(clientStorage.getState().complete.indexOf(action.payload.uid) !== -1){
-				state_new.complete.splice(clientStorage.getState().complete.indexOf(action.payload.uid),1);
-			}
-			return state_new;
+		switch (action.type){
+			case 'ADD_TASK':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new.tasks[action.payload.uid] = action.payload.task;
+				return state_new;
+				break;
+			case 'TASK_COMPLETE':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				if((typeof(action.payload.answer) !== 'undefined') && (action.payload.answer !== '')){
+					state_new.tasks[action.payload.uid].answer = action.payload.answer;
+				}
+				state_new.complete.push(action.payload.uid);
+				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
+					state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
+				}
+				return state_new;
+				break;
+			case 'TASK_INCOMPLETE':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new.incomplete.push(action.payload.uid);
+				if(clientStorage.getState().complete.indexOf(action.payload.uid) !== -1){
+					state_new.complete.splice(clientStorage.getState().complete.indexOf(action.payload.uid),1);
+				}
+				return state_new;
+				break;
+			default:
+				break;
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка при обновлении хранилища:" + e));
