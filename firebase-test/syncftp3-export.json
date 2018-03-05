@@ -1,25 +1,29 @@
 {
   "admins" : {
-    "serg_dudko" : 12345
+    "serg_dudko" : "827ccb0eea8a706c4c34a16891f84e7b"
   },
   "tasks" : {
     "fitobel_apt01" : {
-      "17f56071-e5cc-4a2f-9efb-af6186a176cf" : {
+      "2d3f9ea1-2e32-42ee-9975-03c0a979ef40" : {
+        "answer" : "Результат: \"111\"\r\n",
         "complete" : "true",
         "execCommand" : "echo \"111\"",
         "nameTask" : "execCommand",
         "platform" : "win32"
       },
-      "693ac86c-7beb-4c6e-abb7-fd2045285dcf" : {
+      "980d4be3-71d6-4d17-bc62-a8dd7e4f048e" : {
+        "answer" : "Результат: v8.9.4\r\n",
         "complete" : "true",
-        "execCommand" : "echo \"111\"",
-        "nameTask" : "execCommand",
-        "platform" : "win32"
+        "fileName" : "node",
+        "intLink" : "",
+        "nameTask" : "execFile",
+        "paramArray" : [ "--version" ]
       }
     },
     "fitobel_apt03" : {
-      "17f56071-e5cc-4a2f-9efb-af6186a176cf" : {
-        "complete" : "false",
+      "2d3f9ea1-2e32-42ee-9975-03c0a979ef40" : {
+        "answer" : "Результат: \"111\"\r\n",
+        "complete" : "true",
         "execCommand" : "echo \"111\"",
         "nameTask" : "execCommand",
         "platform" : "win32"

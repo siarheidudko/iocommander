@@ -12,7 +12,8 @@ var port, firebase_user, firebase_pass, config;
 
 /* ### Хранилища состояний ### */
 var serverStorage = redux.createStore(editServerStore);
-var connectionStorage = redux.createStore(editConnectionStore);
+var connectionStorage = redux.createStore(editConnectionStore); 
+//два хранилища нужны для уменьшения трафика междувеб-интерфейсом и сервером, удобства записи в firebase (незачем там хранить данные реального времени о соединениях)
 
 function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try{
@@ -22,10 +23,22 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 			state_new.users[action.payload.user] = action.payload.password;
 			return state_new;
 		}
+		if(action.type === 'REMOVE_USER'){
+			var state_new = {};
+			state_new = lodash.clone(state);
+			delete state_new.users[action.payload.user];
+			return state_new;
+		}
 		if(action.type === 'ADD_ADMIN'){
 			var state_new = {};
 			state_new = lodash.clone(state);
 			state_new.admins[action.payload.user] = action.payload.password;
+			return state_new;
+		}
+		if(action.type === 'REMOVE_ADMIN'){
+			var state_new = {};
+			state_new = lodash.clone(state);
+			delete state_new.admins[action.payload.user];
 			return state_new;
 		}
 		if(action.type === 'ADD_TASK'){
@@ -64,18 +77,27 @@ serverStorage.subscribe(function(){
 	});
 });
 
-function editConnectionStore(state = {uids:{}}, action){
+function editConnectionStore(state = {uids:{}, users:{}}, action){
 	try {
 		if(action.type === 'ADD_UID'){
 			var state_new = {};
 			state_new = lodash.clone(state);
 			state_new.uids[action.payload.uid] = action.payload.user;
+			state_new.users[action.payload.user] = action.payload.uid;
 			return state_new;
 		}
 		if(action.type === 'REMOVE_UID'){
 			var state_new = {};
 			state_new = lodash.clone(state);
 			delete state_new.uids[action.payload.uid];
+			delete state_new.users[connectionStorage.getState().uids[action.payload.uid]];
+			return state_new;
+		}
+		if(action.type === 'REMOVE_USER'){
+			var state_new = {};
+			state_new = lodash.clone(state);
+			delete state_new.users[action.payload.user];
+			delete state_new.uids[connectionStorage.getState().users[action.payload.user]];
 			return state_new;
 		}
 	} catch(e){
@@ -292,6 +314,66 @@ function SendData(DataBody){
 	}
 }
 
+//функция отправки содержимых хранилища в web
+function sendStorageToWeb(io, param){
+	try {
+		var adminObject = serverStorage.getState().admins;
+		var connObject = connectionStorage.getState().users;
+		for(var admin in adminObject){
+			try {
+				var admUid = connectionStorage.getState().users[admin];
+				switch (param){
+					case 'server':
+						io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
+						break;
+					case 'connection':
+						io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
+						break;
+					default:
+						io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
+						io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
+						break;
+				}
+			} catch (e) {
+				console.log(colors.red(datetime() + "Проблема отправки данных в web, администратору " + admin +"!"));
+			}
+		}
+	} catch (e){
+		console.log(colors.red(datetime() + "Проблема отправки данных в web!"));
+	}
+}
+
+//функция запуска web-сервера
+function startWebServer(port){
+	try {
+		http.createServer(function(req, res){
+			var pathFile;
+			if(req.url === '/'){
+				pathFile = './src-adm/index.html';
+			} else {
+				pathFile = './src-adm'+req.url;
+			}
+			try {
+				fs.readFile(pathFile, 'utf-8', (err, file) => {
+					if(err) {
+						res.writeHead(404, {'Content-Type': 'text/plain'});
+						res.end('Not Found');
+					} else {
+						res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+						res.end(file);
+					}
+				});	
+			} catch (e){
+				res.writeHead(500, {'Content-Type': 'text/plain'});
+				res.end('Internal Server Error');
+			}
+		}).listen(port, '0.0.0.0');
+		console.log(colors.gray(datetime() + 'webserver-server listening on *:' + port));
+	} catch (e){
+		console.log(colors.red(datetime() + "Не могу запустить web-сервер!"));
+	}
+}
+
 
 
 /* ### Раздел работы с сокетом ### */
@@ -299,6 +381,7 @@ try {
 	getSettings().then(function(value){
 		//загружаем файл конфигурации
 		port = parseInt(value.port, 10);
+		webport = parseInt(value.webport, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
@@ -338,54 +421,96 @@ try {
 		Initialize.then(function(value){
 			if(value === 'okay'){
 				
-				/////////////////////////////////////
-				setUser('fitobel.apt01', 'password', cryptojs.Crypto.MD5('12345678'));
-				setAdmin('serg.dudko', 'password', cryptojs.Crypto.MD5('12345'));
+			///////////////////////////////////////////////////
+			//ПРИМЕРЫ:
+			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.MD5('12345678'));
+			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.MD5('12345'));
 			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:''}};
-				var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:''}};
-				var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32'}};
+			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:''}};
+			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32'}};
 			//	setTask('fitobel.apt01', task1);
-				setTask('fitobel.apt01', task2);
-				setTask('fitobel.apt03', task3);
-				setTask('fitobel.apt01', task3);
-				///////////////////////////////////////////////
+			//	setTask('fitobel.apt01', task2);
+			//	setTask('fitobel.apt03', task3);
+			//	setTask('fitobel.apt01', task3);
+			//////////////////////////////////////////////////
 				
 				server=http.createServer().listen(port, function() {
-					console.log(colors.gray(datetime() + 'listening on *:' + port));
-					}); 
+					console.log(colors.gray(datetime() + 'socket-server listening on *:' + port));
+				}); 
 					
 				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {
-					io.sockets.sockets[socket.id].emit('initialize', { value: 'whois' });
-					io.sockets.sockets[socket.id].on('login', function (data) { 
-						if(testUser(data.user, data.password)) {
-							io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
-							setUser(data.user, 'uid', socket.id);
-							console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-							io.sockets.sockets[socket.id].emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
-							io.sockets.sockets[socket.id].on('completetask', function (data) {
-								serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid, answer:data.answer}});
-							});
-						} else if(testAdmin(data.user, data.password)) {
-							io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
-							setUser(data.user, 'uid', socket.id);
-							console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id));;
-						} else {
-							socket.emit('authorisation', { value: 'false' });
-							console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-						} 
-					});
-				  
-					socket.on('disconnect', function () {
-						connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socket.id}});
-						console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(connectionStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
-					});
-				  
+					try {
+						io.sockets.sockets[socket.id].emit('initialize', { value: 'whois' });
+						io.sockets.sockets[socket.id].on('login', function (data) { 
+							if(testUser(data.user, data.password)) {
+								try {
+									io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
+									setUser(data.user, 'uid', socket.id);
+									console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+									io.sockets.sockets[socket.id].emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
+									io.sockets.sockets[socket.id].on('completetask', function (data) {
+										serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid, answer:data.answer}});
+									});
+								} catch (e) {
+									console.log(colors.red(datetime() + "Ошибка взаимодействия с пользователем " + data.user +": " + e));
+								}
+							} else if(testAdmin(data.user, data.password)) {
+								try {
+									io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
+									setUser(data.user, 'uid', socket.id);
+									console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id));
+									sendStorageToWeb(io, 'all');
+									io.sockets.sockets[socket.id].on('adm_setUser', function (data) {
+										setUser(data[0], 'password', data[1]);
+									});
+									io.sockets.sockets[socket.id].on('adm_setAdmin', function (data) {
+										setAdmin(data[0], 'password', data[1]);
+									});
+									io.sockets.sockets[socket.id].on('adm_setTask', function (data) {
+										setTask(data[0],data[1]);
+									});
+									io.sockets.sockets[socket.id].on('adm_delUser', function (data) {
+										serverStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+										connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+									});
+									io.sockets.sockets[socket.id].on('adm_delAdmin', function (data) {
+										serverStorage.dispatch({type:'REMOVE_ADMIN', payload: {user:data[0]}});
+										connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+									});
+								} catch (e) {
+									console.log(colors.red(datetime() + "Ошибка взаимодействия с администратором " + data.user +": " + e));
+								}
+							} else {
+								socket.emit('authorisation', { value: 'false' });
+								console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+							} 
+						});
+					  
+						socket.on('disconnect', function () {
+							connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socket.id}});
+							console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(connectionStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
+						});
+				    } catch (e){
+						console.log(colors.red(datetime() + "Ошибка обработки входящего соединения: " + e));
+					}
 				});
+				try {
+					serverStorage.subscribe(function(){
+						sendStorageToWeb(io, 'server');
+					});
+					connectionStorage.subscribe(function(){
+						sendStorageToWeb(io, 'connection');
+					});
+				} catch (e) {
+					console.log(colors.red(datetime() + "Не могу подписать веб-интерфейс на обновления: " + e));
+				}
 			}
 		}, function(error){
 			console.log(colors.red(datetime() + "Неизвестная критическая ошибка работы сервера: " + error));
 		}); 
+		//запускаю web-сервер
+		startWebServer(webport);
 	}, function(error){
 		console.log(colors.red(datetime() + "Инициализация сервера не выполнена по причине: " + error));
 	});
