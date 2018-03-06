@@ -347,17 +347,19 @@ function sendStorageToWeb(io, param){
 		for(var admin in adminObject){
 			try {
 				var admUid = connectionStorage.getState().users[admin];
-				switch (param){
-					case 'server':
-						io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
-						break;
-					case 'connection':
-						io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
-						break;
-					default:
-						io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
-						io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
-						break;
+				if (typeof(admUid) !== 'undefined'){
+					switch (param){
+						case 'server':
+							io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
+							break;
+						case 'connection':
+							io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
+							break;
+						default:
+							io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
+							io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
+							break;
+					}
 				}
 			} catch (e) {
 				console.log(colors.red(datetime() + "Проблема отправки данных в web, администратору " + admin +"!"));
