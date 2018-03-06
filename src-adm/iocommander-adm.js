@@ -108,7 +108,7 @@ function initialiseSocket(login_val, password_val){
 	}
 	if(typeof(JsonInitString) === 'object'){
 		var user_val = JsonInitString.login; 
-		var password_val = CryptoJS.SHA1(JsonInitString.password+'icommander').toString();
+		var password_val = CryptoJS.SHA256(user_val + JsonInitString.password+'icommander').toString();
 		if(typeof(socket) !== 'undefined'){
 			socket.close();
 		}

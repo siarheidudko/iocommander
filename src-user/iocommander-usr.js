@@ -19,7 +19,7 @@ var user_val, password_val;
 getSettings().then(function(value){
 	if(value !== 'error'){
 		user_val = value.login; 
-		password_val = cryptojs.Crypto.SHA1(value.password+'icommander');
+		password_val = cryptojs.Crypto.SHA256(user_val + value.password+'icommander');
 		if(typeof(socket) !== 'undefined'){
 			socket.close();
 		}

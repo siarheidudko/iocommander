@@ -450,8 +450,8 @@ try {
 				
 			///////////////////////////////////////////////////
 			//ПРИМЕРЫ:
-			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA1('12345678'+'icommander'));
-			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA1('12345'+'icommander'));
+			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA256('fitobel.apt01' + '12345678'+'icommander'));
+			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA256('serg.dudko' + '12345'+'icommander'));
 			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:''}};
 			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:''}};
 			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32'}};

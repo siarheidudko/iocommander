@@ -36,11 +36,11 @@
   
 - Хранит актуальные состояния авторизованных клиентов.
   
-- Использует SHA-1 шифрование с солью, для хранения паролей.
+- Использует SHA-256 шифрование с солью, для хранения паролей.
   
 - Умеет создавать, удалять и обновлять пароль пользователей:  
 	```javascript
-	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA1('password'+'icommander')); //создать или изменить пароль существующего пользователя
+	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA256('fitobel.apt01'+'password'+'icommander')); //создать или изменить пароль существующего пользователя
 	
 	serverStorage.dispatch({type:'REMOVE_USER', payload: {user:'fitobel.apt01'}});
 	connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:'fitobel.apt01'}});  //удалить пользователя
@@ -48,7 +48,7 @@
 	
 - Умеет создавать, удалять и обновлять пароль администраторов:
 	```javascript
-	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA1('password'+'icommander')); //создать или изменить пароль существующего пользователя
+	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA256('serg.dudko'+'password'+'icommander')); //создать или изменить пароль существующего пользователя
 	
 	serverStorage.dispatch({type:'REMOVE_ADMIN', payload: {user:'serg.dudko'}});
 	connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:'serg.dudko'}});  //удалить пользователя, в хранилище соединений тип экшн для редьюсера именно REMOVE_USER
@@ -56,7 +56,7 @@
 - Для администраторов умеет слушать и выполнять команды: 
   - Добавление пользователя
 	```javascript
-	socket.emit('adm_setUser', ['fitobel.apt15', Crypto.SHA1('password')])
+	socket.emit('adm_setUser', ['fitobel.apt15', Crypto.SHA256('fitobel.apt01'+'password'+'icommander')])
 	```
 	
   - Удаление пользователя  
@@ -65,7 +65,7 @@
 	```
   - Добавление администратора
 	```javascript
-	socket.emit('adm_setAdmin', ['serg.dudko', Crypto.SHA1('password')])
+	socket.emit('adm_setAdmin', ['serg.dudko', Crypto.SHA256('serg.dudko'+'password'+'icommander')])
 	```
   - Добавление администратора
 	```javascript
