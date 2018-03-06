@@ -150,14 +150,12 @@ function getSettings(){
 }
 
 //функция проверки имени пользователя и пароля
-function testUser(user_val, password_val){
+function testUser(user_val, password_val, socketid){
 	try{
+		connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socketid}});
 		var renameuser = replacer(user_val, true);
 		if(typeof(serverStorage.getState().users) !== 'undefined'){
-			if(typeof(serverStorage.getState().users[renameuser]) === 'undefined'){
-				return false;
-			}
-			if (serverStorage.getState().users[renameuser] === password_val) {
+			if ((serverStorage.getState().users[renameuser] === password_val) && (typeof(serverStorage.getState().users[renameuser]) !== 'undefined')){
 				return true;
 			} else {
 				return false;
@@ -167,21 +165,18 @@ function testUser(user_val, password_val){
 			return false;
 		}
 	} catch(e){
+		connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socketid}});
 		console.log(colors.red(datetime() + "Ошибка проверки имени пользователя и пароля пользователя!"));
 	}
 }
 
 //функция проверки имени пользователя и пароля администратора
-function testAdmin(user_val, password_val){
+function testAdmin(user_val, password_val, socketid){
 	try{
+		connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socketid}});
 		var renameuser = replacer(user_val, true);
 		if(typeof(serverStorage.getState().admins) !== 'undefined'){
-			if(typeof(serverStorage.getState().admins[renameuser]) === 'undefined'){
-				return false;
-			}
-			console.log(serverStorage.getState().admins[renameuser]);
-			console.log(password_val);
-			if (serverStorage.getState().admins[renameuser] === password_val) {
+			if ((serverStorage.getState().admins[renameuser] === password_val) && (typeof(serverStorage.getState().admins[renameuser]) !== 'undefined')) {
 				return true;
 			} else {
 				return false;
@@ -191,6 +186,7 @@ function testAdmin(user_val, password_val){
 			return false;
 		}
 	} catch(e){
+		connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socketid}});
 		console.log(colors.red(datetime() + "Ошибка проверки имени пользователя и пароля администратора!"));
 		return false;
 	}
@@ -452,8 +448,8 @@ try {
 				
 			///////////////////////////////////////////////////
 			//ПРИМЕРЫ:
-				setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA1('12345678'+'icommander'));
-				setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA1('12345'+'icommander'));
+			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA1('12345678'+'icommander'));
+			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA1('12345'+'icommander'));
 			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:''}};
 			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:''}};
 			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32'}};
@@ -472,7 +468,7 @@ try {
 					try {
 						io.sockets.sockets[socket.id].emit('initialize', { value: 'whois' });
 						io.sockets.sockets[socket.id].on('login', function (data) { 
-							if(testUser(data.user, data.password)) {
+							if(testUser(data.user, data.password, socket.id)) {
 								try {
 									io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
 									setUser(data.user, 'uid', socket.id);
@@ -484,7 +480,7 @@ try {
 								} catch (e) {
 									console.log(colors.red(datetime() + "Ошибка взаимодействия с пользователем " + data.user +": " + e));
 								}
-							} else if(testAdmin(data.user, data.password)) {
+							} else if(testAdmin(data.user, data.password, socket.id)) {
 								try {
 									io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
 									setUser(data.user, 'uid', socket.id);

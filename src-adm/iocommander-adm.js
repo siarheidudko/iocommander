@@ -9,7 +9,7 @@
 
 /* ### Хранилища состояний ### */
 var serverStorage = Redux.createStore(editServerStore);
-var connectionStorage = Redux.createStore(editConnStore);
+var connectionStorage = Redux.createStore(editConnStore, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try {
 		switch (action.type){
@@ -48,12 +48,6 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 	}
 	return state;
 }
-serverStorage.subscribe(function(){
-	console.log(serverStorage.getState());
-});
-connectionStorage.subscribe(function(){
-	console.log(connectionStorage.getState());
-});
 
 
 
@@ -69,6 +63,23 @@ function login(socket, user_val, password_val) {
 function datetime() {
 	var dt = new Date();
 	return '[' + dt.getDate() + '.' + (dt.getMonth()+1) + '.' + dt.getFullYear() + ' - ' + dt.getHours() + '.' + dt.getMinutes() + '.' + dt.getSeconds() + '] ';
+}
+
+//функция генерации UID
+function generateUID() { 
+	try {
+		var d = new Date().getTime();
+		if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
+			d += performance.now(); 
+		}
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+			var r = (d + Math.random() * 16) % 16 | 0;
+			d = Math.floor(d / 16);
+			return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+		});
+	} catch(e) {
+		console.log(colors.red(datetime() + "Ошибка генерации uid!"));
+	}
 }
 
 //функция работы с сокетом
@@ -119,6 +130,8 @@ function initialiseSocket(login_val, password_val){
 					if(data.value === 'true'){
 						console.log(datetime() + "Авторизация пройдена!");
 					} else {
+						serverStorage.dispatch({type:'CLEAR_STORAGE'});
+						connectionStorage.dispatch({type:'CLEAR_STORAGE'});
 						console.log(datetime() + "Авторизация не пройдена!");
 					}
 				});
