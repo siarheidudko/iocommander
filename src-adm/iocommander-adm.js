@@ -1,3 +1,10 @@
+/*
+IoCommander v1.0.0
+https://github.com/siarheidudko/iocommander
+(c) 2018 by Siarhei Dudko.
+https://github.com/siarheidudko/iocommander/LICENSE
+*/
+
 /* ### Раздел инициализации ### */
 const InitString = '{"protocol":"http","server":"localhost","port":"444","login":"serg.dudko","password":"12345"}';
 

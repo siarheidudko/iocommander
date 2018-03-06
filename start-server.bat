@@ -1,1 +1,1 @@
-node .\src-server\syncftp-server.js
+node .\src-server\iocommander-server.js

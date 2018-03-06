@@ -1,3 +1,10 @@
+/*
+IoCommander v1.0.0
+https://github.com/siarheidudko/iocommander
+(c) 2018 by Siarhei Dudko.
+https://github.com/siarheidudko/iocommander/LICENSE
+*/
+
 /* ### Раздел инициализации ### */
 const fs=require("fs"),
 colors=require("colors"),
@@ -101,7 +108,7 @@ clientStorage.subscribe(function(){
 function getSettings(){
 	return new Promise(function (resolve){
 		try {
-			fs.readFile(".\\src-user\\syncftp-usr.conf", "utf8", function(error,data){
+			fs.readFile(".\\src-user\\iocommander-usr.conf", "utf8", function(error,data){
 				if(error) throw error; 
 				try {
 					resolve(JSON.parse(data));

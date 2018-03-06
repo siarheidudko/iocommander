@@ -1,1 +1,1 @@
-node .\src-user2\syncftp-usr.js
+node .\src-user2\iocommander-usr.js

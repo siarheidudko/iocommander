@@ -1,3 +1,10 @@
+/*
+IoCommander v1.0.0
+https://github.com/siarheidudko/iocommander
+(c) 2018 by Siarhei Dudko.
+https://github.com/siarheidudko/iocommander/LICENSE
+*/
+
 /* ### Раздел переменных ### */
 const http=require("http"), 
 colors=require("colors"),
@@ -13,7 +20,7 @@ var port, firebase_user, firebase_pass, config;
 /* ### Хранилища состояний ### */
 var serverStorage = redux.createStore(editServerStore);
 var connectionStorage = redux.createStore(editConnectionStore); 
-//два хранилища нужны для уменьшения трафика междувеб-интерфейсом и сервером, удобства записи в firebase (незачем там хранить данные реального времени о соединениях)
+//два хранилища нужны для уменьшения трафика между веб-интерфейсом и сервером, удобства записи в firebase (незачем там хранить данные реального времени о соединениях)
 
 function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try{
@@ -126,7 +133,7 @@ function editConnectionStore(state = {uids:{}, users:{}}, action){
 function getSettings(){
 	return new Promise(function (resolve){
 		try {
-			fs.readFile(".\\src-server\\syncftp-server.conf", "utf8", function(error,data){
+			fs.readFile(".\\src-server\\iocommander-server.conf", "utf8", function(error,data){
 				if(error) throw error; 
 				try {
 					resolve(JSON.parse(data));

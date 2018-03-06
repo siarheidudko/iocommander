@@ -1,21 +1,21 @@
 {
-  "name": "syncftp3",
-  "version": "3.0.0",
+  "name": "iocommander",
+  "version": "1.0.0",
   "description": "This is sync software nodejs-server to nodejs-client",
-  "main": "server.js",
+  "main": "src-server\\iocommander-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/siarheidudko/syncftp3.git"
+    "url": "git+https://github.com/siarheidudko/iocommander.git"
   },
   "author": "Siarhei Dudko",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/siarheidudko/syncftp3/issues"
+    "url": "https://github.com/siarheidudko/iocommander/issues"
   },
-  "homepage": "https://github.com/siarheidudko/syncftp3#readme",
+  "homepage": "https://github.com/siarheidudko/iocommander#readme",
   "dependencies": {
     "child_process": "^1.0.2",
     "colors": "^1.1.2",
