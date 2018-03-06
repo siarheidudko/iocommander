@@ -1,8 +1,8 @@
 /*
-IoCommander v1.0.0
-https://github.com/siarheidudko/iocommander
-(c) 2018 by Siarhei Dudko.
-https://github.com/siarheidudko/iocommander/LICENSE
+		IoCommander v1.0.0
+	https://github.com/siarheidudko/iocommander
+	(c) 2018 by Siarhei Dudko.
+	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
 /* ### Раздел инициализации ### */
@@ -19,7 +19,7 @@ var user_val, password_val;
 getSettings().then(function(value){
 	if(value !== 'error'){
 		user_val = value.login; 
-		password_val = cryptojs.Crypto.MD5(value.password);
+		password_val = cryptojs.Crypto.SHA1(value.password+'icommander');
 		if(typeof(socket) !== 'undefined'){
 			socket.close();
 		}

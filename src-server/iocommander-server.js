@@ -1,8 +1,8 @@
 /*
-IoCommander v1.0.0
-https://github.com/siarheidudko/iocommander
-(c) 2018 by Siarhei Dudko.
-https://github.com/siarheidudko/iocommander/LICENSE
+		IoCommander v1.0.0
+	https://github.com/siarheidudko/iocommander
+	(c) 2018 by Siarhei Dudko.
+	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
 /* ### Раздел переменных ### */
@@ -154,6 +154,9 @@ function testUser(user_val, password_val){
 	try{
 		var renameuser = replacer(user_val, true);
 		if(typeof(serverStorage.getState().users) !== 'undefined'){
+			if(typeof(serverStorage.getState().users[renameuser]) === 'undefined'){
+				return false;
+			}
 			if (serverStorage.getState().users[renameuser] === password_val) {
 				return true;
 			} else {
@@ -173,6 +176,11 @@ function testAdmin(user_val, password_val){
 	try{
 		var renameuser = replacer(user_val, true);
 		if(typeof(serverStorage.getState().admins) !== 'undefined'){
+			if(typeof(serverStorage.getState().admins[renameuser]) === 'undefined'){
+				return false;
+			}
+			console.log(serverStorage.getState().admins[renameuser]);
+			console.log(password_val);
 			if (serverStorage.getState().admins[renameuser] === password_val) {
 				return true;
 			} else {
@@ -184,6 +192,7 @@ function testAdmin(user_val, password_val){
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка проверки имени пользователя и пароля администратора!"));
+		return false;
 	}
 }
 
@@ -443,8 +452,8 @@ try {
 				
 			///////////////////////////////////////////////////
 			//ПРИМЕРЫ:
-			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.MD5('12345678'));
-			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.MD5('12345'));
+				setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA1('12345678'+'icommander'));
+				setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA1('12345'+'icommander'));
 			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:''}};
 			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:''}};
 			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32'}};
