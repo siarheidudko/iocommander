@@ -19,7 +19,7 @@ var user_val, password_val;
 getSettings().then(function(value){
 	if(value !== 'error'){
 		user_val = value.login; 
-		password_val = cryptojs.Crypto.SHA256(user_val+value.password+'icommander');
+		password_val = cryptojs.Crypto.SHA256(user_val + value.password+'icommander');
 		if(typeof(socket) !== 'undefined'){
 			socket.close();
 		}
@@ -46,7 +46,45 @@ getSettings().then(function(value){
 						setTimeout(login, 300000);
 					}
 				});
+				//слушаем сокет
 				listenSocket(socket);
+				//проверяем задания каждые 15 сек
+				setInterval(function(){
+					try {
+						var data_val = clientStorage.getState().tasks;
+						if(typeof(data_val) === 'object'){
+							for(var key_val in data_val){
+								try {
+									if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1)){
+										console.log(colors.yellow(datetime() + "Найдено новое задание: " + key_val));
+										try {
+											var flag = true;
+											if(Array.isArray(data_val[key_val].dependencies)){
+												for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
+													if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
+														flag = false;
+														console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
+													}
+												}
+											}
+											if(flag){
+												runTask(socket, key_val, data_val);
+											}
+										} catch (e) {
+											console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
+										}
+									}
+								} catch(e){
+									console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
+								}
+							}
+						} else {
+							console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
+						}
+					} catch(e){
+						console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
+					}
+				}, 15000);
 			}
 		} while (typeof(socket) === 'undefined');
 	}
@@ -60,32 +98,37 @@ getSettings().then(function(value){
 var clientStorage = redux.createStore(editStore);
 function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 	try {
-		if(action.type === 'ADD_TASK'){
-			var state_new = {tasks: {}, complete: [], incomplete:[]};
-			state_new = lodash.clone(state);
-			state_new.tasks[action.payload.uid] = action.payload.task;
-			return state_new;
-		}
-		if(action.type === 'TASK_COMPLETE'){
-			var state_new = {tasks: {}, complete: [], incomplete:[]};
-			state_new = lodash.clone(state);
-			if((typeof(action.payload.answer) !== 'undefined') && (action.payload.answer !== '')){
-				state_new.tasks[action.payload.uid].answer = action.payload.answer;
-			}
-			state_new.complete.push(action.payload.uid);
-			if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
-				state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
-			}
-			return state_new;
-		}
-		if(action.type === 'TASK_INCOMPLETE'){
-			var state_new = {tasks: {}, complete: [], incomplete:[]};
-			state_new = lodash.clone(state);
-			state_new.incomplete.push(action.payload.uid);
-			if(clientStorage.getState().complete.indexOf(action.payload.uid) !== -1){
-				state_new.complete.splice(clientStorage.getState().complete.indexOf(action.payload.uid),1);
-			}
-			return state_new;
+		switch (action.type){
+			case 'ADD_TASK':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new.tasks[action.payload.uid] = action.payload.task;
+				return state_new;
+				break;
+			case 'TASK_COMPLETE':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				if((typeof(action.payload.answer) !== 'undefined') && (action.payload.answer !== '')){
+					state_new.tasks[action.payload.uid].answer = action.payload.answer;
+				}
+				state_new.tasks[action.payload.uid].complete = 'true';
+				state_new.complete.push(action.payload.uid);
+				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
+					state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
+				}
+				return state_new;
+				break;
+			case 'TASK_INCOMPLETE':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new.incomplete.push(action.payload.uid);
+				if(clientStorage.getState().complete.indexOf(action.payload.uid) !== -1){
+					state_new.complete.splice(clientStorage.getState().complete.indexOf(action.payload.uid),1);
+				}
+				return state_new;
+				break;
+			default:
+				break;
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка при обновлении хранилища:" + e));
@@ -161,7 +204,6 @@ function listenSocket(socket){
 						} catch (e) {
 							console.log(colors.red(datetime() + "Не могу добавить задачу в хранилище!"));
 						}
-						runTask(socket, key, data);
 					}
 				} else {
 					console.log(colors.red(datetime() + "Полученные задания должны являться объектом!"));
@@ -180,126 +222,145 @@ function listenSocket(socket){
 
 //функция записи в файловую систему, работаем только с корнем (для win32 диском C)
 function writeFile(socket, uid_val, extPath, intPath, fileName){
-	try {
-		switch (os.platform()) {
-			case "win32":
-				intPath = 'c:' + intPath;
-				var options = {
-					directory: intPath.replace(/\\/gi, '/'),
-					filename: fileName
-				};
-				download(extPath, options, function(err){
-					if (err) throw err
-					taskOnComplete(socket, uid_val);
-					console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-				});
-				break;
-			case 'linux':
-				var options = {
-					directory: intPath.replace(/\\/gi, '/'),
-					filename: fileName
-				};
-				download(extPath, options, function(err){
-					if (err) throw err
-					taskOnComplete(socket, uid_val);
-					console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-				});
-				break;
-			default:
-				console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-				break;
+	return new Promise(function(resolve){
+		try {
+			switch (os.platform()) {
+				case "win32":
+					intPath = 'c:' + intPath;
+					var options = {
+						directory: intPath.replace(/\\/gi, '/'),
+						filename: fileName
+					};
+					download(extPath, options, function(err){
+						if (err) throw err
+						taskOnComplete(socket, uid_val);
+						console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+						resolve("ok");
+					});
+					break;
+				case 'linux':
+					var options = {
+						directory: intPath.replace(/\\/gi, '/'),
+						filename: fileName
+					};
+					download(extPath, options, function(err){
+						if (err) throw err
+						taskOnComplete(socket, uid_val);
+						console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+						resolve("ok");
+					});
+					break;
+				default:
+					console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
+					resolve("error");
+					break;
+			}
+		} catch (e) {
+			console.log(colors.red(datetime() + "Не могу скачать файл в директорию, по причине:" + e));
+			resolve("error");
 		}
-	} catch (e) {
-		console.log(colors.red(datetime() + "Не могу скачать файл в директорию, по причине:" + e));
-	}
+	});
 }
 
 //функция запуска исполняемого файла, работаем только с корнем (для win32 диском C)
 function execFile(socket, uid_val, intPath, fileName, paramArray){
-	try {
-		switch (os.platform()) {
-			case "win32":
-				if (intPath !== ""){
-					intPath = 'c:' + intPath;
-				}
-				var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
-					if (error) {
-						throw error;
-						return;
+	return new Promise(function(resolve){
+		try {
+			switch (os.platform()) {
+				case "win32":
+					if (intPath !== ""){
+						intPath = 'c:' + intPath;
 					}
-					if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-						if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-							returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+					var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+						if (error) {
+							throw error;
+							resolve("error");
+							return;
+						}
+						if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+							} else {
+								returnAnswer = 'Ошибока: ' + stderr;
+							}					
+						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+							returnAnswer = 'Результат: ' + stdout;
 						} else {
-							returnAnswer = 'Ошибока: ' + stderr;
-						}					
-					} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-						returnAnswer = 'Результат: ' + stdout;
-					} else {
-						returnAnswer = '';
-					}
-					taskOnComplete(socket, uid_val, returnAnswer);
-					console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-				});
-				break;
-			case 'linux':
-				var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
-					if (error) {
-						throw error;
-						return;
-					}
-					if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-						if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-							returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+							returnAnswer = '';
+						}
+						taskOnComplete(socket, uid_val, returnAnswer);
+						console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+						resolve("ok");
+					});
+					break;
+				case 'linux':
+					var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+						if (error) {
+							throw error;
+							resolve("error");
+							return;
+						}
+						if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+							} else {
+								returnAnswer = 'Ошибока: ' + stderr;
+							}					
+						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+							returnAnswer = 'Результат: ' + stdout;
 						} else {
-							returnAnswer = 'Ошибока: ' + stderr;
-						}					
-					} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-						returnAnswer = 'Результат: ' + stdout;
-					} else {
-						returnAnswer = '';
-					}
-					taskOnComplete(socket, uid_val, returnAnswer);
-					console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-				}); 
-				break;
-			default:
-				console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-				break;
+							returnAnswer = '';
+						}
+						taskOnComplete(socket, uid_val, returnAnswer);
+						console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+						resolve("ok");
+					}); 
+					break;
+				default:
+					console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
+					resolve("error");
+					break;
+			}
+		} catch (e){
+			console.log(colors.red(datetime() + "Не могу запустить файл, по причине:" + e));
+			resolve("error");
 		}
-	} catch (e){
-		console.log(colors.red(datetime() + "Не могу запустить файл, по причине:" + e));
-	}
+	});
 }
 
 //функция запуска shell-команды
 function execProcess(socket, uid_val, execCommand, platform){
-	try{
-		if(platform === os.platform()){
-			var child = child_process.exec(execCommand, (error, stdout, stderr) => {
-				if (error) {
-					console.error(`exec error: ${error}`);
-					return;
-				}
-				if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-					if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-						returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+	return new Promise(function(resolve){
+		try{
+			if(platform === os.platform()){
+				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
+					if (error) {
+						console.error(`exec error: ${error}`);
+						return;
+					}
+					if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+						if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+							returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+						} else {
+							returnAnswer = 'Ошибока: ' + stderr;
+						}					
+					} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+						returnAnswer = 'Результат: ' + stdout;
 					} else {
-						returnAnswer = 'Ошибока: ' + stderr;
-					}					
-				} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-					returnAnswer = 'Результат: ' + stdout;
-				} else {
-					returnAnswer = '';
-				}
-				taskOnComplete(socket, uid_val, returnAnswer);
-			});
-		} else {
-			console.log(colors.green(datetime() + "Команда для другой платформы!"));
+						returnAnswer = '';
+					}
+					taskOnComplete(socket, uid_val, returnAnswer);
+					resolve("ok");
+				});
+			} else {
+				console.log(colors.green(datetime() + "Команда для другой платформы!"));
+				resolve("error");
+			}
+		} catch (e){
+			console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
+			resolve("error");
 		}
-	} catch (e){
-		console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
-	}
+	});
 }
 
 //функция изменения состояния при выполнении таска
@@ -314,6 +375,7 @@ function taskOnComplete(socket, uid_val, answer_val){
 	} catch (e){}
 	try {
 		clientStorage.dispatch({type:'TASK_COMPLETE', payload: {uid:uid_val, answer:realAnswer}});
+		console.log(colors.green(datetime() + "Задание " + uid_val + " выполнено!"));
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу изменить состояние таска, по причине:" + e));
 	}
@@ -330,19 +392,21 @@ function runTask(socket, key, data){
 		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1)) {
 			switch (data[key].nameTask){
 				case "getFileFromWWW":
-					writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName);
+					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName);
 					break;
 				case "execFile":
-					execFile(socket, key, data[key].intLink, data[key].fileName, data[key].paramArray);
+					return execFile(socket, key, data[key].intLink, data[key].fileName, data[key].paramArray);
 					break;
 				case "execCommand":
-					execProcess(socket, key, data[key].execCommand, data[key].platform);
+					return execProcess(socket, key, data[key].execCommand, data[key].platform);
 					break;
 				default:
+					return new Promise(function(resolve){resolve("error");});
 					break;
 			}
 		}
 	} catch (e) {
+		return new Promise(function(resolve){resolve("error");});
 		console.log(colors.red(datetime() + "Не могу выполнить задание, по причине:" + e));
 	}
 }

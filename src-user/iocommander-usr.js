@@ -48,7 +48,7 @@ getSettings().then(function(value){
 				});
 				//слушаем сокет
 				listenSocket(socket);
-				//проверяем задания каждые 5 минут
+				//проверяем задания каждые 15 сек
 				setInterval(function(){
 					try {
 						var data_val = clientStorage.getState().tasks;
@@ -84,7 +84,7 @@ getSettings().then(function(value){
 					} catch(e){
 						console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 					}
-				}, 30000);
+				}, 15000);
 			}
 		} while (typeof(socket) === 'undefined');
 	}

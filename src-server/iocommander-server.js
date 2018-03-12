@@ -450,15 +450,15 @@ try {
 				
 			///////////////////////////////////////////////////
 			//ПРИМЕРЫ:
-			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA256('fitobel.apt01' + '12345678'+'icommander'));
-			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA256('serg.dudko' + '12345'+'icommander'));
-				var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:'', dependencies:[]}};
-				var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:'', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618']}};
-				var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618', 'f0b11bc4-83d2-45aa-ba4d-b3fc86198cbf']}};
-				setTask('fitobel.apt01', task1);
-				setTask('fitobel.apt01', task2);
+			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA256('fitobel.apt01' + '12345678' + 'icommander'));
+			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA256('serg.dudko' + '12345' + 'icommander'));
+			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:'', dependencies:[]}};
+			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:'', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618']}};
+			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618', 'f0b11bc4-83d2-45aa-ba4d-b3fc86198cbf']}};
+			//	setTask('fitobel.apt01', task1);
+			//	setTask('fitobel.apt01', task2);
 			//	setTask('fitobel.apt03', task3);
-				setTask('fitobel.apt01', task3);
+			//	setTask('fitobel.apt01', task3);
 			//////////////////////////////////////////////////
 				
 				server=http.createServer().listen(port, function() {
@@ -496,6 +496,22 @@ try {
 									});
 									io.sockets.sockets[socket.id].on('adm_setTask', function (data) {
 										setTask(data[0],data[1]);
+										try {
+											var ReplaceUserName = replacer(data[0], true);
+											if(typeof(connectionStorage.getState().users[ReplaceUserName]) !== 'undefined'){
+												var SocketUserId = connectionStorage.getState().users[ReplaceUserName];
+												if(typeof(io.sockets.sockets[SocketUserId])  !== 'undefined'){
+													io.sockets.sockets[SocketUserId].emit('sendtask', serverStorage.getState().tasks[ReplaceUserName]);
+													console.log(colors.green(datetime() + "Задачи пользователю " + data[0] + " отправлены!"));
+												} else {
+													console.log(colors.red(datetime() + "Пользователь " + data[0] + " не найден в массиве сокетов (рассинхронизация с хранилищем соединений)."));
+												}
+											} else {
+												console.log(colors.yellow(datetime() + "Пользователь " + data[0] + " не найден в хранилище соединений (не подключен). Отправка будет произведена после подключения."));
+											}
+										} catch(e){
+											console.log(colors.red(datetime() + "Не могу отправить задание в сокет:" + e));
+										}
 									});
 									io.sockets.sockets[socket.id].on('adm_delUser', function (data) {
 										serverStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});

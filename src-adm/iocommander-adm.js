@@ -116,6 +116,7 @@ function initialiseSocket(login_val, password_val){
 		server_val = JsonInitString.server,	
 		port_val = JsonInitString.port,
 		socket = io(protocol_val + '://' + server_val + ':' + port_val);
+		window.socket = socket;
 		do {
 			if (typeof(socket) !== 'undefined'){
 				socket.on('connect', () => {
