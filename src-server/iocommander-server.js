@@ -138,7 +138,7 @@ function editConnectionStore(state = {uids:{}, users:{}}, action){
 function getSettings(){
 	return new Promise(function (resolve){
 		try {
-			fs.readFile(".\\src-server\\iocommander-server.conf", "utf8", function(error,data){
+			fs.readFile("./src-server/iocommander-server.conf", "utf8", function(error,data){
 				if(error) throw error; 
 				try {
 					resolve(JSON.parse(data));

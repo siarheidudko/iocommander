@@ -147,7 +147,7 @@ clientStorage.subscribe(function(){
 function getSettings(){
 	return new Promise(function (resolve){
 		try {
-			fs.readFile(".\\src-user2\\iocommander-usr.conf", "utf8", function(error,data){
+			fs.readFile("./src-user2/iocommander-usr.conf", "utf8", function(error,data){
 				if(error) throw error; 
 				try {
 					resolve(JSON.parse(data));
