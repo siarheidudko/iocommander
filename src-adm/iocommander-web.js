@@ -79,7 +79,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'adm_delUser':
 				var adm_delUserOption = new Array;
-				adm_delUserOption.push(<option value="">Выберите задачу</option>);
+				adm_delUserOption.push(<option value="">Выберите пользователя</option>);
 				for(var keyUser in serverStorage.getState().users){
 					adm_delUserOption.push(<option value={keyUser}>{replacer(keyUser, false)}</option>);
 				}
@@ -88,7 +88,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'adm_delAdmin':
 				var adm_delAdminOption = new Array;
-				adm_delAdminOption.push(<option value="">Выберите задачу</option>);
+				adm_delAdminOption.push(<option value="">Выберите пользователя</option>);
 				for(var keyAdmin in serverStorage.getState().admins){
 					adm_delAdminOption.push(<option value={keyAdmin}>{replacer(keyAdmin, false)}</option>);
 				}

@@ -14,6 +14,7 @@ redux=require("redux"),
 lodash=require("lodash"),
 firebase=require("firebase");
 var port, firebase_user, firebase_pass, config;
+var SyncFirebaseTimeout = false;
 
 
 
@@ -81,9 +82,13 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 serverStorage.subscribe(function(){
 	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
 		if(value === 'auth'){
-			SendData(serverStorage.getState());
+			if(!SyncFirebaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен
+				SyncFirebaseTimeout = true; //установим флаг, что в хранилище есть данные ожидающие синхронизации
+				setTimeout(SendData,60000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
+			}
 		}
 	}, function(error){
+		SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации, в случае ошибки
 		console.log(colors.red(datetime() + "Ошибка при обновлении firebase:" + error));
 	});
 });
@@ -325,17 +330,19 @@ function GetFirebaseData(){
 }
 
 //функция записи данных в firebase
-function SendData(DataBody){
+function SendData(){
 	try {
 		var tokendata = new Date();
 		tokendatastr = tokendata.toString();
-		firebase.database().ref('/').set(DataBody).then(function(value){
+		firebase.database().ref('/').set(serverStorage.getState()).then(function(value){
 			console.log(colors.green(datetime() + "Синхронизация с firebase успешна!"));
 		}).catch(function(error){
 			console.log(colors.red(datetime() + "Ошибка записи данных: " + error.message));
 		});
+		SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации
 	} catch (e){
 		console.log(colors.red(datetime() + "Проблема инициализации записи в firebase: " + e));
+		SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации
 	}
 }
 
