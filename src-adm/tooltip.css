@@ -1,0 +1,52 @@
+.tooltip {
+	position: fixed;
+	padding: 10px 20px;
+
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+	text-align: center;
+	font: italic 14px/1.3 arial, sans-serif;
+	color: #333;
+	background: #fff;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+.AdminIoCommanderPanel{
+	width: 90%;
+}
+.AdminIoCommanderPanelHeader {
+	border-radius: 10px 10px 0 0;
+	background: #ffa500;
+	text-align: center;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+.AdminIoCommanderPanelBottom, .AdminIoCommanderPanelBottomUsersOnline, .AdminIoCommanderPanelBottomUsersOffline {
+	height: 50px;
+}
+.AdminIoCommanderPanelBottom {
+	border-radius: 0 0 10px 10px;
+	background: #ffa500;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+.AdminIoCommanderPanelBottomUsersOnline, .AdminIoCommanderPanelBottomUsersOffline {
+	width: 80px;
+	float: right;
+}
+.AdminIoCommanderPanelBottomUsersOnline div, .AdminIoCommanderPanelBottomUsersOffline div {
+	text-align: center;
+	margin-top: 20%;
+}
+.AdminIoCommanderPanelBottomUsersOnline {
+	background: #3cb371;
+	border-radius: 0 0 10px 0;
+}
+.AdminIoCommanderPanelBottomUsersOffline {
+	background: #ff0000;
+}
+.AdminIoCommanderPanel{
+	background: #e2e1df;
+	border-radius: 10px;
+}

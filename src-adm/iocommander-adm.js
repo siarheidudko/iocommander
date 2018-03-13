@@ -49,6 +49,11 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 	return state;
 }
 
+///////////////////////////////////////////////////
+//ПРИМЕРЫ:
+//	initialiseSocket('serg.dudko', '12345');
+//	window.socket.emit('adm_setTask', ['fitobel.apt01', {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618', 'f0b11bc4-83d2-45aa-ba4d-b3fc86198cbf']}}]);
+//////////////////////////////////////////////////
 
 
 /* ### Раздел функций ### */
@@ -142,4 +147,21 @@ function initialiseSocket(login_val, password_val){
 	} else {
 		console.log(datetime() + "Не могу распознать объект конфигурации!");
 	}
+}
+
+//функция замены "." на "_" и обратно
+function replacer(data_val, value_val){
+	try {
+		if(typeof(data_val === 'string')){
+			if(value_val){
+				return data_val.replace(/\./gi,"_");
+			} else {
+				return data_val.replace(/\_/gi,".");
+			}
+		} else {
+			return '(не могу преобразовать, т.к. тип входящего аргумента не является строковым)';
+		}
+	} catch(e) {
+		console.log(colors.red(datetime() + "Ошибка преобразования имени пользователя!"));
+	}	
 }
