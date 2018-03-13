@@ -388,12 +388,37 @@ function startWebServer(port){
 				pathFile = './src-adm'+req.url;
 			}
 			try {
-				fs.readFile(pathFile, 'utf-8', (err, file) => {
+				fs.readFile(pathFile, (err, file) => {
 					if(err) {
 						res.writeHead(404, {'Content-Type': 'text/plain'});
 						res.end('Not Found');
 					} else {
-						res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+						try{
+							var ContentType = req.url.split('.');
+							ContentType = ContentType[ContentType.length -1];
+							switch(ContentType){
+								case '/':
+									res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+									break;
+								case 'html':
+									res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+									break;
+								case 'js':
+									res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8'});
+									break;
+								case 'css':
+									res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8'});
+									break;
+								case 'ico':
+									res.writeHead(200, {'Content-Type': 'image/x-icon'});
+									break;
+								default:
+									res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+									break;
+							}
+						} catch(e){
+							res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+						}
 						res.end(file);
 					}
 				});	
