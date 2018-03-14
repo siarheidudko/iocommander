@@ -1,8 +1,8 @@
 /*
-IoCommander v1.0.0
-https://github.com/siarheidudko/iocommander
-(c) 2018 by Siarhei Dudko.
-https://github.com/siarheidudko/iocommander/LICENSE
+		IoCommander v1.0.0
+	https://github.com/siarheidudko/iocommander
+	(c) 2018 by Siarhei Dudko.
+	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
 "use strict"
@@ -30,22 +30,66 @@ class AdminIoCommanderPanelBody extends React.Component{
 			CommandType: 'adm_setTask',
 			ParamOne: generateUID(),
 			ParamTwo: '',
+			ParamThird: '',
+			ParamFour: '',
+			ParamFive: '',
+			ParamSix: '',
+			ParamSeven: new Array,
+			ParamEight: new Array,
 		};
     }
 	
-	onChangeHandler(e){
+	onClickHandler(e){
 		switch(e.target.name){
 			case 'CommandType':
-				this.setState({CommandType: e.target.value});
-				if(e.target.value === 'adm_setTask'){
+				this.setState({CommandType: e.target.id});
+				if(e.target.id === 'adm_setTask'){
 					this.setState({ParamOne: generateUID()});
+				} else {
+					this.setState({ParamOne: ''});
+					this.setState({ParamTwo: ''});
+					this.setState({ParamThird: ''});
+					this.setState({ParamFour: ''});
+					this.setState({ParamFive: ''});
+					this.setState({ParamSix: ''});
 				}
 				break;
+			default:
+				break;
+		}
+	}
+	
+	onChangeHandler(e){
+		switch(e.target.name){
 			case 'SetParamOne':
 				this.setState({ParamOne: e.target.value});
 				break;
 			case 'SetParamTwo':
 				this.setState({ParamTwo: e.target.value});
+				break;
+			case 'SetParamThird':
+				this.setState({ParamThird: e.target.value});
+				break;
+			case 'SetParamFour':
+				this.setState({ParamFour: e.target.value});
+				break;
+			case 'SetParamFive':
+				this.setState({ParamFive: e.target.value});
+				break;
+			case 'SetParamSix':
+				this.setState({ParamSix: e.target.value});
+				break;
+			case 'SetParamSeven':
+				this.setState({ParamSeven: this.state.ParamSeven.push(e.target.value)});
+				break;
+			case 'SetParamEight':
+				if(e.target.checked){
+					this.setState({ParamEight: this.state.ParamEight.concat([e.target.value])});
+					console.log(this.state.ParamEight);
+				} else {
+					this.setState({ParamEight: this.state.ParamEight.splice(e.target.value)});
+					console.log(this.state.ParamEight);
+				}
 				break;
 			default:
 				break;
@@ -53,25 +97,49 @@ class AdminIoCommanderPanelBody extends React.Component{
 	}
 	
 	onBtnClickHandler(e){
-		console.log(this.state.CommandType);
+		if(e.target.id === 'submit'){
+			if(typeof(window.socket) !== 'undefined'){
+				switch(this.state.CommandType){
+					case 'adm_setTask':
+						console.log('test');
+						break;
+					case 'adm_setUser':
+						var user_name = this.state.ParamOne;
+						var user_pass = this.state.ParamTwo;
+						window.socket.emit('adm_setUser', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+						break;
+					case 'adm_setAdmin':
+						var user_name = this.state.ParamOne;
+						var user_pass = this.state.ParamTwo;
+						window.socket.emit('adm_setAdmin', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+						break;
+					case 'adm_delUser':
+						var user_name = this.state.ParamOne;
+						window.socket.emit('adm_delUser', [user_name]);
+						break;
+					case 'adm_delAdmin':
+						var user_name = this.state.ParamOne;
+						window.socket.emit('adm_delAdmin', [user_name]);
+						break;
+				}
+			}
+		}
 	}
 	
 	render() {
 		
-		var AdminIoCommanderPanelBodyHeader = <p><select size="1" name="CommandType" onChange={this.onChangeHandler.bind(this)}>
-				<option disabled>Выберите задачу</option>
-				<option selected value="adm_setTask">Добавить задачу</option>
-				<option value="adm_setUser">Добавить пользователя</option>
-				<option value="adm_setAdmin">Добавить администратора</option>
-				<option value="adm_delUser">Удалить пользователя</option>
-				<option value="adm_delAdmin">Удалить администратора</option>
-			</select></p>;
+		var AdminIoCommanderPanelBodyHeader = <center><p><img src="adm_settask.jpg" alt="Добавить задачу" name="CommandType" id="adm_setTask" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_setuser.jpg" alt="Добавить пользователя" name="CommandType" id="adm_setUser" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_setadmin.jpg" alt="Добавить администратора" name="CommandType" id="adm_setAdmin" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_deluser.jpg" alt="Удалить пользователя" name="CommandType" id="adm_delUser" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_deladmin.jpg" alt="Удалить администратора" name="CommandType" id="adm_delAdmin" onClick={this.onClickHandler.bind(this)} /></p></center>;
 		
 		var AdminIoCommanderPanelBodyMiddle = new Array;
 		switch (this.state.CommandType){
 			case 'adm_setTask':
+				//поле с uid таска (только чтение)
 				AdminIoCommanderPanelBodyMiddle.push(<div>UID: <input name="SetParamOne" value={this.state.ParamOne} readonly /></div>);
-				
+				//выпадающий список типов заданий
 				var adm_setTaskOption = new Array;
 				adm_setTaskOption.push(<option value="">Выберите тип задания</option>);
 				adm_setTaskOption.push(<option value="getFileFromWWW">Скачать файл в папку</option>);
@@ -79,37 +147,64 @@ class AdminIoCommanderPanelBody extends React.Component{
 				adm_setTaskOption.push(<option value="execCommand">Выполнить команду</option>);
 				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> + {adm_setTaskOption} + </select></p>;
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTask} </div>);
-				
-				switch(this.state.ParamOne){
+				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						//поле ввода ссылки для скачки
+						AdminIoCommanderPanelBodyMiddle.push(<div>Ссылка для скачки: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						//поле ввода локального пути для сохранения
+						AdminIoCommanderPanelBodyMiddle.push(<div>Локальный путь: <input name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						//поле ввода имени файла для сохранения
+						AdminIoCommanderPanelBodyMiddle.push(<div>Имя файла: <input name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
 						break;
 					case 'execFile':
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						//поле ввода пути к скрипту
+						AdminIoCommanderPanelBodyMiddle.push(<div>Путь к скрипту: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						//поле ввода имени скрипта
+						AdminIoCommanderPanelBodyMiddle.push(<div>Имя скрипта: <input name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						//поле ввода параметров запуска
+						AdminIoCommanderPanelBodyMiddle.push(<div>Параметры запуска: <input name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
 						break;
 					case 'execCommand':
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
-						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						//поле ввода команды запуска
+						AdminIoCommanderPanelBodyMiddle.push(<div>Команда: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						break;
+				}
+				if(this.state.ParamTwo !== ''){
+					//выпадающий список выбора платформы
+					var adm_setTaskOptionPlatform = new Array;
+					adm_setTaskOptionPlatform.push(<option value="">Выберите платформу</option>);
+					if(this.state.ParamTwo !== 'execCommand'){
+						adm_setTaskOptionPlatform.push(<option value="all">Любая</option>);
+					}
+					adm_setTaskOptionPlatform.push(<option value="win32">Windows</option>);
+					adm_setTaskOptionPlatform.push(<option value="linux">Linux</option>);
+					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> + {adm_setTaskOptionPlatform} + </select></p>;
+					AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTaskOptionPlatformSet} </div>);
+					//поле ввода зависимостей
+					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} /></div>);
+					//флаг выбора объектов
+					var AdminIoCommanderPanelBodyMiddleClients = new Array;
+					for(var keyUser in serverStorage.getState().users){
+						AdminIoCommanderPanelBodyMiddleClients.push(<div>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} /></div>);
+					}
+					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты: {AdminIoCommanderPanelBodyMiddleClients}</div>);
+					
 				}
 				break;
 			case 'adm_setUser':
-				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} /></div>);
-				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} /></div>);
+				//поле ввода логина
+				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
+				//поле ввода пароля
+				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
 				break;
 			case 'adm_setAdmin':
-				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} /></div>);
-				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} /></div>);
+				//поле ввода логина
+				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
+				//поле ввода пароля
+				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
 				break;
 			case 'adm_delUser':
+				//выпадающий список пользователей
 				var adm_delUserOption = new Array;
 				adm_delUserOption.push(<option value="">Выберите пользователя</option>);
 				for(var keyUser in serverStorage.getState().users){
@@ -119,6 +214,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_delUser} </div>);
 				break;
 			case 'adm_delAdmin':
+				//выпадающий список администраторов
 				var adm_delAdminOption = new Array;
 				adm_delAdminOption.push(<option value="">Выберите пользователя</option>);
 				for(var keyAdmin in serverStorage.getState().admins){
@@ -227,12 +323,16 @@ class AdminIoCommanderPanel extends React.Component{
 		super(props, context);
 		this.state = {
 			OnlineUsers: {},
+			clientUsers: {},
+			adminUsers: {},
 		};
     }
       
 	componentDidMount() {
 		var self = this;
 		serverStorage.subscribe(function(){
+			self.setState({clientUsers: serverStorage.getState().users});
+			self.setState({adminUsers: serverStorage.getState().admins});
 		});
 		connectionStorage.subscribe(function(){
 			self.setState({OnlineUsers: connectionStorage.getState().users});

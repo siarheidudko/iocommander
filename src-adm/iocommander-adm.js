@@ -25,7 +25,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				break;
 		}
 	} catch(e){
-		console.log(colors.red(datetime() + "Ошибка при обновлении хранилища:" + e));
+		console.log(datetime() + "Ошибка при обновлении хранилища:" + e);
 	}
 	return state;
 }
@@ -44,7 +44,7 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 				break;
 		}
 	} catch(e){
-		console.log(colors.red(datetime() + "Ошибка при обновлении хранилища соединений:" + e));
+		console.log(datetime() + "Ошибка при обновлении хранилища соединений:" + e);
 	}
 	return state;
 }
@@ -59,15 +59,23 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 /* ### Раздел функций ### */
 //функция авторизации в сокете
 function login(socket, user_val, password_val) {
-	if(typeof(socket) === 'object'){
-		socket.emit('login', { user: user_val, password: password_val });
+	try {
+		if(typeof(socket) === 'object'){
+			socket.emit('login', { user: user_val, password: password_val });
+		}
+	} catch(e){
+		console.log(datetime() + "Ошибка авторизации в сокете:" + e);
 	}
 }
 
 //функция для таймштампа
 function datetime() {
-	var dt = new Date();
-	return '[' + dt.getDate() + '.' + (dt.getMonth()+1) + '.' + dt.getFullYear() + ' - ' + dt.getHours() + '.' + dt.getMinutes() + '.' + dt.getSeconds() + '] ';
+	try {
+		var dt = new Date();
+		return '[' + dt.getDate() + '.' + (dt.getMonth()+1) + '.' + dt.getFullYear() + ' - ' + dt.getHours() + '.' + dt.getMinutes() + '.' + dt.getSeconds() + '] ';
+	} catch(e) {
+		console.log("Проблема с функцией datetime()!");
+	}
 }
 
 //функция генерации UID
@@ -83,69 +91,89 @@ function generateUID() {
 			return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
 		});
 	} catch(e) {
-		console.log(colors.red(datetime() + "Ошибка генерации uid!"));
+		console.log(datetime() + "Ошибка генерации uid!");
 	}
 }
 
 //функция работы с сокетом
 function listenSocket(socket){
-	socket.on('sendServerStorageToAdmin', function (data) {
-		serverStorage.dispatch({type:'SYNC_OBJECT', payload: data});
-	});
-	socket.on('sendConnStorageToAdmin', function (data) {
-		connectionStorage.dispatch({type:'SYNC_OBJECT', payload: data});
-	});
-	socket.on('disconnect', () => {
-		serverStorage.dispatch({type:'CLEAR_STORAGE'});
-		connectionStorage.dispatch({type:'CLEAR_STORAGE'});
-		console.log(datetime() + "Соединение разорвано!");
-	});
+	try {
+		socket.on('sendServerStorageToAdmin', function (data) {
+			try{
+				serverStorage.dispatch({type:'SYNC_OBJECT', payload: data});
+			} catch (e) {
+				console.log(datetime() + "Ошибка обновления хранилища данных: " + e);
+			}
+		});
+		socket.on('sendConnStorageToAdmin', function (data) {
+			try {
+				connectionStorage.dispatch({type:'SYNC_OBJECT', payload: data});
+			} catch (e) {
+				console.log(datetime() + "Ошибка обновления хранилища соединений: " + e);
+			}
+		});
+		socket.on('disconnect', () => {
+			try {
+				serverStorage.dispatch({type:'CLEAR_STORAGE'});
+				connectionStorage.dispatch({type:'CLEAR_STORAGE'});
+				console.log(datetime() + "Соединение разорвано!");
+			} catch (e) {
+				console.log(datetime() + "Ошибка очистки хранилищ, при разрыве соединения: " + e);
+			}
+		});
+	} catch(e){
+		console.log(datetime() + "Ошибка прослушивания сокета: " + e);
+	}
 }
 
 //функция инициализации проекта
 function initialiseSocket(login_val, password_val){
-	var InitString = '{"protocol":"http","server":"localhost","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
-	var JsonInitString;
-	try {			
-		JsonInitString = (JSON.parse(InitString));
-	} catch (e) {
-		console.log(datetime() + "Не могу распарсить строку конфигурации!");
-	}
-	if(typeof(JsonInitString) === 'object'){
-		var user_val = JsonInitString.login; 
-		var password_val = CryptoJS.SHA256(user_val + JsonInitString.password+'icommander').toString();
-		if(typeof(socket) !== 'undefined'){
-			socket.close();
+	try {
+		var InitString = '{"protocol":"http","server":"localhost","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
+		var JsonInitString;
+		try {			
+			JsonInitString = (JSON.parse(InitString));
+		} catch (e) {
+			console.log(datetime() + "Не могу распарсить строку конфигурации!");
 		}
-		var protocol_val = JsonInitString.protocol,
-		server_val = JsonInitString.server,	
-		port_val = JsonInitString.port,
-		socket = io(protocol_val + '://' + server_val + ':' + port_val);
-		window.socket = socket;
-		do {
-			if (typeof(socket) !== 'undefined'){
-				socket.on('connect', () => {
-					console.log(datetime() + "Соединение установлено!");
-				});
-				socket.on('initialize', function (data) {
-					if(data.value === 'whois'){
-						login(socket, user_val, password_val);
-					}
-				});
-				socket.on('authorisation', function (data) {
-					if(data.value === 'true'){
-						console.log(datetime() + "Авторизация пройдена!");
-					} else {
-						serverStorage.dispatch({type:'CLEAR_STORAGE'});
-						connectionStorage.dispatch({type:'CLEAR_STORAGE'});
-						console.log(datetime() + "Авторизация не пройдена!");
-					}
-				});
-				listenSocket(socket);
+		if(typeof(JsonInitString) === 'object'){
+			var user_val = JsonInitString.login; 
+			var password_val = CryptoJS.SHA256(user_val + JsonInitString.password+'icommander').toString();
+			if(typeof(socket) !== 'undefined'){
+				socket.close();
 			}
-		} while (typeof(socket) === 'undefined');
-	} else {
-		console.log(datetime() + "Не могу распознать объект конфигурации!");
+			var protocol_val = JsonInitString.protocol,
+			server_val = JsonInitString.server,	
+			port_val = JsonInitString.port,
+			socket = io(protocol_val + '://' + server_val + ':' + port_val);
+			window.socket = socket;
+			do {
+				if (typeof(socket) !== 'undefined'){
+					socket.on('connect', () => {
+						console.log(datetime() + "Соединение установлено!");
+					});
+					socket.on('initialize', function (data) {
+						if(data.value === 'whois'){
+							login(socket, user_val, password_val);
+						}
+					});
+					socket.on('authorisation', function (data) {
+						if(data.value === 'true'){
+							console.log(datetime() + "Авторизация пройдена!");
+						} else {
+							serverStorage.dispatch({type:'CLEAR_STORAGE'});
+							connectionStorage.dispatch({type:'CLEAR_STORAGE'});
+							console.log(datetime() + "Авторизация не пройдена!");
+						}
+					});
+					listenSocket(socket);
+				}
+			} while (typeof(socket) === 'undefined');
+		} else {
+			console.log(datetime() + "Не могу распознать объект конфигурации!");
+		}
+	} catch(e){
+		console.log(datetime() + "Критическая ошибка инициализации сервера!");
 	}
 }
 
@@ -162,6 +190,6 @@ function replacer(data_val, value_val){
 			return '(не могу преобразовать, т.к. тип входящего аргумента не является строковым)';
 		}
 	} catch(e) {
-		console.log(colors.red(datetime() + "Ошибка преобразования имени пользователя!"));
+		console.log(datetime() + "Ошибка преобразования имени пользователя!");
 	}	
 }
