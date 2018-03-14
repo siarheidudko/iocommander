@@ -28,7 +28,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 		super(props, context);
 		this.state = {
 			CommandType: 'adm_setTask',
-			ParamOne: '',
+			ParamOne: generateUID(),
 			ParamTwo: '',
 		};
     }
@@ -37,6 +37,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 		switch(e.target.name){
 			case 'CommandType':
 				this.setState({CommandType: e.target.value});
+				if(e.target.value === 'adm_setTask'){
+					this.setState({ParamOne: generateUID()});
+				}
 				break;
 			case 'SetParamOne':
 				this.setState({ParamOne: e.target.value});
@@ -67,7 +70,36 @@ class AdminIoCommanderPanelBody extends React.Component{
 		var AdminIoCommanderPanelBodyMiddle = new Array;
 		switch (this.state.CommandType){
 			case 'adm_setTask':
-				AdminIoCommanderPanelBodyMiddle.push(<div> {'adm_setTask'} </div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div>UID: <input name="SetParamOne" value={this.state.ParamOne} readonly /></div>);
+				
+				var adm_setTaskOption = new Array;
+				adm_setTaskOption.push(<option value="">Выберите тип задания</option>);
+				adm_setTaskOption.push(<option value="getFileFromWWW">Скачать файл в папку</option>);
+				adm_setTaskOption.push(<option value="execFile">Запустить локальный скрипт</option>);
+				adm_setTaskOption.push(<option value="execCommand">Выполнить команду</option>);
+				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> + {adm_setTaskOption} + </select></p>;
+				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTask} </div>);
+				
+				switch(this.state.ParamOne){
+					case 'getFileFromWWW':
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						break;
+					case 'execFile':
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						break;
+					case 'execCommand':
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} /></div>);
+						break;
+				}
 				break;
 			case 'adm_setUser':
 				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} /></div>);

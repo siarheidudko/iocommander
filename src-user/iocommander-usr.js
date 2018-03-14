@@ -221,39 +221,46 @@ function listenSocket(socket){
 }
 
 //функция записи в файловую систему, работаем только с корнем (для win32 диском C)
-function writeFile(socket, uid_val, extPath, intPath, fileName){
+function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 	return new Promise(function(resolve){
 		try {
-			switch (os.platform()) {
-				case "win32":
-					intPath = 'c:' + intPath;
-					var options = {
-						directory: intPath.replace(/\\/gi, '/'),
-						filename: fileName
-					};
-					download(extPath, options, function(err){
-						if (err) throw err
+			if((platform === 'all') || (platform === os.platform())){
+				switch (os.platform()) {
+					case "win32":
+						intPath = 'c:' + intPath;
+						var options = {
+							directory: intPath.replace(/\\/gi, '/'),
+							filename: fileName
+						};
+						download(extPath, options, function(err){
+							if (err) throw err
+							taskOnComplete(socket, uid_val);
+							console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+							resolve("ok");
+						});
+						break;
+					case 'linux':
+						var options = {
+							directory: intPath.replace(/\\/gi, '/'),
+							filename: fileName
+						};
+						download(extPath, options, function(err){
+							if (err) throw err
+							taskOnComplete(socket, uid_val);
+							console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+							resolve("ok");
+						});
+						break;
+					default:
 						taskOnComplete(socket, uid_val);
-						console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-						resolve("ok");
-					});
-					break;
-				case 'linux':
-					var options = {
-						directory: intPath.replace(/\\/gi, '/'),
-						filename: fileName
-					};
-					download(extPath, options, function(err){
-						if (err) throw err
-						taskOnComplete(socket, uid_val);
-						console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-						resolve("ok");
-					});
-					break;
-				default:
-					console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-					resolve("error");
-					break;
+						console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
+						resolve("error");
+						break;
+				}
+			} else {
+				taskOnComplete(socket, uid_val);
+				console.log(colors.green(datetime() + "Команда для другой платформы!"));
+				resolve("ok");
 			}
 		} catch (e) {
 			console.log(colors.red(datetime() + "Не могу скачать файл в директорию, по причине:" + e));
@@ -263,63 +270,70 @@ function writeFile(socket, uid_val, extPath, intPath, fileName){
 }
 
 //функция запуска исполняемого файла, работаем только с корнем (для win32 диском C)
-function execFile(socket, uid_val, intPath, fileName, paramArray){
+function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 	return new Promise(function(resolve){
 		try {
-			switch (os.platform()) {
-				case "win32":
-					if (intPath !== ""){
-						intPath = 'c:' + intPath;
-					}
-					var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
-						if (error) {
-							throw error;
-							resolve("error");
-							return;
+			if((platform === 'all') || (platform === os.platform())){
+				switch (os.platform()) {
+					case "win32":
+						if (intPath !== ""){
+							intPath = 'c:' + intPath;
 						}
-						if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+							if (error) {
+								throw error;
+								resolve("error");
+								return;
+							}
+							if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								} else {
+									returnAnswer = 'Ошибока: ' + stderr;
+								}					
+							} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+								returnAnswer = 'Результат: ' + stdout;
 							} else {
-								returnAnswer = 'Ошибока: ' + stderr;
-							}					
-						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-							returnAnswer = 'Результат: ' + stdout;
-						} else {
-							returnAnswer = '';
-						}
-						taskOnComplete(socket, uid_val, returnAnswer);
-						console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-						resolve("ok");
-					});
-					break;
-				case 'linux':
-					var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
-						if (error) {
-							throw error;
-							resolve("error");
-							return;
-						}
-						if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								returnAnswer = '';
+							}
+							taskOnComplete(socket, uid_val, returnAnswer);
+							console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+							resolve("ok");
+						});
+						break;
+					case 'linux':
+						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+							if (error) {
+								throw error;
+								resolve("error");
+								return;
+							}
+							if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								} else {
+									returnAnswer = 'Ошибока: ' + stderr;
+								}					
+							} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+								returnAnswer = 'Результат: ' + stdout;
 							} else {
-								returnAnswer = 'Ошибока: ' + stderr;
-							}					
-						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-							returnAnswer = 'Результат: ' + stdout;
-						} else {
-							returnAnswer = '';
-						}
-						taskOnComplete(socket, uid_val, returnAnswer);
-						console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-						resolve("ok");
-					}); 
-					break;
-				default:
-					console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-					resolve("error");
-					break;
+								returnAnswer = '';
+							}
+							taskOnComplete(socket, uid_val, returnAnswer);
+							console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+							resolve("ok");
+						}); 
+						break;
+					default:
+						taskOnComplete(socket, uid_val);
+						console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
+						resolve("error");
+						break;
+				}
+			} else {
+				taskOnComplete(socket, uid_val);
+				console.log(colors.green(datetime() + "Команда для другой платформы!"));
+				resolve("ok");
 			}
 		} catch (e){
 			console.log(colors.red(datetime() + "Не могу запустить файл, по причине:" + e));
@@ -353,8 +367,9 @@ function execProcess(socket, uid_val, execCommand, platform){
 					resolve("ok");
 				});
 			} else {
+				taskOnComplete(socket, uid_val);
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("error");
+				resolve("ok");
 			}
 		} catch (e){
 			console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
@@ -392,10 +407,10 @@ function runTask(socket, key, data){
 		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1)) {
 			switch (data[key].nameTask){
 				case "getFileFromWWW":
-					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName);
+					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName, data[key].platform);
 					break;
 				case "execFile":
-					return execFile(socket, key, data[key].intLink, data[key].fileName, data[key].paramArray);
+					return execFile(socket, key, data[key].intLink, data[key].fileName, data[key].paramArray, data[key].platform);
 					break;
 				case "execCommand":
 					return execProcess(socket, key, data[key].execCommand, data[key].platform);
