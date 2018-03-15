@@ -6,6 +6,51 @@
 */
 
 "use strict"
+class AdminIoCommanderPanelAuth extends React.Component{
+  
+	constructor(props, context){
+		super(props, context);
+		this.state = {
+			login: '',
+			password: '',
+		}
+    }
+	
+	onChangeHandler(e){
+		switch(e.target.name){
+			case 'SetParamLogin':
+				this.setState({login: e.target.value});
+				break;
+			case 'SetParamPassword':
+				this.setState({password: e.target.value});
+				break;
+		}
+	}
+	
+	onBtnClickHandler(e){
+		if(e.target.id === 'submit'){
+			initialiseSocket(this.state.login, this.state.password);
+		}
+	}
+	
+	render() {
+		var AdminIoCommanderPanelAuth = new Array;
+		//поле ввода логина
+		AdminIoCommanderPanelAuth.push(<div>Логин: <input name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
+		//поле ввода пароля
+		AdminIoCommanderPanelAuth.push(<div>Пароль: <input name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		//кнопка входа
+		AdminIoCommanderPanelAuth.push(<div><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
+		
+		return (
+			<div className="AdminIoCommanderPanelAuth">
+				{AdminIoCommanderPanelAuth}
+			</div>
+		);
+	}
+	
+}
+
 class AdminIoCommanderPanelHeader extends React.Component{
   
 	constructor(props, context){
@@ -62,36 +107,55 @@ class AdminIoCommanderPanelBody extends React.Component{
 	}
 	
 	onChangeHandler(e){
+		var regexpAll = new RegExp("^.*[^A-z0-9\.\?\/&_-].*$");
 		switch(e.target.name){
 			case 'SetParamOne':
-				this.setState({ParamOne: e.target.value});
+				var regexp = new RegExp("^.*[^A-z0-9\._-].*$");
+				if(!regexp.test(e.target.value)){
+					this.setState({ParamOne: e.target.value});
+				}
 				break;
 			case 'SetParamTwo':
 				this.setState({ParamTwo: e.target.value});
 				break;
 			case 'SetParamThird':
-				this.setState({ParamThird: e.target.value});
+				if(!regexpAll.test(e.target.value)){
+					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
+				}
 				break;
 			case 'SetParamFour':
-				this.setState({ParamFour: e.target.value});
+				if(!regexpAll.test(e.target.value)){
+					this.setState({ParamFour: e.target.value.replace(/\\/gi,"/")});
+				}
 				break;
 			case 'SetParamFive':
-				this.setState({ParamFive: e.target.value});
+				if(!regexpAll.test(e.target.value)){
+					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
+				}
 				break;
 			case 'SetParamSix':
-				this.setState({ParamSix: e.target.value});
+				if(!regexpAll.test(e.target.value)){
+					this.setState({ParamSix: e.target.value});
+				}
 				break;
 			case 'SetParamSeven':
-				this.setState({ParamSeven: this.state.ParamSeven.push(e.target.value)});
+				var regexp = new RegExp("^.*[^A-z0-9;-].*$");
+				if(!regexp.test(e.target.value)){
+					var ParamSeven = e.target.value.split(';');
+					this.setState({ParamSeven: ParamSeven});
+				}
 				break;
 			case 'SetParamEight':
-				var ParamEight = this.state.ParamEight.slice();
-				if(e.target.checked){
-					ParamEight.push(e.target.value);
-					this.setState({ParamEight: ParamEight});
-				} else {
-					ParamEight.splice(ParamEight.indexOf(e.target.value), 1);
-					this.setState({ParamEight: ParamEight});
+				var regexp = new RegExp("^.*[^A-z0-9\._-].*$");
+				if(!regexp.test(e.target.value)){
+					var ParamEight = this.state.ParamEight.slice();
+					if(e.target.checked){
+						ParamEight.push(e.target.value);
+						this.setState({ParamEight: ParamEight});
+					} else {
+						ParamEight.splice(ParamEight.indexOf(e.target.value), 1);
+						this.setState({ParamEight: ParamEight});
+					}
 				}
 				break;
 			default:
@@ -104,38 +168,94 @@ class AdminIoCommanderPanelBody extends React.Component{
 			if(typeof(window.socket) !== 'undefined'){
 				switch(this.state.CommandType){
 					case 'adm_setTask':
-						console.log(this.state.ParamEight);
+						var onSetTask = false;
+						if((typeof(this.state.ParamOne) === 'string') && (this.state.ParamOne !== '') && (typeof(this.state.ParamTwo) === 'string') && (this.state.ParamTwo !== '') && (typeof(this.state.ParamSix) === 'string') && (this.state.ParamSix !== '') && (typeof(this.state.ParamSeven) === 'object') && (typeof(this.state.ParamEight) === 'object')){
+							switch(this.state.ParamTwo){
+								case 'getFileFromWWW':
+										if((typeof(this.state.ParamThird) === 'string') && (this.state.ParamThird !== '') && (typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.state.ParamFive) === 'string') && (this.state.ParamFive !== '')){
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, extLink:this.state.ParamThird, intLink:this.state.ParamFour, fileName: this.state.ParamFive, exec:'false', complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven}};
+											onSetTask = true;
+										} else {
+											console.log(datetime() + "Некорректные аргументы!");
+										}
+									break;
+								case 'execFile':
+										if((typeof(this.state.ParamThird) === 'string') && (typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.state.ParamFive) === 'string')){
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, intLink:this.state.ParamThird, fileName: this.state.ParamFour, paramArray:[this.state.ParamFive], complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven}};
+											onSetTask = true;
+										} else {
+											console.log(datetime() + "Некорректные аргументы!");
+										}
+									break;
+								case 'execCommand':
+										if((typeof(this.state.ParamThird) === 'string') && (this.state.ParamThird !== '')){
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, execCommand:this.state.ParamThird, platform:this.state.ParamSix, dependencies:this.state.ParamSeven}};
+											onSetTask = true;
+										} else {
+											console.log(datetime() + "Некорректные аргументы!");
+										}
+									break;
+							}
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
+						if((onSetTask) && (this.state.ParamEight.length > 0)){
+							for(var i=0;i<this.state.ParamEight.length;i++){
+								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
+								window.socket.emit('adm_setTask', EmitMessage);
+							}
+						} else{
+							console.log(datetime() + "Проблема генерации задачи!");
+						}
 						break;
 					case 'adm_setUser':
 						var user_name = this.state.ParamOne;
 						var user_pass = this.state.ParamTwo;
-						window.socket.emit('adm_setUser', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+						if((typeof(user_name) === 'string') && (user_name !== '') && (typeof(user_pass) === 'string') && (user_pass !== '')){
+							window.socket.emit('adm_setUser', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
 						break;
 					case 'adm_setAdmin':
 						var user_name = this.state.ParamOne;
 						var user_pass = this.state.ParamTwo;
-						window.socket.emit('adm_setAdmin', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+						if((typeof(user_name) === 'string') && (user_name !== '') && (typeof(user_pass) === 'string') && (user_pass !== '')){
+							window.socket.emit('adm_setAdmin', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
 						break;
 					case 'adm_delUser':
 						var user_name = this.state.ParamOne;
-						window.socket.emit('adm_delUser', [user_name]);
+						if((typeof(user_name) === 'string') && (user_name !== '')){
+							window.socket.emit('adm_delUser', [user_name]);
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
 						break;
 					case 'adm_delAdmin':
 						var user_name = this.state.ParamOne;
-						window.socket.emit('adm_delAdmin', [user_name]);
+						if((typeof(user_name) === 'string') && (user_name !== '')){
+							window.socket.emit('adm_delAdmin', [user_name]);
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
 						break;
 				}
+			} else {
+				console.log(datetime() + "Сокет недоступен!");
 			}
 		}
 	}
 	
 	render() {
 		
-		var AdminIoCommanderPanelBodyHeader = <center><p><img src="adm_settask.jpg" alt="Добавить задачу" name="CommandType" id="adm_setTask" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_setuser.jpg" alt="Добавить пользователя" name="CommandType" id="adm_setUser" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_setadmin.jpg" alt="Добавить администратора" name="CommandType" id="adm_setAdmin" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_deluser.jpg" alt="Удалить пользователя" name="CommandType" id="adm_delUser" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_deladmin.jpg" alt="Удалить администратора" name="CommandType" id="adm_delAdmin" onClick={this.onClickHandler.bind(this)} /></p></center>;
+		var AdminIoCommanderPanelBodyHeader = <center><p><img src="adm_settask.png" alt="Добавить задачу" title="Добавить задачу" name="CommandType" id="adm_setTask" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_setuser.png" alt="Добавить пользователя" title="Добавить пользователя" name="CommandType" id="adm_setUser" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_setadmin.png" alt="Добавить администратора" title="Добавить администратора" name="CommandType" id="adm_setAdmin" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_deluser.png" alt="Удалить пользователя" title="Удалить пользователя" name="CommandType" id="adm_delUser" onClick={this.onClickHandler.bind(this)} />
+			<img src="./adm_deladmin.png" alt="Удалить администратора" title="Удалить администратора" name="CommandType" id="adm_delAdmin" onClick={this.onClickHandler.bind(this)} /></p></center>;
 		
 		var AdminIoCommanderPanelBodyMiddle = new Array;
 		switch (this.state.CommandType){
@@ -184,13 +304,19 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> + {adm_setTaskOptionPlatform} + </select></p>;
 					AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTaskOptionPlatformSet} </div>);
 					//поле ввода зависимостей
-					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости: <input name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (через ;): <input name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
 					//флаг выбора объектов
 					var AdminIoCommanderPanelBodyMiddleClients = new Array;
+					var div_val = 0;
 					for(var keyUser in serverStorage.getState().users){
-						AdminIoCommanderPanelBodyMiddleClients.push(<div>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} /></div>);
+						AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject' + div_val}>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} /></div>);
+						if(div_val <=5){
+							div_val++;
+						} else {
+							div_val = 0;
+						}
 					}
-					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты: {AdminIoCommanderPanelBodyMiddleClients}</div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты:<br /> {AdminIoCommanderPanelBodyMiddleClients} </div>);
 					
 				}
 				break;
@@ -231,13 +357,15 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 		};
 		
-		var AdminIoCommanderPanelBodyBottom = <button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button>;
+		var AdminIoCommanderPanelBodyBottom = <div className="AdminIoCommanderPanelBodyBottom"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button></div>;
 		
 		return (
 			<div className="AdminIoCommanderPanelBody">
 				{AdminIoCommanderPanelBodyHeader}
-				{AdminIoCommanderPanelBodyMiddle}
-				{AdminIoCommanderPanelBodyBottom}
+				<div className="PanelBodyMargin">
+					{AdminIoCommanderPanelBodyMiddle}
+					{AdminIoCommanderPanelBodyBottom}
+				</div>
 			</div>
 		);
 	}
@@ -328,6 +456,7 @@ class AdminIoCommanderPanel extends React.Component{
 			OnlineUsers: {},
 			clientUsers: {},
 			adminUsers: {},
+			auth: false,
 		};
     }
       
@@ -340,6 +469,9 @@ class AdminIoCommanderPanel extends React.Component{
 		connectionStorage.subscribe(function(){
 			self.setState({OnlineUsers: connectionStorage.getState().users});
 		});
+		adminpanelStorage.subscribe(function(){
+			self.setState({auth: adminpanelStorage.getState().auth});
+		});
 	}
       
 	componentWillUnmount() {
@@ -349,7 +481,7 @@ class AdminIoCommanderPanel extends React.Component{
 		return (
 			<div className="AdminIoCommanderPanel">
 				<AdminIoCommanderPanelHeader />
-				<AdminIoCommanderPanelBody />
+				{(this.state.auth)?<AdminIoCommanderPanelBody />:<AdminIoCommanderPanelAuth />}
 				<AdminIoCommanderPanelBottom data={this.state.OnlineUsers} />
 			</div>
 		);

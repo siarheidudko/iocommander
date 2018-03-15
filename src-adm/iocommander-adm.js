@@ -8,8 +8,10 @@
 
 
 /* ### Хранилища состояний ### */
+window.IoComAuth = false;
 var serverStorage = Redux.createStore(editServerStore);
-var connectionStorage = Redux.createStore(editConnStore, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+var connectionStorage = Redux.createStore(editConnStore);
+var adminpanelStorage = Redux.createStore(editAdmpanelStore, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try {
 		switch (action.type){
@@ -45,6 +47,22 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 		}
 	} catch(e){
 		console.log(datetime() + "Ошибка при обновлении хранилища соединений:" + e);
+	}
+	return state;
+}
+function editAdmpanelStore(state = {auth: false}, action){
+	try {
+		switch (action.type){
+			case 'AUTH':
+				var state_new = _.clone(state);
+				state_new.auth = action.payload.auth;
+				return state_new;
+				break;
+			default:
+				break;
+		}
+	} catch(e){
+		console.log(datetime() + "Ошибка при обновлении хранилища админпанели:" + e);
 	}
 	return state;
 }
@@ -160,10 +178,12 @@ function initialiseSocket(login_val, password_val){
 					socket.on('authorisation', function (data) {
 						if(data.value === 'true'){
 							console.log(datetime() + "Авторизация пройдена!");
+							adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true}});
 						} else {
 							serverStorage.dispatch({type:'CLEAR_STORAGE'});
 							connectionStorage.dispatch({type:'CLEAR_STORAGE'});
 							console.log(datetime() + "Авторизация не пройдена!");
+							adminpanelStorage.dispatch({type:'AUTH', payload: {auth:false}});
 						}
 					});
 					listenSocket(socket);
