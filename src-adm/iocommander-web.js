@@ -38,7 +38,7 @@ class AdminIoCommanderPanelAuth extends React.Component{
 		//поле ввода логина
 		AdminIoCommanderPanelAuth.push(<div>Логин: <input name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
 		//поле ввода пароля
-		AdminIoCommanderPanelAuth.push(<div>Пароль: <input name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuth.push(<div>Пароль: <input type="password" name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
 		//кнопка входа
 		AdminIoCommanderPanelAuth.push(<div><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
 		
@@ -92,14 +92,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamOne: generateUID()});
 				} else {
 					this.setState({ParamOne: ''});
-					this.setState({ParamTwo: ''});
-					this.setState({ParamThird: ''});
-					this.setState({ParamFour: ''});
-					this.setState({ParamFive: ''});
-					this.setState({ParamSix: ''});
-					this.setState({ParamSeven: new Array});
-					this.setState({ParamEight: new Array});
 				}
+				this.setState({ParamTwo: ''});
+				this.setState({ParamThird: ''});
+				this.setState({ParamFour: ''});
+				this.setState({ParamFive: ''});
+				this.setState({ParamSix: ''});
+				this.setState({ParamSeven: new Array});
+				this.setState({ParamEight: new Array});
 				break;
 			default:
 				break;
@@ -107,7 +107,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 	}
 	
 	onChangeHandler(e){
-		var regexpAll = new RegExp("^.*[^A-z0-9\.\?\/&_-].*$");
+		var regexpAll = new RegExp("^.*[^A-z0-9\.\?\/&_:-].*$");
 		switch(e.target.name){
 			case 'SetParamOne':
 				var regexp = new RegExp("^.*[^A-z0-9\._-].*$");
@@ -203,6 +203,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 							for(var i=0;i<this.state.ParamEight.length;i++){
 								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
 								window.socket.emit('adm_setTask', EmitMessage);
+								this.setState({ParamOne: generateUID()});
+								this.setState({ParamTwo: ''});
+								this.setState({ParamThird: ''});
+								this.setState({ParamFour: ''});
+								this.setState({ParamFive: ''});
+								this.setState({ParamSix: ''});
+								this.setState({ParamSeven: new Array});
+								this.setState({ParamEight: new Array});
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
@@ -213,6 +221,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 						var user_pass = this.state.ParamTwo;
 						if((typeof(user_name) === 'string') && (user_name !== '') && (typeof(user_pass) === 'string') && (user_pass !== '')){
 							window.socket.emit('adm_setUser', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+							this.setState({ParamOne: ''});
+							this.setState({ParamTwo: ''});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -222,6 +238,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 						var user_pass = this.state.ParamTwo;
 						if((typeof(user_name) === 'string') && (user_name !== '') && (typeof(user_pass) === 'string') && (user_pass !== '')){
 							window.socket.emit('adm_setAdmin', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+							this.setState({ParamOne: ''});
+							this.setState({ParamTwo: ''});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -230,6 +254,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 						var user_name = this.state.ParamOne;
 						if((typeof(user_name) === 'string') && (user_name !== '')){
 							window.socket.emit('adm_delUser', [user_name]);
+							this.setState({ParamOne: ''});
+							this.setState({ParamTwo: ''});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -238,6 +270,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 						var user_name = this.state.ParamOne;
 						if((typeof(user_name) === 'string') && (user_name !== '')){
 							window.socket.emit('adm_delAdmin', [user_name]);
+							this.setState({ParamOne: ''});
+							this.setState({ParamTwo: ''});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
