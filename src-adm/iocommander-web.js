@@ -52,6 +52,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamFour: ''});
 					this.setState({ParamFive: ''});
 					this.setState({ParamSix: ''});
+					this.setState({ParamSeven: new Array});
+					this.setState({ParamEight: new Array});
 				}
 				break;
 			default:
@@ -83,12 +85,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 				this.setState({ParamSeven: this.state.ParamSeven.push(e.target.value)});
 				break;
 			case 'SetParamEight':
+				var ParamEight = this.state.ParamEight.slice();
 				if(e.target.checked){
-					this.setState({ParamEight: this.state.ParamEight.concat([e.target.value])});
-					console.log(this.state.ParamEight);
+					ParamEight.push(e.target.value);
+					this.setState({ParamEight: ParamEight});
 				} else {
-					this.setState({ParamEight: this.state.ParamEight.splice(e.target.value)});
-					console.log(this.state.ParamEight);
+					ParamEight.splice(ParamEight.indexOf(e.target.value), 1);
+					this.setState({ParamEight: ParamEight});
 				}
 				break;
 			default:
@@ -101,7 +104,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 			if(typeof(window.socket) !== 'undefined'){
 				switch(this.state.CommandType){
 					case 'adm_setTask':
-						console.log('test');
+						console.log(this.state.ParamEight);
 						break;
 					case 'adm_setUser':
 						var user_name = this.state.ParamOne;
