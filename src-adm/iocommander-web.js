@@ -119,7 +119,10 @@ class AdminIoCommanderPanelBody extends React.Component{
 				this.setState({ParamTwo: e.target.value});
 				break;
 			case 'SetParamThird':
-				if(!regexpAll.test(e.target.value)){
+				var regexp = new RegExp("^.*[^A-z0-9\. \?\/&_:-].*$");
+				if((!regexpAll.test(e.target.value)) && (this.state.ParamTwo !== 'execCommand')){
+					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
+				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execCommand')) {
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
 				}
 				break;
@@ -129,7 +132,10 @@ class AdminIoCommanderPanelBody extends React.Component{
 				}
 				break;
 			case 'SetParamFive':
-				if(!regexpAll.test(e.target.value)){
+				var regexp = new RegExp("^.*[^A-z0-9\.\?\/&_:-].*$");
+				if((!regexpAll.test(e.target.value)) && (this.state.ParamTwo !== 'execFile')){
+					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
+				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execFile')) {
 					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
 				}
 				break;
@@ -204,7 +210,6 @@ class AdminIoCommanderPanelBody extends React.Component{
 								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
 								window.socket.emit('adm_setTask', EmitMessage);
 								this.setState({ParamOne: generateUID()});
-								this.setState({ParamTwo: ''});
 								this.setState({ParamThird: ''});
 								this.setState({ParamFour: ''});
 								this.setState({ParamFive: ''});
