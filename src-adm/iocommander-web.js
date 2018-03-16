@@ -213,9 +213,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 								this.setState({ParamThird: ''});
 								this.setState({ParamFour: ''});
 								this.setState({ParamFive: ''});
-								//this.setState({ParamSix: ''});
+								this.setState({ParamSix: ''});
 								this.setState({ParamSeven: new Array});
-								//this.setState({ParamEight: new Array});
+								this.setState({ParamEight: new Array});
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
@@ -310,10 +310,10 @@ class AdminIoCommanderPanelBody extends React.Component{
 				//выпадающий список типов заданий
 				var adm_setTaskOption = new Array;
 				adm_setTaskOption.push(<option value="">Выберите тип задания</option>);
-				adm_setTaskOption.push(<option value="getFileFromWWW">Скачать файл в папку</option>);
-				adm_setTaskOption.push(<option value="execFile">Запустить локальный скрипт</option>);
-				adm_setTaskOption.push(<option value="execCommand">Выполнить команду</option>);
-				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> + {adm_setTaskOption} + </select></p>;
+				adm_setTaskOption.push(<option value="getFileFromWWW" selected={(this.state.ParamTwo === 'getFileFromWWW')?true:false}>Скачать файл в папку</option>);
+				adm_setTaskOption.push(<option value="execFile" selected={(this.state.ParamTwo === 'execFile')?true:false}>Запустить локальный скрипт</option>);
+				adm_setTaskOption.push(<option value="execCommand" selected={(this.state.ParamTwo === 'execCommand')?true:false}>Выполнить команду</option>);
+				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOption} </select></p>;
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTask} </div>);
 				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
@@ -342,11 +342,11 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var adm_setTaskOptionPlatform = new Array;
 					adm_setTaskOptionPlatform.push(<option value="">Выберите платформу</option>);
 					if(this.state.ParamTwo !== 'execCommand'){
-						adm_setTaskOptionPlatform.push(<option value="all">Любая</option>);
+						adm_setTaskOptionPlatform.push(<option value="all" selected={(this.state.ParamSix === 'all')?true:false}>Любая</option>);
 					}
-					adm_setTaskOptionPlatform.push(<option value="win32">Windows</option>);
-					adm_setTaskOptionPlatform.push(<option value="linux">Linux</option>);
-					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> + {adm_setTaskOptionPlatform} + </select></p>;
+					adm_setTaskOptionPlatform.push(<option value="win32" selected={(this.state.ParamSix === 'win32')?true:false}>Windows</option>);
+					adm_setTaskOptionPlatform.push(<option value="linux" selected={(this.state.ParamSix === 'linux')?true:false}>Linux</option>);
+					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOptionPlatform} </select></p>;
 					AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTaskOptionPlatformSet} </div>);
 					//поле ввода зависимостей
 					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (через ;): <input name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
@@ -354,7 +354,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var AdminIoCommanderPanelBodyMiddleClients = new Array;
 					var div_val = 0;
 					for(var keyUser in serverStorage.getState().users){
-						AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject' + div_val}>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} /></div>);
+						AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject' + div_val}>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} checked={(this.state.ParamEight.indexOf(replacer(keyUser, false)) === -1)?false:true} /></div>);
 						if(div_val <=5){
 							div_val++;
 						} else {
