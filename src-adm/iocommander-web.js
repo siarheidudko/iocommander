@@ -213,9 +213,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 								this.setState({ParamThird: ''});
 								this.setState({ParamFour: ''});
 								this.setState({ParamFive: ''});
-								this.setState({ParamSix: ''});
+								//this.setState({ParamSix: ''});
 								this.setState({ParamSeven: new Array});
-								this.setState({ParamEight: new Array});
+								//this.setState({ParamEight: new Array});
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");

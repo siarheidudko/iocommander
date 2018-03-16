@@ -36,6 +36,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				var state_new = {};
 				state_new = lodash.clone(state);
 				delete state_new.users[action.payload.user];
+				delete state_new.tasks[action.payload.user];
 				console.log(colors.yellow(datetime() + "Удаление пользователя\nLogin: " + action.payload.user));
 				return state_new;
 				break;
@@ -70,6 +71,18 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				break;
 			case 'SYNC':
 				var state_new = action.payload;
+				return state_new;
+				break;
+			case 'GC_TASK':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				delete state_new.tasks[action.payload.user][action.payload.task];
+				return state_new;
+				break;
+			case 'GC_USER':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				delete state_new.tasks[action.payload.user];
 				return state_new;
 				break;
 			default:
@@ -277,7 +290,7 @@ function setTask(user_val, value_val){
 			var renameuser = replacer(user_val, true);
 			value_val.task.complete = 'false';
 			value_val.task.answer = '';
-			value_val.task.datetime = datetime();
+			value_val.task.datetime = Date.now();
 			serverStorage.dispatch({type:'ADD_TASK', payload: {user:renameuser, task:value_val}});
 		} else {
 			console.log(colors.yellow(datetime() + "Некорректный формат задания!"));
@@ -436,6 +449,37 @@ function startWebServer(port){
 	}
 }
 
+//функция очистки хранилища
+function GarbageCollector(){
+	var lifetime = 86400000 * 30; //устанавливаю срок хранения выполненых задач в 30 дней
+	var actualStorage = serverStorage.getState();
+	try{
+		for(var key_object in actualStorage.tasks){
+			try{
+				if(typeof(actualStorage.users[key_object]) === 'undefined'){
+					serverStorage.dispatch({type:'GC_USER', payload: {user:key_object}});
+					console.log(colors.yellow(datetime() + "Найдены задания для несуществующего объекта (" + replacer(key_object, false) + "), удаляю!"));
+				} else {
+					for(var key_task in actualStorage.tasks[key_object]){
+						try {
+							if((actualStorage.tasks[key_object][key_task].complete == 'true') && (actualStorage.tasks[key_object][key_task].datetime < (Date.now()-lifetime))){
+								serverStorage.dispatch({type:'GC_TASK', payload: {user:key_object, task:key_task}});
+								console.log(colors.yellow(datetime() + "Найдены выполненые задания с истекшим сроком (" + key_task + "), удаляю!"));
+							}
+						} catch (e){
+							console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
+						}
+					}
+				}
+			} catch(e){
+				console.log(colors.red(datetime() + "Ошибка обработки объекта "  + replacer(key_object, false) + " сборщиком мусора!"));
+			}
+		}
+	} catch(e){
+		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
+	}
+}
+
 
 
 /* ### Раздел работы с сокетом ### */
@@ -458,6 +502,15 @@ try {
 						if(value_child !== 'null'){
 							try{
 								var value_child_obj = JSON.parse(value_child);
+								if(typeof(value_child_obj.users) === 'undefined'){
+									value_child_obj.users = {};
+								}
+								if(typeof(value_child_obj.tasks) === 'undefined'){
+									value_child_obj.tasks = {};
+								}
+								if(typeof(value_child_obj.admins) === 'undefined'){
+									value_child_obj.admins = {'administrator':'61d8c6ba173c4764d9a4aca45dc6faa0294bb4d7a95f204e1b8bc139cafaa6f6'}; //логин: administrator, пароль: 12345678 (по умолчанию при создании БД)
+								}
 								if((typeof(value_child_obj.users) !== 'undefined') && (typeof(value_child_obj.tasks) !== 'undefined') && (typeof(value_child_obj.admins) !== 'undefined')){
 									serverStorage.dispatch({type:'SYNC', payload: value_child_obj});
 								} else {
@@ -465,9 +518,13 @@ try {
 								}
 							} catch(e){
 								console.log(colors.red(datetime() + "Повреждение firebase, не могу корректно распарсить полученный объект:" + e));
+								value_child_obj = {users:{},tasks:{},admins:{'administrator':'61d8c6ba173c4764d9a4aca45dc6faa0294bb4d7a95f204e1b8bc139cafaa6f6'}};
+								serverStorage.dispatch({type:'SYNC', payload: value_child_obj});
 							}
 						} else {
 							console.log(colors.yellow(datetime() + "Проблема с firebase, полученный снимок является пустым. Firebase будет перезаписана!"));
+							value_child_obj = {users:{},tasks:{},admins:{'administrator':'61d8c6ba173c4764d9a4aca45dc6faa0294bb4d7a95f204e1b8bc139cafaa6f6'}};
+							serverStorage.dispatch({type:'SYNC', payload: value_child_obj});
 						}
 						resolve('okay');
 					}, function (error){
@@ -486,7 +543,7 @@ try {
 			///////////////////////////////////////////////////
 			//ПРИМЕРЫ:
 			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA256('fitobel.apt01' + '12345678' + 'icommander'));
-			//	setAdmin('serg.dudko', 'password', cryptojs.Crypto.SHA256('serg.dudko' + '12345' + 'icommander'));
+			//	setAdmin('administrator', 'password', cryptojs.Crypto.SHA256('administrator' + '12345678' + 'icommander'));
 			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:'', dependencies:[], platform:'all'}};
 			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:'', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618'], platform:'all'}};
 			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618', 'f0b11bc4-83d2-45aa-ba4d-b3fc86198cbf']}};
@@ -495,7 +552,7 @@ try {
 			//	setTask('fitobel.apt03', task3);
 			//	setTask('fitobel.apt01', task3);
 			//////////////////////////////////////////////////
-				
+			
 				server=http.createServer().listen(port, function() {
 					console.log(colors.gray(datetime() + 'socket-server listening on *:' + port));
 				}); 
@@ -609,6 +666,8 @@ try {
 		}); 
 		//запускаю web-сервер
 		startWebServer(webport);
+		//запускаю сборщик мусора раз в час
+		setInterval(GarbageCollector,3600000);
 	}, function(error){
 		console.log(colors.red(datetime() + "Инициализация сервера не выполнена по причине: " + error));
 	});
