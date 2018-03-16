@@ -50,12 +50,17 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 	}
 	return state;
 }
-function editAdmpanelStore(state = {auth: false}, action){
+function editAdmpanelStore(state = {auth: false, report:{}}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
 				var state_new = _.clone(state);
 				state_new.auth = action.payload.auth;
+				return state_new;
+				break;
+			case 'GEN_REPORT':
+				var state_new = _.clone(state);
+				state_new.report = action.payload.report;
 				return state_new;
 				break;
 			default:
@@ -212,4 +217,41 @@ function replacer(data_val, value_val){
 	} catch(e) {
 		console.log(datetime() + "Ошибка преобразования имени пользователя!");
 	}	
+}
+
+//функция обработки заданий (отчеты)
+function GenerateReport(){
+	try {
+		var tempStorage = serverStorage.getState().tasks;
+		var reportStore = {};
+		for(var keyObject in tempStorage){
+			try {
+				for(var keyTask in tempStorage[keyObject]){
+					try {
+						if(typeof(reportStore[keyTask]) === 'undefined'){
+							reportStore[keyTask] = {complete:[],incomplete:[],objects:{}};
+						}
+						if(tempStorage[keyObject][keyTask].complete === 'true'){
+							reportStore[keyTask].complete.push(keyObject);
+						} else {
+							reportStore[keyTask].incomplete.push(keyObject);
+						}
+						if(typeof(reportStore[keyTask].objects[keyObject]) === 'undefined'){
+							reportStore[keyTask].objects[keyObject] = {};
+						}
+						reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
+						reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
+						reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
+					} catch(e){
+						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
+					}
+				}
+			} catch(e){
+				console.log(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!");
+			}
+		}
+		adminpanelStorage.dispatch({type:'GEN_REPORT', payload: {report:reportStore}});
+	} catch(e){
+		console.log(datetime() + "Ошибка генерации отчетов по таскам!");
+	}
 }
