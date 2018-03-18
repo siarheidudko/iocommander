@@ -8,7 +8,6 @@
 
 
 /* ### Хранилища состояний ### */
-window.IoComAuth = false;
 var serverStorage = Redux.createStore(editServerStore);
 var connectionStorage = Redux.createStore(editConnStore);
 var adminpanelStorage = Redux.createStore(editAdmpanelStore, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
@@ -71,6 +70,10 @@ function editAdmpanelStore(state = {auth: false, report:{}}, action){
 	}
 	return state;
 }
+
+serverStorage.subscribe(function(){ //подпишем генерацию отчетов на изменение состояния постоянного хранилища
+	GenerateReport();
+});
 
 ///////////////////////////////////////////////////
 //ПРИМЕРЫ:

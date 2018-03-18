@@ -95,17 +95,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 }
 
 serverStorage.subscribe(function(){
-	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
-		if(value === 'auth'){
-			if(!SyncFirebaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен
-				SyncFirebaseTimeout = true; //установим флаг, что в хранилище есть данные ожидающие синхронизации
-				setTimeout(SendData,60000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
-			}
-		}
-	}, function(error){
-		SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации, в случае ошибки
-		console.log(colors.red(datetime() + "Ошибка при обновлении firebase:" + error));
-	});
+	FirebaseSync();
 });
 
 function editConnectionStore(state = {uids:{}, users:{}}, action){
@@ -345,6 +335,21 @@ function GetFirebaseData(){
 	});
 }
 
+//функция записи авторизации в firebase с последующим вызовом записи SendData()
+function FirebaseSync(){
+	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
+		if(value === 'auth'){
+			if(!SyncFirebaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен
+				SyncFirebaseTimeout = true; //установим флаг, что в хранилище есть данные ожидающие синхронизации
+				setTimeout(SendData,60000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
+			}
+		}
+	}, function(error){
+		console.log(colors.red(datetime() + "Ошибка при обновлении firebase:" + error));
+		setTimeout(FirebaseSync,60000); //при ошибке запустим саму себя через минуту
+	});
+}
+
 //функция записи данных в firebase
 function SendData(){
 	try {
@@ -358,7 +363,7 @@ function SendData(){
 		SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации
 	} catch (e){
 		console.log(colors.red(datetime() + "Проблема инициализации записи в firebase: " + e));
-		SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации
+		setTimeout(SendData,60000); //при ошибке запустим саму себя через минуту
 	}
 }
 

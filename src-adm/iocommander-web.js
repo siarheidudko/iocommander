@@ -296,11 +296,12 @@ class AdminIoCommanderPanelBody extends React.Component{
 	
 	render() {
 		
-		var AdminIoCommanderPanelBodyHeader = <center><p><img src="adm_settask.png" alt="Добавить задачу" title="Добавить задачу" name="CommandType" id="adm_setTask" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_setuser.png" alt="Добавить пользователя" title="Добавить пользователя" name="CommandType" id="adm_setUser" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_setadmin.png" alt="Добавить администратора" title="Добавить администратора" name="CommandType" id="adm_setAdmin" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_deluser.png" alt="Удалить пользователя" title="Удалить пользователя" name="CommandType" id="adm_delUser" onClick={this.onClickHandler.bind(this)} />
-			<img src="./adm_deladmin.png" alt="Удалить администратора" title="Удалить администратора" name="CommandType" id="adm_delAdmin" onClick={this.onClickHandler.bind(this)} /></p></center>;
+		var AdminIoCommanderPanelBodyHeader = <center><p><img className="imgCommandType" src="adm_settask.png" alt="Добавить задачу" title="Добавить задачу" name="CommandType" id="adm_setTask" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_setTask')?"2":"0"} />
+			<img className="imgCommandType" src="./adm_setuser.png" alt="Добавить пользователя" title="Добавить пользователя" name="CommandType" id="adm_setUser" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_setUser')?"2":"0"} />
+			<img className="imgCommandType" src="./adm_setadmin.png" alt="Добавить администратора" title="Добавить администратора" name="CommandType" id="adm_setAdmin" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_setAdmin')?"2":"0"} />
+			<img className="imgCommandType" src="./adm_deluser.png" alt="Удалить пользователя" title="Удалить пользователя" name="CommandType" id="adm_delUser" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_delUser')?"2":"0"} />
+			<img className="imgCommandType" src="./adm_deladmin.png" alt="Удалить администратора" title="Удалить администратора" name="CommandType" id="adm_delAdmin" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_delAdmin')?"2":"0"} />
+			<img className="imgCommandType" src="./adm_report.png" alt="Отчеты по таскам" title="Отчеты по таскам" name="CommandType" id="adm_TaskReport" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_TaskReport')?"2":"0"} /></p></center>;
 		
 		var AdminIoCommanderPanelBodyMiddle = new Array;
 		switch (this.state.CommandType){
@@ -397,13 +398,46 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_delAdmin = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_delAdminOption} + </select></p>;
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_delAdmin} </div>);
 				break;
+			case 'adm_TaskReport':
+				//отчеты по таскам
+				var adm_TaskReportOption = new Array;
+				adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
+				for(var keyTask in adminpanelStorage.getState().report){
+					adm_TaskReportOption.push(<option value={keyTask}>{keyTask}</option>);
+				}
+				var adm_TaskReport = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>;
+				var adm_TaskReportResult = new Array;
+				if(this.state.ParamOne !== ""){
+					var tempStorage = adminpanelStorage.getState().report;
+					if(typeof(tempStorage[this.state.ParamOne]) !== 'undefined'){
+						var tempObjects = tempStorage[this.state.ParamOne].objects;
+						if(typeof(tempObjects) !== 'undefined'){
+							
+							for(var keyObject in tempObjects){ //reportTableStaus' + tempObjects[keyObject].complete
+								var adm_TaskReportResultRow = new Array;
+								adm_TaskReportResultRow.push(<div className="reportTableColumnName">{keyObject}</div>);
+								adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{tempObjects[keyObject].complete}</div>);
+								adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">{tempObjects[keyObject].answer}</div>);
+								if(typeof(tempObjects[keyObject].datetime) == 'number'){
+									var dateEpochToString = new Date(tempObjects[keyObject].datetime);
+									adm_TaskReportResultRow.push(<div className="reportTableColumnDate">{dateEpochToString.toString()}</div>);
+								} else {
+									adm_TaskReportResultRow.push(<div className="reportTableColumnDate">not converted</div>);
+								}
+								adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+tempObjects[keyObject].complete}>{adm_TaskReportResultRow}</div>)
+							}
+						}
+					}
+				}
+				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_TaskReport} <div className="reportTable">{adm_TaskReportResult}</div></div>);
+				break;
 			default:
 				AdminIoCommanderPanelBodyMiddle.push(<div> Неизвестный тип команды! </div>);
 				break;
 		};
-		
-		var AdminIoCommanderPanelBodyBottom = <div className="AdminIoCommanderPanelBodyBottom"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button></div>;
-		
+		if (this.state.CommandType !== 'adm_TaskReport'){
+			var AdminIoCommanderPanelBodyBottom = <div className="AdminIoCommanderPanelBodyBottom"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button></div>;
+		}
 		return (
 			<div className="AdminIoCommanderPanelBody">
 				{AdminIoCommanderPanelBodyHeader}

@@ -1,3 +1,4 @@
+/* всплывающее окно online/offline */
 .tooltip {
 	position: fixed;
 	padding: 10px 20px;
@@ -8,6 +9,8 @@
 	background: #fff;
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
 }
+
+/* Скелет админки */
 .AdminIoCommanderPanel{
 	width: 90%;
 	background: #e2e1df;
@@ -74,4 +77,30 @@
 	width: 40%;
 	text-align: right;
 	padding: 20px 0;
+}
+.imgCommandType{
+	border-color: #ffa500;
+	border-radius: 4px;
+}
+/* Отчеты по таскам */
+.reportTableRow{
+	display:table;
+}
+.reportTableRowtrue {
+	background: #3cb371;
+}
+.reportTableRowfalse {
+	background: #ff0000;
+}
+.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate{
+	float: left;
+	border: 1px solid #b3c9ce;
+}
+.reportTableColumnName{
+}
+.reportTableColumnStatus{
+}
+.reportTableColumnAnswer{
+}
+.reportTableColumnDate{
 }
