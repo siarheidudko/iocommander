@@ -383,7 +383,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_delUserOption = new Array;
 				adm_delUserOption.push(<option value="">Выберите пользователя</option>);
 				for(var keyUser in serverStorage.getState().users){
-					adm_delUserOption.push(<option value={keyUser}>{replacer(keyUser, false)}</option>);
+					adm_delUserOption.push(<option value={keyUser} selected={(this.state.ParamOne === keyUser)?true:false} >{replacer(keyUser, false)}</option>);
 				}
 				var adm_delUser = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_delUserOption} + </select></p>;
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_delUser} </div>);
@@ -393,7 +393,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_delAdminOption = new Array;
 				adm_delAdminOption.push(<option value="">Выберите пользователя</option>);
 				for(var keyAdmin in serverStorage.getState().admins){
-					adm_delAdminOption.push(<option value={keyAdmin}>{replacer(keyAdmin, false)}</option>);
+					adm_delAdminOption.push(<option value={keyAdmin} selected={(this.state.ParamOne === keyAdmin)?true:false} >{replacer(keyAdmin, false)}</option>);
 				}
 				var adm_delAdmin = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_delAdminOption} + </select></p>;
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_delAdmin} </div>);
@@ -403,7 +403,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_TaskReportOption = new Array;
 				adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
 				for(var keyTask in adminpanelStorage.getState().report){
-					adm_TaskReportOption.push(<option value={keyTask}>{keyTask}</option>);
+					adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{keyTask}</option>);
 				}
 				var adm_TaskReport = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>;
 				var adm_TaskReportResult = new Array;
@@ -416,14 +416,16 @@ class AdminIoCommanderPanelBody extends React.Component{
 							for(var keyObject in tempObjects){ //reportTableStaus' + tempObjects[keyObject].complete
 								var adm_TaskReportResultRow = new Array;
 								adm_TaskReportResultRow.push(<div className="reportTableColumnName">{keyObject}</div>);
-								adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{tempObjects[keyObject].complete}</div>);
-								adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">{tempObjects[keyObject].answer}</div>);
-								if(typeof(tempObjects[keyObject].datetime) == 'number'){
-									var dateEpochToString = new Date(tempObjects[keyObject].datetime);
-									adm_TaskReportResultRow.push(<div className="reportTableColumnDate">{dateEpochToString.toString()}</div>);
+								adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{(tempObjects[keyObject].complete === 'true')?'Выполнено':'Не выполнено'}</div>);
+								adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">{(tempObjects[keyObject].answer === 'none')?'':tempObjects[keyObject].answer}</div>);
+								var dateEpochToString = new Date(tempObjects[keyObject].datetime);
+								adm_TaskReportResultRow.push(<div className="reportTableColumnDate">{timeStamp(dateEpochToString)}</div>);
+								if(tempObjects[keyObject].datetimecompl !== 0){
+									var dateEpochToStringCompl = new Date(tempObjects[keyObject].datetimecompl);
 								} else {
-									adm_TaskReportResultRow.push(<div className="reportTableColumnDate">not converted</div>);
+									var dateEpochToStringCompl = null; //т.к. таймштамп не сможет получить дату от Null, то вернет нули в эксепшн
 								}
+								adm_TaskReportResultRow.push(<div className="reportTableColumnDateCompl">{timeStamp(dateEpochToStringCompl)}</div>);								
 								adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+tempObjects[keyObject].complete}>{adm_TaskReportResultRow}</div>)
 							}
 						}

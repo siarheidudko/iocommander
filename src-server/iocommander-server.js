@@ -66,6 +66,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				var state_new = {};
 				state_new = lodash.clone(state);
 				state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
+				state_new.tasks[action.payload.user][action.payload.task].datetimecompl = Date.now();
 				state_new.tasks[action.payload.user][action.payload.task].answer = action.payload.answer;
 				return state_new;
 				break;
@@ -281,6 +282,7 @@ function setTask(user_val, value_val){
 			value_val.task.complete = 'false';
 			value_val.task.answer = '';
 			value_val.task.datetime = Date.now();
+			value_val.task.datetimecompl = 0;
 			serverStorage.dispatch({type:'ADD_TASK', payload: {user:renameuser, task:value_val}});
 		} else {
 			console.log(colors.yellow(datetime() + "Некорректный формат задания!"));

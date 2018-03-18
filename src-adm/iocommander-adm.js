@@ -94,13 +94,48 @@ function login(socket, user_val, password_val) {
 	}
 }
 
-//функция для таймштампа
+//функция для таймштампа консоли
 function datetime() {
 	try {
 		var dt = new Date();
 		return '[' + dt.getDate() + '.' + (dt.getMonth()+1) + '.' + dt.getFullYear() + ' - ' + dt.getHours() + '.' + dt.getMinutes() + '.' + dt.getSeconds() + '] ';
 	} catch(e) {
 		console.log("Проблема с функцией datetime()!");
+	}
+}
+
+//
+function timeStamp(dataObject){
+	try {
+		var resultString;
+		if(dataObject.getDate() > 9){
+			resultString = dataObject.getDate() + '.';
+		} else {
+			resultString = '0' + dataObject.getDate() + '.';
+		}
+		if((dataObject.getMonth()+1) > 9){
+			resultString = resultString + (dataObject.getMonth()+1) + '.' + dataObject.getFullYear() + ' ';
+		} else {
+			resultString = resultString + '0' + (dataObject.getMonth()+1) + '.' + dataObject.getFullYear() + ' ';
+		}
+		if(dataObject.getHours() > 9){
+			resultString = resultString + dataObject.getHours() + ':';
+		} else {
+			resultString = resultString + '0' + dataObject.getHours() + ':';
+		}
+		if(dataObject.getMinutes() > 9){
+			resultString = resultString + dataObject.getMinutes() + ':';
+		} else {
+			resultString = resultString + '0' + dataObject.getMinutes() + ':';
+		}
+		if(dataObject.getSeconds() > 9){
+			resultString = resultString + dataObject.getSeconds();
+		} else {
+			resultString = resultString + '0' + dataObject.getSeconds();
+		}
+		return resultString;
+	} catch(e){
+		return '00.00.0000 00:00:00';
 	}
 }
 
@@ -243,6 +278,7 @@ function GenerateReport(){
 							reportStore[keyTask].objects[keyObject] = {};
 						}
 						reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
+						reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
 						reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
 						reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
 					} catch(e){

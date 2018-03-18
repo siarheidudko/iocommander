@@ -92,7 +92,7 @@
 .reportTableRowfalse {
 	background: #ff0000;
 }
-.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate{
+.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl{
 	float: left;
 	border: 1px solid #b3c9ce;
 }
@@ -103,4 +103,6 @@
 .reportTableColumnAnswer{
 }
 .reportTableColumnDate{
+}
+.reportTableColumnDateCompl{	
 }

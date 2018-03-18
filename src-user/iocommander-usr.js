@@ -195,11 +195,17 @@ function listenSocket(socket){
 				if(typeof(data) === 'object'){
 					for(var key in data){
 						try {
-							clientStorage.dispatch({type:'ADD_TASK', payload: {uid:key, task:data[key]}});
+							if(typeof(clientStorage.getState().tasks[key]) === 'undefined'){
+								clientStorage.dispatch({type:'ADD_TASK', payload: {uid:key, task:data[key]}});
+							}
 							if(data[key].complete === 'true'){
 								clientStorage.dispatch({type:'TASK_COMPLETE', payload: {uid:key}});
 							} else {
-								clientStorage.dispatch({type:'TASK_INCOMPLETE', payload: {uid:key}});
+								if(clientStorage.getState().complete.indexOf(key) === -1){
+									clientStorage.dispatch({type:'TASK_INCOMPLETE', payload: {uid:key}});
+								} else {
+									taskOnComplete(socket, key, clientStorage.getState().tasks[key].answer);
+								}
 							}
 						} catch (e) {
 							console.log(colors.red(datetime() + "Не могу добавить задачу в хранилище!"));
@@ -397,7 +403,7 @@ function taskOnComplete(socket, uid_val, answer_val){
 	try {
 		socket.emit('completetask', { uid: uid_val, answer:realAnswer});
 	} catch (e){
-		console.log(colors.red(datetime() + "Не могу отправить отчет о задании в сокет, по причине:" + e));
+		console.log(colors.red(datetime() + "Не могу отправить отчет о задании в сокет, по причине:" + e));		
 	}
 }
 
