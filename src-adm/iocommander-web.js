@@ -390,7 +390,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 		switch (this.state.CommandType){
 			case 'adm_setTask':
 				//поле с uid таска (только чтение)
-				AdminIoCommanderPanelBodyMiddle.push(<div>UID: <input name="SetParamOne" value={this.state.ParamOne} readonly /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div>UID: {this.state.ParamOne}</div>);
 				//выпадающий список типов заданий
 				var adm_setTaskOption = new Array;
 				adm_setTaskOption.push(<option value="">Выберите тип задания</option>);
@@ -545,7 +545,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				AdminIoCommanderPanelBodyMiddle.push(<div> Неизвестный тип команды! </div>);
 				break;
 		};
-		if (this.state.CommandType !== 'adm_TaskReport'){
+		if ((this.state.CommandType !== 'adm_TaskReport') && (this.state.CommandType !== 'adm_TaskOnline')){
 			var AdminIoCommanderPanelBodyBottom = <div className="AdminIoCommanderPanelBodyBottom"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button></div>;
 		}
 		return (

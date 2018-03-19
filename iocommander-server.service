@@ -1,0 +1,11 @@
+[Unit]
+Description=Web and Socket server for iocommander
+after=network.target remote-fs.target nss-lookup.target
+
+[Service]
+WorkingDirectory=/home/iocommander/
+ExecStart=/bin/node /home/iocommander/src-server/iocommander-server.js
+ExecStop=kill -9 $(pidof node)
+
+[Install]
+WantedBy=multi-user.target
