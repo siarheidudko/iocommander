@@ -55,8 +55,8 @@ getSettings().then(function(value){
 						if(typeof(data_val) === 'object'){
 							for(var key_val in data_val){
 								try {
-									if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1)){
-										console.log(colors.yellow(datetime() + "Найдено новое задание: " + key_val));
+									if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
+										console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
 										try {
 											var flag = true;
 											if(Array.isArray(data_val[key_val].dependencies)){
@@ -135,10 +135,6 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 	}
 	return state;
 }
-
-clientStorage.subscribe(function(){
-	//console.log(clientStorage.getState());
-});
 
 
 
@@ -410,7 +406,7 @@ function taskOnComplete(socket, uid_val, answer_val){
 //функция запуска выполнения заданий
 function runTask(socket, key, data){
 	try {
-		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1)) {
+		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
 			switch (data[key].nameTask){
 				case "getFileFromWWW":
 					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName, data[key].platform);

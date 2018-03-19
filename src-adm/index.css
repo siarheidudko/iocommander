@@ -60,7 +60,7 @@
 }
 .PanelBodyMargin {
 	margin:auto;
-	width: 40%;
+	width: 80%;
 	text-align: right;
 }
 .clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5, .AdminIoCommanderPanelBodyBottom{
@@ -86,13 +86,13 @@
 .reportTableRow{
 	display:table;
 }
-.reportTableRowtrue {
+.reportTableRowtrue, .adm_OnlineOn {
 	background: #3cb371;
 }
-.reportTableRowfalse {
+.reportTableRowfalse, .adm_OnlineOff {
 	background: #ff0000;
 }
-.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl{
+.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl, .reportTableColumnDateTimeout{
 	float: left;
 	border: 1px solid #b3c9ce;
 }
@@ -103,6 +103,8 @@
 .reportTableColumnAnswer{
 }
 .reportTableColumnDate{
+}
+.reportTableColumnDateTimeout{
 }
 .reportTableColumnDateCompl{	
 }

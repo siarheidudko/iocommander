@@ -75,11 +75,6 @@ serverStorage.subscribe(function(){ //подпишем генерацию отч
 	GenerateReport();
 });
 
-///////////////////////////////////////////////////
-//ПРИМЕРЫ:
-//	initialiseSocket('serg.dudko', '12345');
-//	window.socket.emit('adm_setTask', ['fitobel.apt01', {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618', 'f0b11bc4-83d2-45aa-ba4d-b3fc86198cbf']}}]);
-//////////////////////////////////////////////////
 
 
 /* ### Раздел функций ### */
@@ -278,9 +273,14 @@ function GenerateReport(){
 							reportStore[keyTask].objects[keyObject] = {};
 						}
 						reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
+						if(typeof(tempStorage[keyObject][keyTask].timeoncompl) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].datetimeout = (new Date(tempStorage[keyObject][keyTask].timeoncompl)).getTime();
+						}
 						reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
 						reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
 						reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
+						reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
+						reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
 					} catch(e){
 						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
 					}

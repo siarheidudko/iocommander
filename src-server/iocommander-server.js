@@ -458,7 +458,7 @@ function startWebServer(port){
 
 //функция очистки хранилища
 function GarbageCollector(){
-	var lifetime = 86400000 * 30; //устанавливаю срок хранения выполненых задач в 30 дней
+	var lifetime = 86400000 * 10; //устанавливаю срок хранения выполненых задач в 10 дней
 	var actualStorage = serverStorage.getState();
 	try{
 		for(var key_object in actualStorage.tasks){
@@ -547,19 +547,6 @@ try {
 		Initialize.then(function(value){
 			if(value === 'okay'){
 				
-			///////////////////////////////////////////////////
-			//ПРИМЕРЫ:
-			//	setUser('fitobel.apt01', 'password', cryptojs.Crypto.SHA256('fitobel.apt01' + '12345678' + 'icommander'));
-			//	setAdmin('administrator', 'password', cryptojs.Crypto.SHA256('administrator' + '12345678' + 'icommander'));
-			//	var task1 = {uid:generateUID(), task: {nameTask:'getFileFromWWW', extLink:'http://vpn.sergdudko.tk/releases/dwpanel-2.2.0-1.noarch.rpm', intLink:'/test/', fileName: '1.rpm', exec:'false', complete:'false', answer:'', dependencies:[], platform:'all'}};
-			//	var task2 = {uid:generateUID(), task: {nameTask:'execFile', intLink:'', fileName: 'node', paramArray:['--version'], complete:'false', answer:'', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618'], platform:'all'}};
-			//	var task3 = {uid:generateUID(), task: {nameTask:'execCommand', execCommand:'echo "111"', platform:'win32', dependencies:['efc0a00f-00b3-489d-be28-b1760be01618', 'f0b11bc4-83d2-45aa-ba4d-b3fc86198cbf']}};
-			//	setTask('fitobel.apt01', task1);
-			//	setTask('fitobel.apt01', task2);
-			//	setTask('fitobel.apt03', task3);
-			//	setTask('fitobel.apt01', task3);
-			//////////////////////////////////////////////////
-			
 				server=http.createServer().listen(port, function() {
 					console.log(colors.gray(datetime() + 'socket-server listening on *:' + port));
 				}); 

@@ -81,6 +81,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 			ParamSix: '',
 			ParamSeven: new Array,
 			ParamEight: new Array,
+			ParamTen: '',
 		};
     }
 	
@@ -100,6 +101,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				this.setState({ParamSix: ''});
 				this.setState({ParamSeven: new Array});
 				this.setState({ParamEight: new Array});
+				this.setState({ParamNine: ''});
+				this.setState({ParamTen: ''});
 				break;
 			default:
 				break;
@@ -164,6 +167,40 @@ class AdminIoCommanderPanelBody extends React.Component{
 					}
 				}
 				break;
+			case 'SetParamNine':
+				var regexp = new RegExp("^.*[^A-z0-9А-я ].*$");
+				if(!regexp.test(e.target.value)){
+					this.setState({ParamNine: e.target.value});
+				}
+				break;
+			case 'SetParamTen':
+				var regexp = new RegExp("^.*[^0-9T:-].*$");
+				if(!regexp.test(e.target.value)){
+					//2018-03-19T18:37:00
+					switch(e.target.value.length){
+						case 4:
+							this.setState({ParamTen: e.target.value + '-'});
+							break;
+						case 7:
+							this.setState({ParamTen: e.target.value + '-'});
+							break;
+						case 10:
+							this.setState({ParamTen: e.target.value + 'T'});
+							break;
+						case 13:
+							this.setState({ParamTen: e.target.value + ':'});
+							break;
+						case 16:
+							this.setState({ParamTen: e.target.value + ':'});
+							break;
+						default:
+							if(e.target.value.length < 20){
+								this.setState({ParamTen: e.target.value});
+							}
+							break;
+					}
+				}
+				break;
 			default:
 				break;
 		}
@@ -176,10 +213,16 @@ class AdminIoCommanderPanelBody extends React.Component{
 					case 'adm_setTask':
 						var onSetTask = false;
 						if((typeof(this.state.ParamOne) === 'string') && (this.state.ParamOne !== '') && (typeof(this.state.ParamTwo) === 'string') && (this.state.ParamTwo !== '') && (typeof(this.state.ParamSix) === 'string') && (this.state.ParamSix !== '') && (typeof(this.state.ParamSeven) === 'object') && (typeof(this.state.ParamEight) === 'object')){
+							var timeOnCompl;
+							try {
+								timeOnCompl = new Date(this.state.ParamTen);
+							} catch(e){
+								timeOnCompl = new Date(0);
+							}
 							switch(this.state.ParamTwo){
 								case 'getFileFromWWW':
 										if((typeof(this.state.ParamThird) === 'string') && (this.state.ParamThird !== '') && (typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.state.ParamFive) === 'string') && (this.state.ParamFive !== '')){
-											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, extLink:this.state.ParamThird, intLink:this.state.ParamFour, fileName: this.state.ParamFive, exec:'false', complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven}};
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, extLink:this.state.ParamThird, intLink:this.state.ParamFour, fileName: this.state.ParamFive, exec:'false', complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
@@ -187,7 +230,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									break;
 								case 'execFile':
 										if((typeof(this.state.ParamThird) === 'string') && (typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.state.ParamFive) === 'string')){
-											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, intLink:this.state.ParamThird, fileName: this.state.ParamFour, paramArray:[this.state.ParamFive], complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven}};
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, intLink:this.state.ParamThird, fileName: this.state.ParamFour, paramArray:[this.state.ParamFive], complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
@@ -195,7 +238,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									break;
 								case 'execCommand':
 										if((typeof(this.state.ParamThird) === 'string') && (this.state.ParamThird !== '')){
-											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, execCommand:this.state.ParamThird, platform:this.state.ParamSix, dependencies:this.state.ParamSeven}};
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, execCommand:this.state.ParamThird, platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
@@ -216,6 +259,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 								this.setState({ParamSix: ''});
 								this.setState({ParamSeven: new Array});
 								this.setState({ParamEight: new Array});
+								this.setState({ParamNine: ''});
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
@@ -234,6 +278,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSix: ''});
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -251,6 +296,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSix: ''});
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -267,6 +313,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSix: ''});
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -283,6 +330,41 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSix: ''});
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
+						break;
+					case 'adm_TaskReport':
+						var user_name = this.state.ParamOne;
+						if((typeof(user_name) === 'string') && (user_name !== '')){
+							window.socket.emit('adm_delAdmin', [user_name]);
+							this.setState({ParamOne: ''});
+							this.setState({ParamTwo: ''});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
+						} else {
+							console.log(datetime() + "Некорректные аргументы!");
+						}
+						break;
+					case 'adm_TaskOnline':
+						var user_name = this.state.ParamOne;
+						if((typeof(user_name) === 'string') && (user_name !== '')){
+							window.socket.emit('adm_delAdmin', [user_name]);
+							this.setState({ParamOne: ''});
+							this.setState({ParamTwo: ''});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -301,7 +383,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 			<img className="imgCommandType" src="./adm_setadmin.png" alt="Добавить администратора" title="Добавить администратора" name="CommandType" id="adm_setAdmin" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_setAdmin')?"2":"0"} />
 			<img className="imgCommandType" src="./adm_deluser.png" alt="Удалить пользователя" title="Удалить пользователя" name="CommandType" id="adm_delUser" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_delUser')?"2":"0"} />
 			<img className="imgCommandType" src="./adm_deladmin.png" alt="Удалить администратора" title="Удалить администратора" name="CommandType" id="adm_delAdmin" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_delAdmin')?"2":"0"} />
-			<img className="imgCommandType" src="./adm_report.png" alt="Отчеты по таскам" title="Отчеты по таскам" name="CommandType" id="adm_TaskReport" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_TaskReport')?"2":"0"} /></p></center>;
+			<img className="imgCommandType" src="./adm_report.png" alt="Отчеты по таскам" title="Отчеты по таскам" name="CommandType" id="adm_TaskReport" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_TaskReport')?"2":"0"} />
+			<img className="imgCommandType" src="./adm_online.png" alt="Текущие соединения" title="Текущие соединения" name="CommandType" id="adm_TaskOnline" onClick={this.onClickHandler.bind(this)} border={(this.state.CommandType === 'adm_TaskOnline')?"2":"0"} /></p></center>;
 		
 		var AdminIoCommanderPanelBodyMiddle = new Array;
 		switch (this.state.CommandType){
@@ -316,6 +399,12 @@ class AdminIoCommanderPanelBody extends React.Component{
 				adm_setTaskOption.push(<option value="execCommand" selected={(this.state.ParamTwo === 'execCommand')?true:false}>Выполнить команду</option>);
 				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOption} </select></p>;
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTask} </div>);
+				if(this.state.ParamTwo !== ''){
+					//Комментарий к таску
+					AdminIoCommanderPanelBodyMiddle.push(<div>Комментарий (для поиска): <input name="SetParamNine" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamNine} /></div>);
+					//Выполнить после
+					AdminIoCommanderPanelBodyMiddle.push(<div>Выполнить после (2018-03-19T18:37:00): <input name="SetParamTen" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTen} /></div>);
+				}
 				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
 						//поле ввода ссылки для скачки
@@ -363,7 +452,6 @@ class AdminIoCommanderPanelBody extends React.Component{
 						}
 					}
 					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты:<br /> {AdminIoCommanderPanelBodyMiddleClients} </div>);
-					
 				}
 				break;
 			case 'adm_setUser':
@@ -403,16 +491,17 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_TaskReportOption = new Array;
 				adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
 				for(var keyTask in adminpanelStorage.getState().report){
-					adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{keyTask}</option>);
+					var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
+					adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
 				}
 				var adm_TaskReport = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>;
 				var adm_TaskReportResult = new Array;
 				if(this.state.ParamOne !== ""){
 					var tempStorage = adminpanelStorage.getState().report;
+					adm_TaskReportResult.push(<div className={'reportTableRow'}>{this.state.ParamOne}</div>)
 					if(typeof(tempStorage[this.state.ParamOne]) !== 'undefined'){
 						var tempObjects = tempStorage[this.state.ParamOne].objects;
-						if(typeof(tempObjects) !== 'undefined'){
-							
+						if(typeof(tempObjects) !== 'undefined'){							
 							for(var keyObject in tempObjects){ //reportTableStaus' + tempObjects[keyObject].complete
 								var adm_TaskReportResultRow = new Array;
 								adm_TaskReportResultRow.push(<div className="reportTableColumnName">{keyObject}</div>);
@@ -420,6 +509,12 @@ class AdminIoCommanderPanelBody extends React.Component{
 								adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">{(tempObjects[keyObject].answer === 'none')?'':tempObjects[keyObject].answer}</div>);
 								var dateEpochToString = new Date(tempObjects[keyObject].datetime);
 								adm_TaskReportResultRow.push(<div className="reportTableColumnDate">{timeStamp(dateEpochToString)}</div>);
+								if((tempObjects[keyObject].datetimeout !== 0) && (typeof(tempObjects[keyObject].datetimeout) !== 'undefined')){
+									var dateEpochToStringTimeout = new Date(tempObjects[keyObject].datetimeout);
+								} else {
+									var dateEpochToStringTimeout = null; //т.к. таймштамп не сможет получить дату от Null, то вернет нули в эксепшн
+								}
+								adm_TaskReportResultRow.push(<div className="reportTableColumnDateTimeout">{timeStamp(dateEpochToStringTimeout)}</div>);
 								if(tempObjects[keyObject].datetimecompl !== 0){
 									var dateEpochToStringCompl = new Date(tempObjects[keyObject].datetimecompl);
 								} else {
@@ -433,6 +528,19 @@ class AdminIoCommanderPanelBody extends React.Component{
 				}
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_TaskReport} <div className="reportTable">{adm_TaskReportResult}</div></div>);
 				break;
+			case 'adm_TaskOnline':
+				//отчет по онлайну
+				var adm_OnlineOn = new Array;
+				var adm_OnlineOff = new Array;
+				for(var keyOnlineAll in serverStorage.getState().users){
+					if(typeof(connectionStorage.getState().users[keyOnlineAll]) !== 'undefined'){
+						adm_OnlineOn.push(<div>{replacer(keyOnlineAll, false)}</div>);
+					} else {
+						adm_OnlineOff.push(<div>{replacer(keyOnlineAll, false)}</div>);
+					}
+				}
+				AdminIoCommanderPanelBodyMiddle.push(<div> <div className="adm_OnlineOn">{adm_OnlineOn}</div><div className="adm_OnlineOff">{adm_OnlineOff}</div> </div>);
+				break;
 			default:
 				AdminIoCommanderPanelBodyMiddle.push(<div> Неизвестный тип команды! </div>);
 				break;
@@ -444,8 +552,10 @@ class AdminIoCommanderPanelBody extends React.Component{
 			<div className="AdminIoCommanderPanelBody">
 				{AdminIoCommanderPanelBodyHeader}
 				<div className="PanelBodyMargin">
-					{AdminIoCommanderPanelBodyMiddle}
-					{AdminIoCommanderPanelBodyBottom}
+					<center>
+						{AdminIoCommanderPanelBodyMiddle}
+						{AdminIoCommanderPanelBodyBottom}
+					</center>
 				</div>
 			</div>
 		);
