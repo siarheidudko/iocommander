@@ -55,6 +55,9 @@ getSettings().then(function(value){
 						if(typeof(data_val) === 'object'){
 							for(var key_val in data_val){
 								try {
+									if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
+										data_val[key_val].timeoncompl = 0;
+									}
 									if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
 										console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
 										try {
@@ -136,6 +139,10 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 	return state;
 }
 
+clientStorage.subscribe(function(){
+	setDatabase();
+});
+
 
 
 /* ### Раздел функций ### */
@@ -154,6 +161,41 @@ function getSettings(){
 			});
 		} catch (e) {
 			console.log(colors.red(datetime() + "Конфигурационный файл недоступен!"));
+			resolve('error');
+		}
+	});
+}
+
+//функция чтения базы данных
+function getDatabase(){
+	return new Promise(function (resolve){
+		try {
+			fs.readFile("./src-user/storage.db", "utf8", function(error,data){
+				if(error) throw error; 
+				try {
+					resolve(JSON.parse(data));
+				} catch(e){
+					console.log(colors.red(datetime() + "База данных испорчена!"));
+					resolve('error');
+				}
+			});
+		} catch (e) {
+			console.log(colors.red(datetime() + "База данных недоступена!"));
+			resolve('error');
+		}
+	});
+}
+
+//функция записи в базу данных
+function setDatabase(){
+	return new Promise(function (resolve){
+		try {
+			fs.writeFileSync('./src-user/storage.db', JSON.stringify(clientStorage.getState()), (err) => {
+			  if (err) throw err;
+			  resolve('save');
+			});
+		} catch (e) {
+			console.log(colors.red(datetime() + "База данных недоступена!"));
 			resolve('error');
 		}
 	});
@@ -198,7 +240,9 @@ function listenSocket(socket){
 								clientStorage.dispatch({type:'TASK_COMPLETE', payload: {uid:key}});
 							} else {
 								if(clientStorage.getState().complete.indexOf(key) === -1){
-									clientStorage.dispatch({type:'TASK_INCOMPLETE', payload: {uid:key}});
+									if(clientStorage.getState().incomplete.indexOf(key) === -1){
+										clientStorage.dispatch({type:'TASK_INCOMPLETE', payload: {uid:key}});
+									}
 								} else {
 									taskOnComplete(socket, key, clientStorage.getState().tasks[key].answer);
 								}
@@ -235,7 +279,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 							filename: fileName
 						};
 						download(extPath, options, function(err){
-							if (err) throw err
+							if (err) throw err;
 							taskOnComplete(socket, uid_val);
 							console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
 							resolve("ok");
