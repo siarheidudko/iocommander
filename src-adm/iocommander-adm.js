@@ -272,15 +272,31 @@ function GenerateReport(){
 						if(typeof(reportStore[keyTask].objects[keyObject]) === 'undefined'){
 							reportStore[keyTask].objects[keyObject] = {};
 						}
-						reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
+						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
+						}
 						if(typeof(tempStorage[keyObject][keyTask].timeoncompl) !== 'undefined'){
 							reportStore[keyTask].objects[keyObject].datetimeout = (new Date(tempStorage[keyObject][keyTask].timeoncompl)).getTime();
 						}
-						reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
-						reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
-						reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
-						reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
-						reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
+						if(typeof(tempStorage[keyObject][keyTask].tryval) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].tryval = tempStorage[keyObject][keyTask].tryval;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].datetimecompl) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].complete) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].answer) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
+							reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].comment) !== 'undefined'){
+							reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
+						}
+						
 					} catch(e){
 						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
 					}

@@ -68,6 +68,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
 				state_new.tasks[action.payload.user][action.payload.task].datetimecompl = Date.now();
 				state_new.tasks[action.payload.user][action.payload.task].answer = action.payload.answer;
+				state_new.tasks[action.payload.user][action.payload.task].tryval = action.payload.tryval;
 				return state_new;
 				break;
 			case 'SYNC':
@@ -145,8 +146,8 @@ function getSettings(){
 	return new Promise(function (resolve){
 		try {
 			fs.readFile("./src-server/iocommander-server.conf", "utf8", function(error,data){
-				if(error) throw error; 
-				try {
+				try {	
+					if(error) throw error; 
 					resolve(JSON.parse(data));
 				} catch(e){
 					console.log(colors.red(datetime() + "Конфигурационный файл испорчен!"));
@@ -283,6 +284,7 @@ function setTask(user_val, value_val){
 			value_val.task.answer = '';
 			value_val.task.datetime = Date.now();
 			value_val.task.datetimecompl = 0;
+			value_val.task.tryval = 0;
 			serverStorage.dispatch({type:'ADD_TASK', payload: {user:renameuser, task:value_val}});
 		} else {
 			console.log(colors.yellow(datetime() + "Некорректный формат задания!"));
@@ -563,7 +565,7 @@ try {
 									console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
 									io.sockets.sockets[socket.id].emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
 									io.sockets.sockets[socket.id].on('completetask', function (data) {
-										serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid, answer:data.answer}});
+										serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid, answer:data.answer, tryval:data.tryval}});
 									});
 								} catch (e) {
 									console.log(colors.red(datetime() + "Ошибка взаимодействия с пользователем " + data.user +": " + e));

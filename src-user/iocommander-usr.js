@@ -130,6 +130,12 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				}
 				return state_new;
 				break;
+			case 'TASK_ERROR':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new.tasks[action.payload.uid].tryval = state.tasks[action.payload.uid].tryval + 1;
+				return state_new;
+				break;
 			default:
 				break;
 		}
@@ -171,8 +177,8 @@ function getDatabase(){
 	return new Promise(function (resolve){
 		try {
 			fs.readFile("./src-user/storage.db", "utf8", function(error,data){
-				if(error) throw error; 
-				try {
+				try {	
+					if(error) throw error; 
 					resolve(JSON.parse(data));
 				} catch(e){
 					console.log(colors.red(datetime() + "База данных испорчена!"));
@@ -180,7 +186,7 @@ function getDatabase(){
 				}
 			});
 		} catch (e) {
-			console.log(colors.red(datetime() + "База данных недоступена!"));
+			console.log(colors.red(datetime() + "База данных недоступна!"));
 			resolve('error');
 		}
 	});
@@ -191,11 +197,16 @@ function setDatabase(){
 	return new Promise(function (resolve){
 		try {
 			fs.writeFileSync('./src-user/storage.db', JSON.stringify(clientStorage.getState()), (err) => {
-			  if (err) throw err;
-			  resolve('save');
+				try{
+					if (err) throw err;
+					resolve('save');
+				} catch(e){
+					console.log(colors.red(datetime() + "Проблема записи в базу данных!"));
+					resolve('error');
+				}
 			});
 		} catch (e) {
-			console.log(colors.red(datetime() + "База данных недоступена!"));
+			console.log(colors.red(datetime() + "База данных недоступна!"));
 			resolve('error');
 		}
 	});
@@ -279,10 +290,20 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 							filename: fileName
 						};
 						download(extPath, options, function(err){
-							if (err) throw err;
-							taskOnComplete(socket, uid_val);
-							console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-							resolve("ok");
+							try{
+								if (err) throw err;
+								taskOnComplete(socket, uid_val);
+								console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+								resolve("ok");
+							} catch(e) {
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, e);
+								}
+								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
+								resolve("error");
+							}
 						});
 						break;
 					case 'linux':
@@ -291,10 +312,20 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 							filename: fileName
 						};
 						download(extPath, options, function(err){
-							if (err) throw err
-							taskOnComplete(socket, uid_val);
-							console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-							resolve("ok");
+							try{
+								if (err) throw err;
+								taskOnComplete(socket, uid_val);
+								console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+								resolve("ok");
+							} catch(e) {
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, e);
+								}
+								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
+								resolve("error");
+							}
 						});
 						break;
 					default:
@@ -328,6 +359,12 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
 							if (error) {
 								throw error;
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, error);
+								}
+								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
 								resolve("error");
 								return;
 							}
@@ -351,6 +388,12 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
 							if (error) {
 								throw error;
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, error);
+								}
+								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
 								resolve("error");
 								return;
 							}
@@ -395,7 +438,13 @@ function execProcess(socket, uid_val, execCommand, platform){
 			if(platform === os.platform()){
 				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
 					if (error) {
-						console.error(`exec error: ${error}`);
+						if(clientStorage.getState().tasks[uid_val].tryval < 100){
+							clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+						} else {
+							taskOnComplete(socket, uid_val, error);
+						}
+						console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
+						resolve("error");
 						return;
 					}
 					if((typeof(stderr) !== 'undefined') && (stderr !== '')){
@@ -418,6 +467,11 @@ function execProcess(socket, uid_val, execCommand, platform){
 				resolve("ok");
 			}
 		} catch (e){
+			if(clientStorage.getState().tasks[uid_val].tryval < 100){
+				clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+			} else {
+				taskOnComplete(socket, uid_val, e);
+			}
 			console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
 			resolve("error");
 		}
@@ -441,7 +495,12 @@ function taskOnComplete(socket, uid_val, answer_val){
 		console.log(colors.red(datetime() + "Не могу изменить состояние таска, по причине:" + e));
 	}
 	try {
-		socket.emit('completetask', { uid: uid_val, answer:realAnswer});
+		if(typeof(clientStorage.getState().tasks[uid_val].TryVal) !== 'undefined'){
+			var TryVal = clientStorage.getState().tasks[uid_val].TryVal;
+		} else {
+			var TryVal = 0;
+		}
+		socket.emit('completetask', { uid: uid_val, answer:realAnswer, tryval: TryVal});
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу отправить отчет о задании в сокет, по причине:" + e));		
 	}
@@ -467,7 +526,7 @@ function runTask(socket, key, data){
 			}
 		}
 	} catch (e) {
-		return new Promise(function(resolve){resolve("error");});
 		console.log(colors.red(datetime() + "Не могу выполнить задание, по причине:" + e));
+		return new Promise(function(resolve){resolve("error");});
 	}
 }
