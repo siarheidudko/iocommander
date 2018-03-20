@@ -15,6 +15,7 @@ child_process = require("child_process"),
 redux=require("redux"),
 lodash=require("lodash");
 var user_val, password_val;
+var SyncDatabaseTimeout = false;
 
 getSettings().then(function(value){
 	if(value !== 'error'){
@@ -27,69 +28,77 @@ getSettings().then(function(value){
 		server_val = value.server,	
 		port_val = value.port,
 		socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
-		do {
-			if (typeof(socket) !== 'undefined'){
-				socket.on('connect', () => {
-					console.log(colors.green(datetime() + "Соединение установлено!"));
-				});
-				socket.on('initialize', function (data) {
-					if(data.value === 'whois'){
-						login(socket);
-					}
-				});
-				socket.on('authorisation', function (data) {
-					if(data.value === 'true'){
-						console.log(colors.green(datetime() + "Авторизация пройдена!"));
-					} else {
-						//если авторизация неудачна, пробую каждые 5 минут
-						console.log(colors.red(datetime() + "Авторизация не пройдена!"));
-						setTimeout(login, 300000);
-					}
-				});
-				//слушаем сокет
-				listenSocket(socket);
-				//проверяем задания каждые 15 сек
-				setInterval(function(){
-					try {
-						var data_val = clientStorage.getState().tasks;
-						if(typeof(data_val) === 'object'){
-							for(var key_val in data_val){
+		getDatabase().then(function (database){
+			if(database !== 'error'){
+				clientStorage.dispatch({type:'DB_SYNC', payload: database});
+				console.log(colors.green(datetime() + "Синхронизация с базой данных выполнена!"));
+			} else {
+				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
+			}
+			do {
+				if (typeof(socket) !== 'undefined'){
+					socket.on('connect', () => {
+						console.log(colors.green(datetime() + "Соединение установлено!"));
+					});
+					socket.on('initialize', function (data) {
+						if(data.value === 'whois'){
+							login(socket);
+						}
+					});
+					socket.on('authorisation', function (data) {
+						if(data.value === 'true'){
+							console.log(colors.green(datetime() + "Авторизация пройдена!"));
+						} else {
+							//если авторизация неудачна, пробую каждые 5 минут
+							console.log(colors.red(datetime() + "Авторизация не пройдена!"));
+							setTimeout(login, 300000);
+						}
+					});
+					//слушаем сокет
+					listenSocket(socket);
+				}
+			} while (typeof(socket) === 'undefined');
+		});
+		//проверяем задания каждые 15 сек
+		setInterval(function(){
+			try {
+				var data_val = clientStorage.getState().tasks;
+				if(typeof(data_val) === 'object'){
+					for(var key_val in data_val){
+						try {
+							if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
+								data_val[key_val].timeoncompl = 0;
+							}
+							if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
+								console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
 								try {
-									if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
-										data_val[key_val].timeoncompl = 0;
-									}
-									if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
-										console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
-										try {
-											var flag = true;
-											if(Array.isArray(data_val[key_val].dependencies)){
-												for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
-													if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
-														flag = false;
-														console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
-													}
-												}
+									var flag = true;
+									if(Array.isArray(data_val[key_val].dependencies)){
+										for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
+											if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
+												flag = false;
+												console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
 											}
-											if(flag){
-												runTask(socket, key_val, data_val);
-											}
-										} catch (e) {
-											console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
 										}
 									}
-								} catch(e){
-									console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
+									if(flag){
+										runTask(socket, key_val, data_val);
+									}
+								} catch (e) {
+									console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
 								}
 							}
-						} else {
-							console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
+						} catch(e){
+							console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 						}
-					} catch(e){
-						console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 					}
-				}, 15000);
+				} else {
+					console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
+				}
+			} catch(e){
+				console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 			}
-		} while (typeof(socket) === 'undefined');
+		}, 15000);
 	}
 }, function(error){
 	console.log(colors.red(datetime() + "Ошибка инициализации!"));
@@ -136,6 +145,12 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				state_new.tasks[action.payload.uid].tryval = state.tasks[action.payload.uid].tryval + 1;
 				return state_new;
 				break;
+			case 'DB_SYNC':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new = action.payload;
+				return state_new;
+				break;
 			default:
 				break;
 		}
@@ -146,7 +161,10 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 }
 
 clientStorage.subscribe(function(){
-	setDatabase();
+	if(!SyncDatabaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен
+		SyncDatabaseTimeout = true; //установим флаг, что в хранилище есть данные ожидающие синхронизации
+		setTimeout(setDatabase,60000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
+	}
 });
 
 
@@ -199,14 +217,17 @@ function setDatabase(){
 			fs.writeFileSync('./src-user/storage.db', JSON.stringify(clientStorage.getState()), (err) => {
 				try{
 					if (err) throw err;
+					SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации
 					resolve('save');
 				} catch(e){
 					console.log(colors.red(datetime() + "Проблема записи в базу данных!"));
+					setTimeout(setDatabase,60000); //при ошибке запустим саму себя через минуту
 					resolve('error');
 				}
 			});
 		} catch (e) {
 			console.log(colors.red(datetime() + "База данных недоступна!"));
+			setTimeout(setDatabase,60000); //при ошибке запустим саму себя через минуту
 			resolve('error');
 		}
 	});

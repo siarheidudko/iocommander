@@ -505,7 +505,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							for(var keyObject in tempObjects){ //reportTableStaus' + tempObjects[keyObject].complete
 								var adm_TaskReportResultRow = new Array;
 								adm_TaskReportResultRow.push(<div className="reportTableColumnName">{keyObject}</div>);
-								adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{(tempObjects[keyObject].complete === 'true')?'Выполнено':'Не выполнено'}</div>);
+								adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'Выполнено':'Не выполнено'}</div>);
 								adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">{(tempObjects[keyObject].answer === 'none')?'':tempObjects[keyObject].answer}</div>);
 								var dateEpochToString = new Date(tempObjects[keyObject].datetime);
 								adm_TaskReportResultRow.push(<div className="reportTableColumnDate">{timeStamp(dateEpochToString)}</div>);
