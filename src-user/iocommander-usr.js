@@ -99,7 +99,7 @@ getSettings().then(function(value){
 				}
 			}, 15000);
 			//запускаю сборщик мусора каждый час
-			setInterval(GarbageCollector, 30000);
+			setInterval(GarbageCollector, 3600000);
 		});
 	}
 }, function(error){
@@ -589,7 +589,7 @@ function runTask(socket, key, data){
 
 //функция очистки хранилища
 function GarbageCollector(){
-	var lifetime = 5000;//86400000 * 10; //устанавливаю срок хранения локальных данных в 10 дней
+	var lifetime = 86400000 * 10; //устанавливаю срок хранения локальных данных в 10 дней
 	var actualStorage = clientStorage.getState();
 	try{
 		try{
