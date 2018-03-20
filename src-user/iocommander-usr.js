@@ -58,47 +58,47 @@ getSettings().then(function(value){
 					listenSocket(socket);
 				}
 			} while (typeof(socket) === 'undefined');
-		});
-		//проверяем задания каждые 15 сек
-		setInterval(function(){
-			try {
-				var data_val = clientStorage.getState().tasks;
-				if(typeof(data_val) === 'object'){
-					for(var key_val in data_val){
-						try {
-							if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
-								data_val[key_val].timeoncompl = 0;
-							}
-							if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
-								console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
-								try {
-									var flag = true;
-									if(Array.isArray(data_val[key_val].dependencies)){
-										for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
-											if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
-												flag = false;
-												console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
+			//проверяем задания каждые 15 сек
+			setInterval(function(){
+				try {
+					var data_val = clientStorage.getState().tasks;
+					if(typeof(data_val) === 'object'){
+						for(var key_val in data_val){
+							try {
+								if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
+									data_val[key_val].timeoncompl = 0;
+								}
+								if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
+									console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
+									try {
+										var flag = true;
+										if(Array.isArray(data_val[key_val].dependencies)){
+											for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
+												if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
+													flag = false;
+													console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
+												}
 											}
 										}
+										if(flag){ 
+											runTask(socket, key_val, data_val);
+										}
+									} catch (e) {
+										console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
 									}
-									if(flag){
-										runTask(socket, key_val, data_val);
-									}
-								} catch (e) {
-									console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
 								}
+							} catch(e){
+								console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 							}
-						} catch(e){
-							console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 						}
+					} else {
+						console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
 					}
-				} else {
-					console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
+				} catch(e){
+					console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 				}
-			} catch(e){
-				console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
-			}
-		}, 15000);
+			}, 15000);
+		});
 	}
 }, function(error){
 	console.log(colors.red(datetime() + "Ошибка инициализации!"));
@@ -161,9 +161,9 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 }
 
 clientStorage.subscribe(function(){
-	if(!SyncDatabaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен
+	if(!SyncDatabaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен 
 		SyncDatabaseTimeout = true; //установим флаг, что в хранилище есть данные ожидающие синхронизации
-		setTimeout(setDatabase,60000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
+		setTimeout(setDatabase,15000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
 	}
 });
 
@@ -212,25 +212,26 @@ function getDatabase(){
 
 //функция записи в базу данных
 function setDatabase(){
-	return new Promise(function (resolve){
-		try {
-			fs.writeFileSync('./src-user/storage.db', JSON.stringify(clientStorage.getState()), (err) => {
-				try{
-					if (err) throw err;
-					SyncFirebaseTimeout = false; //вернем начальное состояние флагу синхронизации
-					resolve('save');
-				} catch(e){
-					console.log(colors.red(datetime() + "Проблема записи в базу данных!"));
-					setTimeout(setDatabase,60000); //при ошибке запустим саму себя через минуту
-					resolve('error');
-				}
-			});
-		} catch (e) {
-			console.log(colors.red(datetime() + "База данных недоступна!"));
-			setTimeout(setDatabase,60000); //при ошибке запустим саму себя через минуту
-			resolve('error');
-		}
-	});
+	try {
+		var resultFs = fs.writeFileSync('./src-user/storage.db', JSON.stringify(clientStorage.getState()), (err) => {
+			try{
+				if (err) throw err;
+			} catch(e){
+				console.log(colors.red(datetime() + "Проблема записи в базу данных!"));
+				setTimeout(setDatabase,15000); //при ошибке запустим саму себя через минуту
+				return;
+			}
+		});
+		if(typeof(resultFs) === 'undefined'){
+			SyncDatabaseTimeout = false; //вернем начальное состояние флагу синхронизации
+			console.log(colors.green(datetime() + "Синхронизация с базой данных выполнена!"));
+			return;
+		};
+	} catch (e) {
+		console.log(colors.red(datetime() + "База данных недоступна!"));
+		setTimeout(setDatabase,15000); //при ошибке запустим саму себя через минуту
+		return;
+	}
 }
 
 //функция авторизации в сокете
@@ -516,8 +517,8 @@ function taskOnComplete(socket, uid_val, answer_val){
 		console.log(colors.red(datetime() + "Не могу изменить состояние таска, по причине:" + e));
 	}
 	try {
-		if(typeof(clientStorage.getState().tasks[uid_val].TryVal) !== 'undefined'){
-			var TryVal = clientStorage.getState().tasks[uid_val].TryVal;
+		if(typeof(clientStorage.getState().tasks[uid_val].tryval) !== 'undefined'){
+			var TryVal = clientStorage.getState().tasks[uid_val].tryval;
 		} else {
 			var TryVal = 0;
 		}
