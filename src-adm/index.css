@@ -12,6 +12,7 @@
 
 /* Скелет админки */
 .AdminIoCommanderPanel{
+	min-width: 1200px;
 	width: 90%;
 	background: #e2e1df;
 	border-radius: 10px;
@@ -60,11 +61,14 @@
 }
 .PanelBodyMargin {
 	margin:auto;
-	width: 80%;
+	width: 90%;
 	text-align: right;
 }
 .clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5, .AdminIoCommanderPanelBodyBottom{
 	float: right;
+}
+.clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
+	width: 120px;
 }
 .clientObject0, .AdminIoCommanderPanelBodyBottom{
 	clear:right;
@@ -85,6 +89,7 @@
 /* Отчеты по таскам */
 .reportTableRow{
 	display:table;
+	min-width: 1000px;
 }
 .reportTableRowtrue, .adm_OnlineOn {
 	background: #3cb371;
@@ -92,19 +97,40 @@
 .reportTableRowfalse, .adm_OnlineOff {
 	background: #ff0000;
 }
-.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl, .reportTableColumnDateTimeout{
-	float: left;
-	border: 1px solid #b3c9ce;
+.reportTableRowtrue, .reportTableRowfalse, .reportTableRowHeader{
+	border-top: 1px solid #b3c9ce;
+	border-bottom: 1px solid #b3c9ce;
+	height: 40px;
+	padding-top: 5px;
+}
+.reportTableRowHeader{
+	background: #ffa500;
 }
 .reportTableColumnName{
+	border-left: 2px solid #b3c9ce;
+}
+.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl, .reportTableColumnDateTimeout{
+	float: left;
+	height:100%;
+	overflow: hidden;
+	text-overflow: clip;
+	border-right: 2px solid #b3c9ce;
+}
+.reportTableColumnName{
+	width: 120px;
 }
 .reportTableColumnStatus{
+	width: 120px;
 }
 .reportTableColumnAnswer{
+	width: 430px;
 }
 .reportTableColumnDate{
+	width: 110px;
 }
 .reportTableColumnDateTimeout{
+	width: 110px;
 }
-.reportTableColumnDateCompl{	
+.reportTableColumnDateCompl{
+	width: 110px;
 }

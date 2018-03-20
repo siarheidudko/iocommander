@@ -501,8 +501,17 @@ class AdminIoCommanderPanelBody extends React.Component{
 					adm_TaskReportResult.push(<div className={'reportTableRow'}>{this.state.ParamOne}</div>)
 					if(typeof(tempStorage[this.state.ParamOne]) !== 'undefined'){
 						var tempObjects = tempStorage[this.state.ParamOne].objects;
-						if(typeof(tempObjects) !== 'undefined'){							
-							for(var keyObject in tempObjects){ //reportTableStaus' + tempObjects[keyObject].complete
+						if(typeof(tempObjects) !== 'undefined'){
+							var adm_TaskReportResultRow = new Array;
+							adm_TaskReportResultRow.push(<div className="reportTableColumnName">Учетная запись</div>);
+							adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">Статус выполнения</div>);
+							adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">Вывод (ответ) консоли</div>);
+							adm_TaskReportResultRow.push(<div className="reportTableColumnDate">Дата создания</div>);
+							adm_TaskReportResultRow.push(<div className="reportTableColumnDateTimeout">Выполнять после</div>);
+							adm_TaskReportResultRow.push(<div className="reportTableColumnDateCompl">Дата выполнения</div>);
+							adm_TaskReportResult.push(<div className="reportTableRow reportTableRowHeader">{adm_TaskReportResultRow}</div>);
+							adm_TaskReportResultRow = null;
+							for(var keyObject in tempObjects){
 								var adm_TaskReportResultRow = new Array;
 								adm_TaskReportResultRow.push(<div className="reportTableColumnName">{keyObject}</div>);
 								adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'Выполнено':'Не выполнено'}</div>);
@@ -521,7 +530,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									var dateEpochToStringCompl = null; //т.к. таймштамп не сможет получить дату от Null, то вернет нули в эксепшн
 								}
 								adm_TaskReportResultRow.push(<div className="reportTableColumnDateCompl">{timeStamp(dateEpochToStringCompl)}</div>);								
-								adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+(((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'true':'false')}>{adm_TaskReportResultRow}</div>)
+								adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+(((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'true':'false')}>{adm_TaskReportResultRow}</div>);
 							}
 						}
 					}
