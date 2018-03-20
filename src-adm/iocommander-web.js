@@ -521,7 +521,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									var dateEpochToStringCompl = null; //т.к. таймштамп не сможет получить дату от Null, то вернет нули в эксепшн
 								}
 								adm_TaskReportResultRow.push(<div className="reportTableColumnDateCompl">{timeStamp(dateEpochToStringCompl)}</div>);								
-								adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+tempObjects[keyObject].complete}>{adm_TaskReportResultRow}</div>)
+								adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+(((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'true':'false')}>{adm_TaskReportResultRow}</div>)
 							}
 						}
 					}
