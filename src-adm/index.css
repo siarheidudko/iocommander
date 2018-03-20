@@ -1,12 +1,20 @@
-/* всплывающее окно online/offline */
-.tooltip {
-	position: fixed;
-	padding: 10px 20px;
+/* компоненты */
+input[type="text"], input[type="password"], select {
+	padding:2px;
 	border: 1px solid #b3c9ce;
 	border-radius: 4px;
 	text-align: left;
-	color: #333;
-	background: #fff;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+input[type="checkbox"] {
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+}
+button{
+	padding:2px;
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+	text-align: left;
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
 }
 
@@ -17,6 +25,7 @@
 	background: #e2e1df;
 	border-radius: 10px;
 	margin: auto;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
 }
 .AdminIoCommanderPanelHeader {
 	border-radius: 10px 10px 0 0;
@@ -82,39 +91,85 @@
 	text-align: right;
 	padding: 20px 0;
 }
+
+/* Кнопки управления */
 .imgCommandType{
 	border-color: #ffa500;
 	border-radius: 4px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
 }
+
+/* Онлайн/Оффлайн */
+.reportOnline {
+	display:table;
+	min-width:1000px;
+}
+.adm_OnlineOff, .adm_OnlineOn {
+	background: #ffa500;
+	border-radius: 10px;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+	width:48%;
+	display:table;
+	padding:5px;
+}
+.adm_OnlineOff {
+	border-left: 1px solid #b3c9ce;
+	float:left;
+}
+.adm_OnlineOn {
+	border-right: 1px solid #b3c9ce;
+	float:right;
+}
+.adm_OnlineOn0, .adm_OnlineOn1, .adm_OnlineOn2, .adm_OnlineOn3, .adm_OnlineOn4 {
+	background: #3cb371;
+}
+.adm_OnlineOff0, .adm_OnlineOff1, .adm_OnlineOff2, .adm_OnlineOff3, .adm_OnlineOff4 {
+	background: #ff0000;
+}
+.adm_OnlineOn0, .adm_OnlineOn1, .adm_OnlineOn2, .adm_OnlineOn3, .adm_OnlineOn4, .adm_OnlineOff0, .adm_OnlineOff1, .adm_OnlineOff2, .adm_OnlineOff3, .adm_OnlineOff4, .adm_OnlineZero {
+	border: 1px solid #b3c9ce;
+	border-radius: 5px;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+	width: 118px;
+	height:18px;
+	float:left;
+}
+.adm_OnlineZero {
+	border: 0px;
+	box-shadow: 0px 0px 0px;
+}
+
 /* Отчеты по таскам */
 .reportTableRow{
 	display:table;
 	min-width: 1000px;
 }
-.reportTableRowtrue, .adm_OnlineOn {
+.reportTableRowtrue {
 	background: #3cb371;
 }
-.reportTableRowfalse, .adm_OnlineOff {
+.reportTableRowfalse {
 	background: #ff0000;
 }
 .reportTableRowtrue, .reportTableRowfalse, .reportTableRowHeader{
 	border-top: 1px solid #b3c9ce;
 	border-bottom: 1px solid #b3c9ce;
 	height: 40px;
-	padding-top: 5px;
+	border-radius: 10px;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
 }
 .reportTableRowHeader{
 	background: #ffa500;
-}
-.reportTableColumnName{
-	border-left: 2px solid #b3c9ce;
 }
 .reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl, .reportTableColumnDateTimeout{
 	float: left;
 	height:100%;
 	overflow: hidden;
 	text-overflow: clip;
-	border-right: 2px solid #b3c9ce;
+	border-right: 1px solid #b3c9ce;
+	padding-top: 5px;
 }
 .reportTableColumnName{
 	width: 120px;
@@ -133,4 +188,17 @@
 }
 .reportTableColumnDateCompl{
 	width: 110px;
+	border-right: 0px;
+}
+
+/* всплывающее окно online/offline */
+.tooltip {
+	position: fixed;
+	padding: 10px 20px;
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+	text-align: left;
+	color: #333;
+	background: #fff;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
 }

@@ -36,7 +36,7 @@ class AdminIoCommanderPanelAuth extends React.Component{
 	render() {
 		var AdminIoCommanderPanelAuth = new Array;
 		//поле ввода логина
-		AdminIoCommanderPanelAuth.push(<div>Логин: <input name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
+		AdminIoCommanderPanelAuth.push(<div>Логин: <input type="text" name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
 		//поле ввода пароля
 		AdminIoCommanderPanelAuth.push(<div>Пароль: <input type="password" name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
 		//кнопка входа
@@ -401,30 +401,30 @@ class AdminIoCommanderPanelBody extends React.Component{
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTask} </div>);
 				if(this.state.ParamTwo !== ''){
 					//Комментарий к таску
-					AdminIoCommanderPanelBodyMiddle.push(<div>Комментарий (для поиска): <input name="SetParamNine" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamNine} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Комментарий (для поиска): <input type="text" name="SetParamNine" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamNine} /></div>);
 					//Выполнить после
-					AdminIoCommanderPanelBodyMiddle.push(<div>Выполнить после (2018-03-19T18:37:00): <input name="SetParamTen" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTen} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Выполнить после (2018-03-19T18:37:00): <input type="text" name="SetParamTen" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTen} /></div>);
 				}
 				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
 						//поле ввода ссылки для скачки
-						AdminIoCommanderPanelBodyMiddle.push(<div>Ссылка для скачки: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						//поле ввода локального пути для сохранения
-						AdminIoCommanderPanelBodyMiddle.push(<div>Локальный путь: <input name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода имени файла для сохранения
-						AdminIoCommanderPanelBodyMiddle.push(<div>Имя файла: <input name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Имя файла: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
 						break;
 					case 'execFile':
 						//поле ввода пути к скрипту
-						AdminIoCommanderPanelBodyMiddle.push(<div>Путь к скрипту: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						//поле ввода имени скрипта
-						AdminIoCommanderPanelBodyMiddle.push(<div>Имя скрипта: <input name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Имя скрипта: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода параметров запуска
-						AdminIoCommanderPanelBodyMiddle.push(<div>Параметры запуска: <input name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Параметры запуска: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
 						break;
 					case 'execCommand':
 						//поле ввода команды запуска
-						AdminIoCommanderPanelBodyMiddle.push(<div>Команда: <input name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div>Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						break;
 				}
 				if(this.state.ParamTwo !== ''){
@@ -439,7 +439,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOptionPlatform} </select></p>;
 					AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTaskOptionPlatformSet} </div>);
 					//поле ввода зависимостей
-					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (через ;): <input name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (через ;): <input type="text" name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
 					//флаг выбора объектов
 					var AdminIoCommanderPanelBodyMiddleClients = new Array;
 					var div_val = 0;
@@ -456,15 +456,15 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'adm_setUser':
 				//поле ввода логина
-				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input type="text" name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
 				//поле ввода пароля
-				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input type="text" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
 				break;
 			case 'adm_setAdmin':
 				//поле ввода логина
-				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input type="text" name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
 				//поле ввода пароля
-				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input type="text" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
 				break;
 			case 'adm_delUser':
 				//выпадающий список пользователей
@@ -539,16 +539,32 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'adm_TaskOnline':
 				//отчет по онлайну
-				var adm_OnlineOn = new Array;
-				var adm_OnlineOff = new Array;
+				var adm_OnlineOn = new Array; var OnlineParam = 0;
+				var adm_OnlineOff = new Array; var OfflineParam = 0;
 				for(var keyOnlineAll in serverStorage.getState().users){
 					if(typeof(connectionStorage.getState().users[keyOnlineAll]) !== 'undefined'){
-						adm_OnlineOn.push(<div>{replacer(keyOnlineAll, false)}</div>);
+						adm_OnlineOn.push(<div className={"adm_OnlineOn" + OnlineParam}>{replacer(keyOnlineAll, false)}</div>);
+						if(OnlineParam < 4){
+							OnlineParam++;
+						} else {
+							OnlineParam = 0;
+						}
 					} else {
-						adm_OnlineOff.push(<div>{replacer(keyOnlineAll, false)}</div>);
+						adm_OnlineOff.push(<div className={"adm_OnlineOff" + OfflineParam}>{replacer(keyOnlineAll, false)}</div>);
+						if(OfflineParam < 4){
+							OfflineParam++;
+						} else {
+							OfflineParam = 0;
+						}
 					}
 				}
-				AdminIoCommanderPanelBodyMiddle.push(<div> <div className="adm_OnlineOn">{adm_OnlineOn}</div><div className="adm_OnlineOff">{adm_OnlineOff}</div> </div>);
+				if(adm_OnlineOn.length === 0){
+					adm_OnlineOn.push(<div className="adm_OnlineZero"></div>);
+				}
+				if(adm_OnlineOff.length === 0){
+					adm_OnlineOff.push(<div className="adm_OnlineZero"></div>);
+				}
+				AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> <div className="adm_OnlineOn">{adm_OnlineOn}</div><div className="adm_OnlineOff">{adm_OnlineOff}</div> </div>);
 				break;
 			default:
 				AdminIoCommanderPanelBodyMiddle.push(<div> Неизвестный тип команды! </div>);
