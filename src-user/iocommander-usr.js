@@ -98,6 +98,8 @@ getSettings().then(function(value){
 					console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 				}
 			}, 15000);
+			//запускаю сборщик мусора каждый час
+			setInterval(GarbageCollector, 30000);
 		});
 	}
 }, function(error){
@@ -124,7 +126,9 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 					state_new.tasks[action.payload.uid].answer = action.payload.answer;
 				}
 				state_new.tasks[action.payload.uid].complete = 'true';
-				state_new.complete.push(action.payload.uid);
+				if(clientStorage.getState().complete.indexOf(action.payload.uid) === -1){
+					state_new.complete.push(action.payload.uid);
+				}
 				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
 					state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
 				}
@@ -133,7 +137,9 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 			case 'TASK_INCOMPLETE':
 				var state_new = {tasks: {}, complete: [], incomplete:[]};
 				state_new = lodash.clone(state);
-				state_new.incomplete.push(action.payload.uid);
+				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) === -1){
+					state_new.incomplete.push(action.payload.uid);
+				}
 				if(clientStorage.getState().complete.indexOf(action.payload.uid) !== -1){
 					state_new.complete.splice(clientStorage.getState().complete.indexOf(action.payload.uid),1);
 				}
@@ -147,8 +153,34 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				break;
 			case 'DB_SYNC':
 				var state_new = {tasks: {}, complete: [], incomplete:[]};
-				state_new = lodash.clone(state);
 				state_new = action.payload;
+				return state_new;
+				break;
+			case 'DB_CLEAR_TASK':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				delete state_new.tasks[action.payload.uid];
+				console.log(colors.yellow(datetime() + "Удаляю задание с истекшим сроком: "  + action.payload.uid));
+				return state_new;
+				break;
+			case 'DB_CLEAR_COMPL':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var taskid = state.complete.indexOf(action.payload.uid);
+				state_new = lodash.clone(state);
+				if(taskid !== -1){
+					state_new.complete.splice(taskid, 1);
+				}
+				console.log(colors.yellow(datetime() + "Удаляю из массива complete, несуществующее задание: "  + action.payload.uid));
+				return state_new;
+				break;
+			case 'DB_CLEAR_INCOMPL':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var taskid = state.incomplete.indexOf(action.payload.uid);
+				state_new = lodash.clone(state);
+				if(taskid !== -1){
+					state_new.incomplete.splice(taskid, 1);
+				}
+				console.log(colors.yellow(datetime() + "Удаляю из массива incomplete, несуществующее задание: "  + action.payload.uid));
 				return state_new;
 				break;
 			default:
@@ -270,7 +302,9 @@ function listenSocket(socket){
 								clientStorage.dispatch({type:'ADD_TASK', payload: {uid:key, task:data[key]}});
 							}
 							if(data[key].complete === 'true'){
-								clientStorage.dispatch({type:'TASK_COMPLETE', payload: {uid:key}});
+								if(clientStorage.getState().complete.indexOf(key) === -1){
+									clientStorage.dispatch({type:'TASK_COMPLETE', payload: {uid:key}});
+								}
 							} else {
 								if(clientStorage.getState().complete.indexOf(key) === -1){
 									if(clientStorage.getState().incomplete.indexOf(key) === -1){
@@ -550,5 +584,56 @@ function runTask(socket, key, data){
 	} catch (e) {
 		console.log(colors.red(datetime() + "Не могу выполнить задание, по причине:" + e));
 		return new Promise(function(resolve){resolve("error");});
+	}
+}
+
+//функция очистки хранилища
+function GarbageCollector(){
+	var lifetime = 5000;//86400000 * 10; //устанавливаю срок хранения локальных данных в 10 дней
+	var actualStorage = clientStorage.getState();
+	try{
+		try{
+			for(var keyTask in actualStorage.tasks){
+				try{
+					if((actualStorage.tasks[keyTask].datetime + lifetime) < Date.now()){
+						clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по таскам: "  + e));
+		}
+		try{
+			for(var i = 0; i < actualStorage.complete.length; i++){
+				try {
+					var actualUidCompl = actualStorage.complete[i];
+					if(typeof(actualStorage.tasks[actualUidCompl]) === 'undefined'){
+						clientStorage.dispatch({type:'DB_CLEAR_COMPL', payload: {uid:actualUidCompl}});
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора в массиве complete не обработан id: "  + i));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву complete: "  + e));
+		}
+		try{
+			for(var j = 0; j < actualStorage.incomplete.length; j++){
+				try{
+					var actualUidIncompl = actualStorage.incomplete[j];
+					if(typeof(actualStorage.tasks[actualUidIncompl]) === 'undefined'){
+						clientStorage.dispatch({type:'DB_CLEAR_INCOMPL', payload: {uid:actualUidIncompl}});
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора в массиве incomplete не обработан id: "  + j));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву incomplete: "  + e));
+		}
+	} catch(e){
+		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
 	}
 }
