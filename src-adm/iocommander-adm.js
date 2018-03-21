@@ -360,3 +360,4 @@ function GenerateGroup(){
 	}
 	adminpanelStorage.dispatch({type:'GEN_GROUP', payload: {groups:groupStorage}});
 }
+

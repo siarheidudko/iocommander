@@ -16,12 +16,17 @@ button{
 	border-radius: 4px;
 	text-align: left;
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
 }
 
 /* Скелет админки */
-.AdminIoCommanderPanel{
-	min-width: 1200px;
+.AdminIoCommander{
 	width: 90%;
+}
+.AdminIoCommanderPanel{
+	width: 1400px;
 	background: #e2e1df;
 	border-radius: 10px;
 	margin: auto;
@@ -87,6 +92,8 @@ button{
 .AdminIoCommanderPanelBodyBottom{
 	float:center;
 	margin:auto;
+}
+.inputFieldCenterRightBotton{
 	padding-top:20px;
 }
 .AdminIoCommanderPanelAuth {
