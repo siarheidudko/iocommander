@@ -1,6 +1,6 @@
 # IoCommander v1.0.0 - Установка сервера
 
-# Создание проекта firebase
+## Создание проекта firebase
 
 - Создаете новый проект по адресу https://console.firebase.google.com
 
@@ -47,7 +47,18 @@
 
 ![Screenshot_9](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_9.png)
 
-# Настройка проекта
+## Зависимости проекта
+
+- socket.io
+- http
+- colors
+- fs
+- cryptojs
+- redux
+- lodash
+- firebase
+
+## Настройка проекта
 
 - Копируете файлы проекта, например в папку /home/iocommander/*
 
