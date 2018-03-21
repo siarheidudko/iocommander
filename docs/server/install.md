@@ -4,27 +4,27 @@
 
 - Создаете новый проект по адресу https://console.firebase.google.com
 
-![Screenshot_1](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_1.jpg)
+![Screenshot_1](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_1.png)
 
 - Вводите название проекта и страну
 
-![Screenshot_2](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_2.jpg)
+![Screenshot_2](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_2.png)
 
 - Выбираете Разработка/Авторизация
 
-![Screenshot_3](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_3.jpg)
+![Screenshot_3](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_3.png)
 
 - Выбираете способы входа и включаете вход по адресу электронной почты и паролю
 
-![Screenshot_4](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_4.jpg)
+![Screenshot_4](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_4.png)
 
 - Выбираете пользователи и создаете нового
 
-![Screenshot_5](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_5.jpg)
+![Screenshot_5](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_5.png)
 
 - Выбираете Базы данных/База данных реального времени
 
-![Screenshot_6](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_6.jpg)
+![Screenshot_6](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_6.png)
 
 - Выбираете правила и задаете права на чтение/запись только для созданного выше пользователя:
 
@@ -37,15 +37,15 @@
 }
 ```
 
-![Screenshot_7](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_7.jpg)
+![Screenshot_7](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_7.png)
 
 - Заходите в настройки/настройки проекта
 
-![Screenshot_8](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_8.jpg)
+![Screenshot_8](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_8.png)
 
 - Запоминаете Идентификатор проекта и ключ апи веб-приложения
 
-![Screenshot_9](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_9.jpg)
+![Screenshot_9](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_9.png)
 
 # Настройка проекта
 
