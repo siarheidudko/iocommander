@@ -412,7 +412,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 						break;
 				}
 			} else {
-				taskOnComplete(socket, uid_val);
+				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
 				resolve("ok");
 			}
@@ -497,7 +497,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						break;
 				}
 			} else {
-				taskOnComplete(socket, uid_val);
+				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
 				resolve("ok");
 			}
@@ -539,7 +539,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 					resolve("ok");
 				});
 			} else {
-				taskOnComplete(socket, uid_val);
+				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
 				resolve("ok");
 			}
