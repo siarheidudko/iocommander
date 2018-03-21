@@ -49,19 +49,27 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 	}
 	return state;
 }
-function editAdmpanelStore(state = {auth: false, report:{}}, action){
+function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
-				var state_new = _.clone(state);
+				var state_new = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}};
+				state_new = _.clone(state);
 				state_new.auth = action.payload.auth;
 				return state_new;
 				break;
 			case 'GEN_REPORT':
-				var state_new = _.clone(state);
+				var state_new = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}};
+				state_new = _.clone(state);
 				state_new.report = action.payload.report
 				state_new.reportsort = action.payload.reportsort;
 				state_new.reportsortvalid = action.payload.reportsortvalid;
+				return state_new;
+				break;
+			case 'GEN_GROUP':
+				var state_new = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}};
+				state_new = _.clone(state);
+				state_new.groups = action.payload.groups;
 				return state_new;
 				break;
 			default:
@@ -75,6 +83,7 @@ function editAdmpanelStore(state = {auth: false, report:{}}, action){
 
 serverStorage.subscribe(function(){ //подпишем генерацию отчетов на изменение состояния постоянного хранилища
 	GenerateReport();
+	GenerateGroup();
 });
 
 
@@ -332,4 +341,22 @@ function GenerateReport(){
 	} catch(e){
 		console.log(datetime() + "Ошибка генерации отчетов по таскам!");
 	}
+}
+
+//функция генерации груп
+function GenerateGroup(){
+	var tempStorage = serverStorage.getState().users;
+	var groupStorage = {};
+	groupStorage['all'] = [];
+	for(var keyObject in tempStorage){
+		var replaceKeyObject = replacer(keyObject, false);
+		var groupNameArr = replaceKeyObject.split('.');
+		var groupName = groupNameArr[0];
+		if(typeof(groupStorage[groupName]) === 'undefined'){
+			groupStorage[groupName] = [];
+		}
+		groupStorage[groupName].push(replaceKeyObject);
+		groupStorage['all'].push(replaceKeyObject);
+	}
+	adminpanelStorage.dispatch({type:'GEN_GROUP', payload: {groups:groupStorage}});
 }

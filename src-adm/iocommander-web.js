@@ -82,6 +82,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 			ParamSeven: new Array,
 			ParamEight: new Array,
 			ParamTen: '',
+			ParamEleven: '',
 		};
     }
 	
@@ -103,6 +104,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				this.setState({ParamEight: new Array});
 				this.setState({ParamNine: ''});
 				this.setState({ParamTen: ''});
+				this.setState({ParamEleven: ''});
 				break;
 			default:
 				break;
@@ -201,6 +203,29 @@ class AdminIoCommanderPanelBody extends React.Component{
 					}
 				}
 				break;
+			case 'SetParamEleven':
+				if(e.target.value !== ""){
+					var tempArr = _.clone(adminpanelStorage.getState().groups[e.target.value]);
+					var tempNewArr = _.clone(this.state.ParamEight);
+					for(var i =0; i< tempArr.length;i++){
+						if(tempNewArr.indexOf(tempArr[i]) === -1){
+							tempNewArr.push(tempArr[i]);
+						}
+					}
+					this.setState({ParamEight: tempNewArr});
+					this.setState({ParamEleven: e.target.value});
+				} else {
+					var tempArr = _.clone(adminpanelStorage.getState().groups[this.state.ParamEleven]);
+					var tempNewArr = _.clone(this.state.ParamEight);
+					for(var i =0; i< tempArr.length;i++){
+						if(tempNewArr.indexOf(tempArr[i]) !== -1){
+							tempNewArr.splice(tempNewArr.indexOf(tempArr[i]), 1);
+						}
+					}
+					this.setState({ParamEight: tempNewArr});
+					this.setState({ParamEleven: e.target.value});
+				}
+				break;
 			default:
 				break;
 		}
@@ -260,6 +285,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 								this.setState({ParamSeven: new Array});
 								this.setState({ParamEight: new Array});
 								this.setState({ParamNine: ''});
+								this.setState({ParamTen: ''});
+								this.setState({ParamEleven: ''});
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
@@ -279,6 +306,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
 							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -297,6 +326,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
 							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -314,6 +345,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
 							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -331,6 +364,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
 							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -348,6 +383,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
 							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -365,6 +402,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamSeven: new Array});
 							this.setState({ParamEight: new Array});
 							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 						}
@@ -439,7 +478,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOptionPlatform} </select></p>;
 					AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTaskOptionPlatformSet} </div>);
 					//поле ввода зависимостей
-					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (через ;): <input type="text" name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (необязательно, через ;): <input type="text" name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
 					//флаг выбора объектов
 					var AdminIoCommanderPanelBodyMiddleClients = new Array;
 					var div_val = 0;
@@ -451,7 +490,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 							div_val = 0;
 						}
 					}
-					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты:<br /> {AdminIoCommanderPanelBodyMiddleClients} </div>);
+					var AdminIoCommanderPanelBodyMiddleGroupsSet = new Array;
+					AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value="">Выберите группу (не обязательно)</option>);
+					for(var keyGroup in adminpanelStorage.getState().groups){
+						AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value={keyGroup} selected={(this.state.ParamEleven === keyGroup)?true:false}>{keyGroup}</option>);
+					}
+					var AdminIoCommanderPanelBodyMiddleGroups = <p><select size="1" name="SetParamEleven" onChange={this.onChangeHandler.bind(this)}> {AdminIoCommanderPanelBodyMiddleGroupsSet} </select></p>;
+					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты:<br /> {AdminIoCommanderPanelBodyMiddleGroups}<br />{AdminIoCommanderPanelBodyMiddleClients} </div>);
 				}
 				break;
 			case 'adm_setUser':

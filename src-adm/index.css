@@ -69,20 +69,24 @@ button{
 	padding: 0 20px 20px 20px;
 }
 .PanelBodyMargin {
+	display:table;
 	margin:auto;
 	width: 90%;
 	text-align: right;
 }
-.clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5, .AdminIoCommanderPanelBodyBottom{
-	float: right;
+.clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
+	float: left;
 }
 .clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
 	width: 120px;
+	margin:auto;
 }
 .clientObject0, .AdminIoCommanderPanelBodyBottom{
-	clear:right;
+	clear:left;
 }
 .AdminIoCommanderPanelBodyBottom{
+	float:center;
+	margin-left:30%;
 	margin-bottom: 20px;
 }
 .AdminIoCommanderPanelAuth {
