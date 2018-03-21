@@ -68,7 +68,7 @@ getSettings().then(function(value){
 								if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
 									data_val[key_val].timeoncompl = 0;
 								}
-								if((data_val[key_val].complete !== 'true') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
+								if((data_val[key_val].complete !== 'true') && (typeof(clientStorage.getState().executetask[key_val]) === 'undefined') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
 									console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
 									try {
 										var flag = true;
@@ -110,17 +110,17 @@ getSettings().then(function(value){
 
 /* ### Хранилище состояний ### */
 var clientStorage = redux.createStore(editStore);
-function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
+function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:{}}, action){
 	try {
 		switch (action.type){
 			case 'ADD_TASK':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
 				state_new.tasks[action.payload.uid] = action.payload.task;
 				return state_new;
 				break;
 			case 'TASK_COMPLETE':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
 				if((typeof(action.payload.answer) !== 'undefined') && (action.payload.answer !== '')){
 					state_new.tasks[action.payload.uid].answer = action.payload.answer;
@@ -132,10 +132,11 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
 					state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
 				}
+				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			case 'TASK_INCOMPLETE':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
 				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) === -1){
 					state_new.incomplete.push(action.payload.uid);
@@ -146,25 +147,33 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				return state_new;
 				break;
 			case 'TASK_ERROR':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
 				state_new.tasks[action.payload.uid].tryval = state.tasks[action.payload.uid].tryval + 1;
+				delete state_new.executetask[action.payload.uid];
+				return state_new;
+				break;
+			case 'TASK_START':
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
+				state_new = lodash.clone(state);
+				state_new.executetask[action.payload.uid] = Date.now();
 				return state_new;
 				break;
 			case 'DB_SYNC':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = action.payload;
+				state_new.executetask = [];
 				return state_new;
 				break;
 			case 'DB_CLEAR_TASK':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
 				delete state_new.tasks[action.payload.uid];
 				console.log(colors.yellow(datetime() + "Удаляю задание с истекшим сроком: "  + action.payload.uid));
 				return state_new;
 				break;
 			case 'DB_CLEAR_COMPL':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				var taskid = state.complete.indexOf(action.payload.uid);
 				state_new = lodash.clone(state);
 				if(taskid !== -1){
@@ -174,7 +183,7 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				return state_new;
 				break;
 			case 'DB_CLEAR_INCOMPL':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				var taskid = state.incomplete.indexOf(action.payload.uid);
 				state_new = lodash.clone(state);
 				if(taskid !== -1){
@@ -184,9 +193,15 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				return state_new;
 				break;
 			case 'DB_REPLANSW_TASK':
-				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
 				state_new.tasks[action.payload.uid].answer = state.tasks[action.payload.uid].answer.substring(0,500) + '...';
+				return state_new;
+				break;
+			case 'DB_CLEAR_EXECUTETASK':
+				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
+				state_new = lodash.clone(state);
+				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			default:
@@ -575,7 +590,8 @@ function taskOnComplete(socket, uid_val, answer_val){
 //функция запуска выполнения заданий
 function runTask(socket, key, data){
 	try {
-		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
+		if((data[key].complete !== 'true') && (typeof(clientStorage.getState().executetask[key]) === 'undefined') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
+			clientStorage.dispatch({type:'TASK_START', payload: {uid:key}});
 			switch (data[key].nameTask){
 				case "getFileFromWWW":
 					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName, data[key].platform);
@@ -650,6 +666,24 @@ function GarbageCollector(){
 			}
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву incomplete: "  + e));
+		}
+		try{
+			var lifeexec = 43200000; //срок выполнения задания (ставлю 12 часов)
+			for(var keyTask in actualStorage.executetask){
+				try{
+					if(typeof(actualStorage.tasks[keyTask]) === 'undefined'){
+						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
+					} else if (actualStorage.tasks[keyTask].complete === 'true') {
+						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
+					} else if ((actualStorage.executetask + lifeexec) < Date.now()){
+						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора в массиве executetask не обработан id: "  + keyTask));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву executetask: "  + e));
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
