@@ -183,6 +183,12 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 				console.log(colors.yellow(datetime() + "Удаляю из массива incomplete, несуществующее задание: "  + action.payload.uid));
 				return state_new;
 				break;
+			case 'DB_REPLANSW_TASK':
+				var state_new = {tasks: {}, complete: [], incomplete:[]};
+				state_new = lodash.clone(state);
+				state_new.tasks[action.payload.uid].answer = state.tasks[action.payload.uid].substring(0,500) + '...';
+				return state_new;
+				break;
 			default:
 				break;
 		}
@@ -428,7 +434,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
 								} else {
-									returnAnswer = 'Ошибока: ' + stderr;
+									returnAnswer = 'Ошибки: ' + stderr;
 								}					
 							} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 								returnAnswer = 'Результат: ' + stdout;
@@ -457,7 +463,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
 								} else {
-									returnAnswer = 'Ошибока: ' + stderr;
+									returnAnswer = 'Ошибки: ' + stderr;
 								}					
 							} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 								returnAnswer = 'Результат: ' + stdout;
@@ -543,6 +549,10 @@ function taskOnComplete(socket, uid_val, answer_val){
 		} else if (typeof(answer_val) === 'string'){
 			realAnswer = answer_val;
 		}
+		if(realAnswer.length > 503){
+			realAnswer = realAnswer.substring(0,500) + '...';
+		}
+		realAnswer = realAnswer.replace(/([^>])\n+/g, '<br />');
 	} catch (e){}
 	try {
 		clientStorage.dispatch({type:'TASK_COMPLETE', payload: {uid:uid_val, answer:realAnswer}});
@@ -600,6 +610,14 @@ function GarbageCollector(){
 					}
 				} catch(e){
 					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
+				}
+				try{
+					if(actualStorage.tasks[keyTask].answer.length > 503){
+						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
+						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
 				}
 			}
 		} catch(e){

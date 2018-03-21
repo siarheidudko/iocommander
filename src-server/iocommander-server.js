@@ -87,6 +87,12 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				delete state_new.tasks[action.payload.user];
 				return state_new;
 				break;
+			case 'GC_TASK_REPLANSW':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				state_new.tasks[action.payload.user][action.payload.task].answer = state_new.tasks[action.payload.user][action.payload.task].answer.substring(0,500) + '...';
+				return state_new;
+				break;
 			default:
 				break;
 		}
@@ -477,6 +483,14 @@ function GarbageCollector(){
 							}
 						} catch (e){
 							console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
+						}
+						try {
+							if(actualStorage.tasks[key_object][key_task].answer.length > 503){
+								serverStorage.dispatch({type:'GC_TASK_REPLANSW', payload: {user:key_object, task:key_task}});
+								console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + key_task + "(" + replacer(key_object, false) + "), обрезаю!"));
+							}
+						} catch(e){
+							console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
 						}
 					}
 				}
