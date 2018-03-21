@@ -36,11 +36,11 @@ class AdminIoCommanderPanelAuth extends React.Component{
 	render() {
 		var AdminIoCommanderPanelAuth = new Array;
 		//поле ввода логина
-		AdminIoCommanderPanelAuth.push(<div>Логин: <input type="text" name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
+		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
 		//поле ввода пароля
-		AdminIoCommanderPanelAuth.push(<div>Пароль: <input type="password" name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter">Пароль: <input type="password" name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
 		//кнопка входа
-		AdminIoCommanderPanelAuth.push(<div><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
+		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
 		
 		return (
 			<div className="AdminIoCommanderPanelAuth">
@@ -440,30 +440,31 @@ class AdminIoCommanderPanelBody extends React.Component{
 				AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTask} </div>);
 				if(this.state.ParamTwo !== ''){
 					//Комментарий к таску
-					AdminIoCommanderPanelBodyMiddle.push(<div>Комментарий (для поиска): <input type="text" name="SetParamNine" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamNine} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Комментарий (для поиска): <input type="text" name="SetParamNine" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamNine} /></div>);
 					//Выполнить после
-					AdminIoCommanderPanelBodyMiddle.push(<div>Выполнить после (2018-03-19T18:37:00): <input type="text" name="SetParamTen" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTen} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Выполнить после (2018-03-19T18:37:00): <input type="text" name="SetParamTen" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTen} /></div>);
+					
 				}
 				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
 						//поле ввода ссылки для скачки
-						AdminIoCommanderPanelBodyMiddle.push(<div>Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						//поле ввода локального пути для сохранения
-						AdminIoCommanderPanelBodyMiddle.push(<div>Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода имени файла для сохранения
-						AdminIoCommanderPanelBodyMiddle.push(<div>Имя файла: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Имя файла: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
 						break;
 					case 'execFile':
 						//поле ввода пути к скрипту
-						AdminIoCommanderPanelBodyMiddle.push(<div>Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						//поле ввода имени скрипта
-						AdminIoCommanderPanelBodyMiddle.push(<div>Имя скрипта: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Имя скрипта: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода параметров запуска
-						AdminIoCommanderPanelBodyMiddle.push(<div>Параметры запуска: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Параметры запуска: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
 						break;
 					case 'execCommand':
 						//поле ввода команды запуска
-						AdminIoCommanderPanelBodyMiddle.push(<div>Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
 						break;
 				}
 				if(this.state.ParamTwo !== ''){
@@ -478,7 +479,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOptionPlatform} </select></p>;
 					AdminIoCommanderPanelBodyMiddle.push(<div> {adm_setTaskOptionPlatformSet} </div>);
 					//поле ввода зависимостей
-					AdminIoCommanderPanelBodyMiddle.push(<div>Зависимости (необязательно, через ;): <input type="text" name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Зависимости (необязательно, через ;): <input type="text" name="SetParamSeven" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamSeven.join(';')} /></div>);
 					//флаг выбора объектов
 					var AdminIoCommanderPanelBodyMiddleClients = new Array;
 					var div_val = 0;
@@ -496,20 +497,20 @@ class AdminIoCommanderPanelBody extends React.Component{
 						AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value={keyGroup} selected={(this.state.ParamEleven === keyGroup)?true:false}>{keyGroup}</option>);
 					}
 					var AdminIoCommanderPanelBodyMiddleGroups = <p><select size="1" name="SetParamEleven" onChange={this.onChangeHandler.bind(this)}> {AdminIoCommanderPanelBodyMiddleGroupsSet} </select></p>;
-					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты:<br /> {AdminIoCommanderPanelBodyMiddleGroups}<br />{AdminIoCommanderPanelBodyMiddleClients} </div>);
+					AdminIoCommanderPanelBodyMiddle.push(<div>Объекты:<br /> {AdminIoCommanderPanelBodyMiddleGroups}<br /><div className="objectTable">{AdminIoCommanderPanelBodyMiddleClients}</div> </div>);
 				}
 				break;
 			case 'adm_setUser':
 				//поле ввода логина
-				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input type="text" name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
 				//поле ввода пароля
-				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input type="text" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenter">Пароль: <input type="text" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
 				break;
 			case 'adm_setAdmin':
 				//поле ввода логина
-				AdminIoCommanderPanelBodyMiddle.push(<div>Логин: <input type="text" name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamOne" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamOne} /></div>);
 				//поле ввода пароля
-				AdminIoCommanderPanelBodyMiddle.push(<div>Пароль: <input type="text" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenter">Пароль: <input type="text" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamTwo} /></div>);
 				break;
 			case 'adm_delUser':
 				//выпадающий список пользователей
@@ -624,7 +625,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 		};
 		if ((this.state.CommandType !== 'adm_TaskReport') && (this.state.CommandType !== 'adm_TaskOnline')){
-			var AdminIoCommanderPanelBodyBottom = <div className="AdminIoCommanderPanelBodyBottom"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button></div>;
+			var AdminIoCommanderPanelBodyBottom = <div className={"AdminIoCommanderPanelBodyBottom" + ((this.state.CommandType === 'adm_setTask')?" inputFieldCenterRight":"") + (((this.state.CommandType === 'adm_setUser') || this.state.CommandType === 'adm_setAdmin')?" inputFieldCenter":"") + (((this.state.CommandType === 'adm_delUser') || this.state.CommandType === 'adm_delAdmin')?" inputFieldCenterReal":"")}><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Выполнить</button></div>;
 		}
 		return (
 			<div className="AdminIoCommanderPanelBody">

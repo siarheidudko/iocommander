@@ -86,14 +86,30 @@ button{
 }
 .AdminIoCommanderPanelBodyBottom{
 	float:center;
-	margin-left:30%;
-	margin-bottom: 20px;
+	margin:auto;
+	padding-top:20px;
 }
 .AdminIoCommanderPanelAuth {
+	padding: 20px 0;
+}
+.inputFieldCenter {
+	margin:auto;
+	width: 25%;
+	text-align: right;
+}
+.inputFieldCenterRight {
 	margin:auto;
 	width: 40%;
 	text-align: right;
-	padding: 20px 0;
+}
+.inputFieldCenterReal{
+	margin:auto;
+	width: 10%;
+	text-align: right;
+}
+.objectTable{
+	margin:auto;
+	width: 60%;
 }
 
 /* Кнопки управления */
