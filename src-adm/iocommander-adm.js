@@ -59,7 +59,9 @@ function editAdmpanelStore(state = {auth: false, report:{}}, action){
 				break;
 			case 'GEN_REPORT':
 				var state_new = _.clone(state);
-				state_new.report = action.payload.report;
+				state_new.report = action.payload.report
+				state_new.reportsort = action.payload.reportsort;
+				state_new.reportsortvalid = action.payload.reportsortvalid;
 				return state_new;
 				break;
 			default:
@@ -257,6 +259,7 @@ function GenerateReport(){
 	try {
 		var tempStorage = serverStorage.getState().tasks;
 		var reportStore = {};
+		var reportSortStore = {};
 		for(var keyObject in tempStorage){
 			try {
 				for(var keyTask in tempStorage[keyObject]){
@@ -296,16 +299,36 @@ function GenerateReport(){
 						if(typeof(tempStorage[keyObject][keyTask].comment) !== 'undefined'){
 							reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
 						}
-						
 					} catch(e){
 						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
 					}
+				}
+				var reportSortValidate1 = 0;
+				var reportSortValidate2 = 0;
+				var reportSortValidate = false;
+				reportSortStore = {};
+				var reportSortStoreTemp = {};
+				var reportSortStoreArray = [];
+				for(var keyTask in reportStore){
+					reportSortStoreTemp[reportStore[keyTask].datetime] = keyTask;
+					reportSortStoreArray.push(reportStore[keyTask].datetime);
+					reportSortValidate1++;
+				}
+				reportSortStoreArray = reportSortStoreArray.sort();
+				for(var i = reportSortStoreArray.length-1; i>-1; i--){
+					reportSortStore[reportSortStoreArray[i]] = reportSortStoreTemp[reportSortStoreArray[i]];
+				}
+				for(var keyTime in reportSortStore){
+					reportSortValidate2++;
+				}
+				if(reportSortValidate1 === reportSortValidate2){
+					reportSortValidate = true;
 				}
 			} catch(e){
 				console.log(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!");
 			}
 		}
-		adminpanelStorage.dispatch({type:'GEN_REPORT', payload: {report:reportStore}});
+		adminpanelStorage.dispatch({type:'GEN_REPORT', payload: {report:reportStore, reportsort:reportSortStore, reportsortvalid:reportSortValidate}});
 	} catch(e){
 		console.log(datetime() + "Ошибка генерации отчетов по таскам!");
 	}

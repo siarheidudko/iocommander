@@ -122,7 +122,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				this.setState({ParamTwo: e.target.value});
 				break;
 			case 'SetParamThird':
-				var regexp = new RegExp("^.*[^A-z0-9\. \?\/&_:-].*$");
+				var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!@-].*$");
 				if((!regexpAll.test(e.target.value)) && (this.state.ParamTwo !== 'execCommand')){
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
 				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execCommand')) {
@@ -490,9 +490,17 @@ class AdminIoCommanderPanelBody extends React.Component{
 				//отчеты по таскам
 				var adm_TaskReportOption = new Array;
 				adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
-				for(var keyTask in adminpanelStorage.getState().report){
-					var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
-					adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
+				if(adminpanelStorage.getState().reportsortvalid){ //если у нас не было двух uid в одну мс, сортируем объект по времени
+					for(var keyTime in adminpanelStorage.getState().reportsort){ 
+						var keyTask = adminpanelStorage.getState().reportsort[keyTime];
+						var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
+						adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
+					}
+				} else {
+					for(var keyTask in adminpanelStorage.getState().report){
+						var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
+						adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
+					}
 				}
 				var adm_TaskReport = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>;
 				var adm_TaskReportResult = new Array;
