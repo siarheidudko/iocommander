@@ -4,11 +4,55 @@
 
 - Создаете новый проект по адресу https://console.firebase.google.com
 
+![Screenshot_1](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_1.jpg)
 
+- Вводите название проекта и страну
+
+![Screenshot_2](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_2.jpg)
+
+- Выбираете Разработка/Авторизация
+
+![Screenshot_3](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_3.jpg)
+
+- Выбираете способы входа и включаете вход по адресу электронной почты и паролю
+
+![Screenshot_4](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_4.jpg)
+
+- Выбираете пользователи и создаете нового
+
+![Screenshot_5](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_5.jpg)
+
+- Выбираете Базы данных/База данных реального времени
+
+![Screenshot_6](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_6.jpg)
+
+- Выбираете правила и задаете права на чтение/запись только для созданного выше пользователя:
+
+```
+{
+	"rules": {
+		".read": "(auth.email == 'admin@sergdudko.tk')",
+		".write": "(auth.email == 'admin@sergdudko.tk')"
+	}
+}
+```
+
+![Screenshot_7](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_7.jpg)
+
+- Заходите в настройки/настройки проекта
+
+![Screenshot_8](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_8.jpg)
+
+- Запоминаете Идентификатор проекта и ключ апи веб-приложения
+
+![Screenshot_9](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_9.jpg)
 
 # Настройка проекта
 
 - Копируете файлы проекта, например в папку /home/iocommander/*
+
+  - ./src-server/* - файлы сервера
+  - ./src-adm/* - панель администрирования
 
 - Создаете/редактируете файл настроек ./src-server/iocommander-server.conf
 
