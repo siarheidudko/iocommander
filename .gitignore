@@ -1,0 +1,5 @@
+$ cat .gitignore
+src-user/*.conf
+src-user/*.db
+src-server/*.conf
+src-server/*.db
