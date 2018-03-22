@@ -118,6 +118,10 @@
 
 #### Веб-панель администратора
 
+- [Инструкция по работе с панелью администрирования](https://github.com/siarheidudko/iocommander/blob/master/docs/web/manual.md)
+
+- [Техническая документация работы панели администрирования](https://github.com/siarheidudko/iocommander/blob/master/docs/web/techdocs.md)
+
 - Умеет авторизовавыться в сокете
   
 - Автоматически получает измененные данные из сокета (два аналогичных серверу хранилища)

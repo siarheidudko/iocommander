@@ -49,26 +49,23 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 	}
 	return state;
 }
-function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}}, action){
+function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:false, groups:{}}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
-				var state_new = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}};
-				state_new = _.clone(state);
+				var state_new = _.clone(state);
 				state_new.auth = action.payload.auth;
 				return state_new;
 				break;
 			case 'GEN_REPORT':
-				var state_new = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}};
-				state_new = _.clone(state);
+				var state_new = _.clone(state);
 				state_new.report = action.payload.report
 				state_new.reportsort = action.payload.reportsort;
 				state_new.reportsortvalid = action.payload.reportsortvalid;
 				return state_new;
 				break;
 			case 'GEN_GROUP':
-				var state_new = {auth: false, report:{}, reportsort:{}, reportsortvalid:{}, groups:{}};
-				state_new = _.clone(state);
+				var state_new = _.clone(state);
 				state_new.groups = action.payload.groups;
 				return state_new;
 				break;
@@ -110,7 +107,7 @@ function datetime() {
 	}
 }
 
-//
+//функция генерации валидного таймштампа для отчетов "01.01.2018 10:01:01"
 function timeStamp(dataObject){
 	try {
 		var resultString;
