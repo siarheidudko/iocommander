@@ -249,8 +249,11 @@ function getDatabase(){
 		try {
 			fs.readFile("./src-user/storage.db", "utf8", function(error,data){
 				try {	
-					if(error) throw error; 
-					resolve(JSON.parse(data));
+					if(error) {
+						throw error;
+					} else {
+						resolve(JSON.parse(data));
+					}
 				} catch(e){
 					console.log(colors.red(datetime() + "База данных испорчена!"));
 					resolve('error');
@@ -368,10 +371,13 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 						};
 						download(extPath, options, function(error){
 							try{
-								if (error) {throw error;}
-								taskOnComplete(socket, uid_val, 'Файл скачан!');
-								console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-								resolve("ok");
+								if (error) {
+									throw error;
+								} else{
+									taskOnComplete(socket, uid_val, 'Файл скачан!');
+									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+									resolve("ok");
+								}
 							} catch(e) {
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
@@ -390,10 +396,13 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 						};
 						download(extPath, options, function(error){
 							try{
-								if (error) {throw error;}
-								taskOnComplete(socket, uid_val, 'Файл скачан!');
-								console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-								resolve("ok");
+								if (error) {
+									throw error;
+								} else {
+									taskOnComplete(socket, uid_val, 'Файл скачан!');
+									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+									resolve("ok");
+								}
 							} catch(e) {
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
@@ -435,21 +444,24 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						}
 						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
 							try{
-								if (error) {throw error;}
-								if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-									if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-										returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
-									} else {
-										returnAnswer = 'Ошибки: ' + stderr;
-									}					
-								} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-									returnAnswer = 'Результат: ' + stdout;
+								if (error) {
+									throw error;
 								} else {
-									returnAnswer = '';
+									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+											returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+										} else {
+											returnAnswer = 'Ошибки: ' + stderr;
+										}					
+									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+										returnAnswer = 'Результат: ' + stdout;
+									} else {
+										returnAnswer = '';
+									}
+									taskOnComplete(socket, uid_val, returnAnswer);
+									console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+									resolve("ok");
 								}
-								taskOnComplete(socket, uid_val, returnAnswer);
-								console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-								resolve("ok");
 							} catch(error){
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
@@ -464,34 +476,40 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 					case 'linux':
 						fs.chmod((intPath.replace(/\\/gi, '/') + fileName), 0777, (error) =>{
 							try{
-								if (error) {throw error;}
-								var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
-									try{
-										if (error) {throw error;}
-										if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-											if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-												returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								if (error) {
+									throw error;
+								} else {
+									var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+										try{
+											if (error) {
+												throw error;
 											} else {
-												returnAnswer = 'Ошибки: ' + stderr;
-											}					
-										} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-											returnAnswer = 'Результат: ' + stdout;
-										} else {
-											returnAnswer = '';
+												if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+													if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+														returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+													} else {
+														returnAnswer = 'Ошибки: ' + stderr;
+													}					
+												} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+													returnAnswer = 'Результат: ' + stdout;
+												} else {
+													returnAnswer = '';
+												}
+												taskOnComplete(socket, uid_val, returnAnswer);
+												console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+												resolve("ok");
+											}
+										} catch(error){
+											if(clientStorage.getState().tasks[uid_val].tryval < 100){
+												clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+											} else {
+												taskOnComplete(socket, uid_val, error);
+											}
+											console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
+											resolve("error");
 										}
-										taskOnComplete(socket, uid_val, returnAnswer);
-										console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-										resolve("ok");
-									} catch(error){
-										if(clientStorage.getState().tasks[uid_val].tryval < 100){
-											clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
-										} else {
-											taskOnComplete(socket, uid_val, error);
-										}
-										console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-										resolve("error");
-									}
-								}); 
+									}); 
+								}
 							} catch(error){
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
@@ -528,20 +546,23 @@ function execProcess(socket, uid_val, execCommand, platform){
 			if(platform === os.platform()){
 				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
 					try {
-						if (error) {throw error;}
-						if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
-							} else {
-								returnAnswer = 'Ошибока: ' + stderr;
-							}					
-						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-							returnAnswer = 'Результат: ' + stdout;
+						if (error) {
+							throw error;
 						} else {
-							returnAnswer = '';
+							if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								} else {
+									returnAnswer = 'Ошибок: ' + stderr;
+								}					
+							} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+								returnAnswer = 'Результат: ' + stdout;
+							} else {
+								returnAnswer = '';
+							}
+							taskOnComplete(socket, uid_val, returnAnswer);
+							resolve("ok");
 						}
-						taskOnComplete(socket, uid_val, returnAnswer);
-						resolve("ok");
 					} catch(error){
 						if(clientStorage.getState().tasks[uid_val].tryval < 100){
 							clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});

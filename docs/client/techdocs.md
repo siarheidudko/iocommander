@@ -684,7 +684,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
 							} else {
-								returnAnswer = 'Ошибока: ' + stderr;
+								returnAnswer = 'Ошибок: ' + stderr;
 							}					
 						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 							returnAnswer = 'Результат: ' + stdout;

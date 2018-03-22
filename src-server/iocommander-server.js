@@ -153,8 +153,11 @@ function getSettings(){
 		try {
 			fs.readFile("./src-server/iocommander-server.conf", "utf8", function(error,data){
 				try {	
-					if(error) throw error; 
-					resolve(JSON.parse(data));
+					if(error) {
+						throw error; 
+					} else {
+						resolve(JSON.parse(data));
+					}
 				} catch(e){
 					console.log(colors.red(datetime() + "Конфигурационный файл испорчен!"));
 					resolve('error');
