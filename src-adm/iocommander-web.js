@@ -471,9 +471,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					//выпадающий список выбора платформы
 					var adm_setTaskOptionPlatform = new Array;
 					adm_setTaskOptionPlatform.push(<option value="">Выберите платформу</option>);
-					if(this.state.ParamTwo !== 'execCommand'){
-						adm_setTaskOptionPlatform.push(<option value="all" selected={(this.state.ParamSix === 'all')?true:false}>Любая</option>);
-					}
+					adm_setTaskOptionPlatform.push(<option value="all" selected={(this.state.ParamSix === 'all')?true:false}>Любая</option>);
 					adm_setTaskOptionPlatform.push(<option value="win32" selected={(this.state.ParamSix === 'win32')?true:false}>Windows</option>);
 					adm_setTaskOptionPlatform.push(<option value="linux" selected={(this.state.ParamSix === 'linux')?true:false}>Linux</option>);
 					var adm_setTaskOptionPlatformSet = <p><select size="1" name="SetParamSix" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOptionPlatform} </select></p>;

@@ -367,13 +367,15 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 						intPath = 'c:' + intPath;
 						var options = {
 							directory: intPath.replace(/\\/gi, '/'),
-							filename: fileName
+							filename: fileName,
+							timeout: 60000
 						};
+						var errors = 0;
 						download(extPath, options, function(error){
 							try{
 								if (error) {
 									throw error;
-								} else{
+								} else if(errors === 0){
 									taskOnComplete(socket, uid_val, 'Файл скачан!');
 									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
 									resolve("ok");
@@ -392,18 +394,21 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 					case 'linux':
 						var options = {
 							directory: intPath.replace(/\\/gi, '/'),
-							filename: fileName
+							filename: fileName,
+							timeout: 60000
 						};
+						var errors = 0;
 						download(extPath, options, function(error){
 							try{
 								if (error) {
 									throw error;
-								} else {
+								} else if(errors === 0){
 									taskOnComplete(socket, uid_val, 'Файл скачан!');
 									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
 									resolve("ok");
 								}
 							} catch(e) {
+								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
@@ -411,6 +416,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 								}
 								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
 								resolve("error");
+								return;
 							}
 						});
 						break;
@@ -442,11 +448,12 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						if (intPath !== ""){
 							intPath = 'c:' + intPath;
 						}
+						var errors = 0;
 						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
 							try{
 								if (error) {
 									throw error;
-								} else {
+								} else if(errors === 0){
 									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
 										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 											returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
@@ -463,6 +470,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									resolve("ok");
 								}
 							} catch(error){
+								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
@@ -474,16 +482,18 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						});
 						break;
 					case 'linux':
+						var errors = 0;
 						fs.chmod((intPath.replace(/\\/gi, '/') + fileName), 0777, (error) =>{
 							try{
 								if (error) {
 									throw error;
-								} else {
+								} else if(errors === 0){
+									var errorsinc = 0;
 									var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
 										try{
 											if (error) {
 												throw error;
-											} else {
+											} else if(errorsinc === 0){
 												if((typeof(stderr) !== 'undefined') && (stderr !== '')){
 													if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 														returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
@@ -500,6 +510,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 												resolve("ok");
 											}
 										} catch(error){
+											errorsinc++;
 											if(clientStorage.getState().tasks[uid_val].tryval < 100){
 												clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 											} else {
@@ -511,6 +522,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									}); 
 								}
 							} catch(error){
+								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
@@ -543,12 +555,13 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 function execProcess(socket, uid_val, execCommand, platform){
 	return new Promise(function(resolve){
 		try{
-			if(platform === os.platform()){
+			if((platform === os.platform()) || (platform === 'all')){
+				var errors = 0;
 				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
 					try {
 						if (error) {
 							throw error;
-						} else {
+						} else if(errors === 0){
 							if((typeof(stderr) !== 'undefined') && (stderr !== '')){
 								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
 									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
@@ -564,6 +577,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 							resolve("ok");
 						}
 					} catch(error){
+						errors++;
 						if(clientStorage.getState().tasks[uid_val].tryval < 100){
 							clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 						} else {
