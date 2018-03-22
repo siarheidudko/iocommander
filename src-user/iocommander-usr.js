@@ -27,7 +27,7 @@ getSettings().then(function(value){
 		var protocol_val = value.protocol,
 		server_val = value.server,	
 		port_val = value.port,
-		socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
+		socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
 		getDatabase().then(function (database){
 			if(database !== 'error'){
 				clientStorage.dispatch({type:'DB_SYNC', payload: database});

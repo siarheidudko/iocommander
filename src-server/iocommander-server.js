@@ -6,14 +6,14 @@
 */
 
 /* ### Раздел переменных ### */
-const http=require("http"), 
+const https=require("https"), 
 colors=require("colors"),
 fs=require("fs"),
 cryptojs=require("cryptojs"),
 redux=require("redux"),
 lodash=require("lodash"),
 firebase=require("firebase");
-var port, firebase_user, firebase_pass, config;
+var port, firebase_user, firebase_pass, config, SslOptions;
 var SyncFirebaseTimeout = false;
 
 
@@ -414,7 +414,7 @@ function sendStorageToWeb(io, param){
 //функция запуска web-сервера
 function startWebServer(port){
 	try {
-		http.createServer(function(req, res){
+		https.createServer(SslOptions, function(req, res){
 			var pathFile;
 			if(req.url === '/'){
 				pathFile = './src-adm/index.html';
@@ -517,6 +517,14 @@ try {
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
+		sslkey = value.sslkey;
+		sslcrt = value.sslcrt;
+		sslca = value.sslca;
+		
+		SslOptions = {
+			key: fs.readFileSync(sslkey),
+			cert: fs.readFileSync(sslcrt) + '\n' + fs.readFileSync(sslca)
+		};
 		
 		firebase.initializeApp(config);
 		
@@ -566,7 +574,7 @@ try {
 		Initialize.then(function(value){
 			if(value === 'okay'){
 				
-				server=http.createServer().listen(port, function() {
+				server=https.createServer(SslOptions).listen(port, function() {
 					console.log(colors.gray(datetime() + 'socket-server listening on *:' + port));
 				}); 
 					
