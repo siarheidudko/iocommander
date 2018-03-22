@@ -4,3 +4,4 @@ src-user/*.db
 src-server/*.conf
 src-server/*.db
 ssl/*
+src-adm/files/*
