@@ -45,7 +45,7 @@
   - connectionStorage - хранилище соединений полностью аналогичное серверному, изменяется только по средствам получения нового store из socket.io
   - adminpanelStorage - внутреннее хранилище панели администратора
 
-- Редьюсеры слушают dispatch в сиде action:{type:TYPE, payload:{}}
+- Редьюсеры слушают dispatch в виде action:{type:TYPE, payload:{}}
   - TYPE - тип действия
   - payload - полезная нагрузка
 

@@ -200,7 +200,7 @@ try {
 
 - Представлены постоянным хранилищем serverStorage и хранилищем соединений connectionStorage.
 
-- Редьюсеры слушают dispatch в сиде action:{type:TYPE, payload:{}}
+- Редьюсеры слушают dispatch в виде action:{type:TYPE, payload:{}}
   - TYPE - тип действия
   - payload - полезная нагрузка
 
