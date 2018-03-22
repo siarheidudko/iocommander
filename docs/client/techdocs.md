@@ -676,7 +676,7 @@ Promise
 function execProcess(socket, uid_val, execCommand, platform){
 	return new Promise(function(resolve){
 		try{
-			if(platform === os.platform()){
+			if((platform === os.platform()) || (platform === 'all')){
 				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
 					try {
 						if (error) {throw error;}
