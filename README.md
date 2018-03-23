@@ -1,7 +1,13 @@
 # IoCommander v1.0.0
-### Приложение для отправки команд удаленным клиентам через socket.io. Функционал написан на серверном javascript и представлен тремя отдельными частями
+#### Приложение для отправки команд удаленным клиентам через socket.io. Функционал написан на серверном javascript и представлен тремя отдельными частями
 
-#### Скрипт сервера
+Стабильная версия всегда в ветке production. Для работы ssl - необходима стабильная версия node 8
+
+Для запуска и клиента и сервера на linux достаточно бинарника из архива node (https://nodejs.org/en/download/), для windows установленной программы nodejs. Для удобства, рекомендую закинуть его в /bin/node с правами x+.
+Тестируется на LTS (8.10.0 - текущая).
+
+
+### Скрипт сервера
 
 - [Установка сервера](https://github.com/siarheidudko/iocommander/blob/master/docs/server/install.md)
 
@@ -10,6 +16,7 @@
 - Зависимости
   - socket.io
   - http
+  - https
   - colors
   - fs
   - cryptojs
@@ -25,7 +32,7 @@
   - web-сервер (веб-приложение панели управления, написанное на react + redux + socket.io)
   - socket-сервер (основной сервер приложения)
 
-#### Скрипт клиента (настройки в файле "src-user\iocommander-usr.conf", запуск "node .\src-user\iocommander-usr.js"), который:
+### Скрипт клиента (настройки в файле "src-user\iocommander-usr.conf", запуск "node .\src-user\iocommander-usr.js"), который:
 
 - [Установка клиента](https://github.com/siarheidudko/iocommander/blob/master/docs/client/install.md)
 
@@ -116,7 +123,7 @@
 	}
 ```  
 
-#### Веб-панель администратора
+### Веб-панель администратора
 
 - [Инструкция по работе с панелью администрирования](https://github.com/siarheidudko/iocommander/blob/master/docs/web/manual.md)
 

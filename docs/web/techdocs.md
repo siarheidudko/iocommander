@@ -314,6 +314,7 @@ function listenSocket(socket){
 
 ##### Описание
 Подключается к сокету и пытается авторизоваться с заданными пользователем и паролем. Запускает функцию прослушивания сокета.
+В InitString - настройки сокета, при смене порта сокета - нужно сменить его вручную.
 
 ##### Входящие параметры
 login_val - имя пользователя(администратора) в веб-сокете (String)
@@ -326,7 +327,7 @@ undefined
 ```
 function initialiseSocket(login_val, password_val){
 	try {
-		var InitString = '{"protocol":"http","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
+		var InitString = '{"protocol":"' + window.location.protocol.substr(0,window.location.protocol.length - 1) + '","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
 		var JsonInitString;
 		try {			
 			JsonInitString = (JSON.parse(InitString));

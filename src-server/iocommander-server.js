@@ -7,6 +7,7 @@
 
 /* ### Раздел переменных ### */
 const https=require("https"), 
+http=require("http")
 colors=require("colors"),
 fs=require("fs"),
 cryptojs=require("cryptojs"),
@@ -414,7 +415,7 @@ function sendStorageToWeb(io, param){
 //функция запуска web-сервера
 function startWebServer(port){
 	try {
-		https.createServer(SslOptions, function(req, res){
+		var webserverfunc = function(req, res){
 			var pathFile;
 			if(req.url === '/'){
 				pathFile = './src-adm/index.html';
@@ -460,8 +461,14 @@ function startWebServer(port){
 				res.writeHead(500, {'Content-Type': 'text/plain'});
 				res.end('Internal Server Error');
 			}
-		}).listen(port, '0.0.0.0');
-		console.log(colors.gray(datetime() + 'webserver-server listening on *:' + port));
+		};
+		if(SslOptions !== 'error'){ 
+			https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
+			console.log(colors.gray(datetime() + 'https-webserver-server listening on *:' + port));
+		} else {
+			http.createServer(webserverfunc).listen(port, '0.0.0.0');
+			console.log(colors.gray(datetime() + 'http-webserver-server listening on *:' + port));
+		}
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу запустить web-сервер!"));
 	}
@@ -520,11 +527,14 @@ try {
 		sslkey = value.sslkey;
 		sslcrt = value.sslcrt;
 		sslca = value.sslca;
-		
-		SslOptions = {
-			key: fs.readFileSync(sslkey),
-			cert: fs.readFileSync(sslcrt) + '\n' + fs.readFileSync(sslca)
-		};
+		if((typeof(sslkey) !== 'undefined') && (sslkey !== '') && (typeof(sslcrt) !== 'undefined') && (sslcrt !== '') && (typeof(sslca) !== 'undefined') && (sslca !== '')) {
+			SslOptions = {
+				key: fs.readFileSync(sslkey),
+				cert: fs.readFileSync(sslcrt) + '\n' + fs.readFileSync(sslca)
+			};
+		} else {
+			SslOptions = 'error';
+		}
 		
 		firebase.initializeApp(config);
 		
@@ -573,10 +583,15 @@ try {
 
 		Initialize.then(function(value){
 			if(value === 'okay'){
-				
-				server=https.createServer(SslOptions).listen(port, function() {
-					console.log(colors.gray(datetime() + 'socket-server listening on *:' + port));
-				}); 
+				if(SslOptions !== 'error'){
+					server=https.createServer(SslOptions).listen(port, function() {
+						console.log(colors.gray(datetime() + 'wss socket-server listening on *:' + port));
+					}); 
+				} else {
+					server=http.createServer().listen(port, function() {
+						console.log(colors.gray(datetime() + 'ws socket-server listening on *:' + port));
+					}); 
+				}
 					
 				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {

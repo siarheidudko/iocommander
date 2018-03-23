@@ -193,7 +193,7 @@ function listenSocket(socket){
 //функция инициализации проекта
 function initialiseSocket(login_val, password_val){
 	try {
-		var InitString = '{"protocol":"https","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
+		var InitString = '{"protocol":"' + window.location.protocol.substr(0,window.location.protocol.length - 1) + '","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
 		var JsonInitString;
 		try {			
 			JsonInitString = (JSON.parse(InitString));

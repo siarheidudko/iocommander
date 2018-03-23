@@ -51,6 +51,7 @@
 
 - socket.io
 - http
+- https
 - colors
 - fs
 - cryptojs
@@ -71,14 +72,17 @@
 {
 "port": "444",
 "webport": "8000",
-"firebase_user": "test@test.com",
-"firebase_pass": "testtesttest",
+"firebase_user": "admin@sergdudko.tk",
+"firebase_pass": "Nw5ld4S8cCgBJKhde7NOS2aQIa72",
 "firebase_config": {
-	"apiKey": "AIzaSyBuNtMUJhs8Ifvxe_QxRJiJkSi03oYstJY",
-	"authDomain": "test-612c2.firebaseapp.com",
-	"databaseURL": "https://test-612c2.firebaseio.com",
-	"storageBucket": "test-612c2.appspot.com"
-	}
+	"apiKey": "AIzaSyCKP0rai4BwWPGuUWAQc8QOtWNHBcBMWsg",
+	"authDomain": "syncftp3.firebaseapp.com",
+	"databaseURL": "https://syncftp3.firebaseio.com",
+	"storageBucket": "syncftp3.appspot.com"
+	},
+"sslkey":"/etc/webmin/letsencrypt-key.pem",
+"sslcrt":"/etc/webmin/letsencrypt-cert.pem",
+"sslca":"/etc/webmin/letsencrypt-ca.pem"
 }
 ```
 
@@ -88,6 +92,7 @@
   - firebase_pass - пароль пользователя в firebase
   - apiKey - ключ api для веб-приложения
   - в трех ссылках (authDomain, databaseURL, storageBucket) заменить test-612c2 на ваш идентификатор проекта
+  - sslkey, sslcrt, sslca - пути к сертификатам и ключу. Если хоть один параметр пуст, то сервер будет http/ws. Если заполнены, то сервер https/wss.
 
 - Устанавливаете nodejs, например в CentOS 7.x он устанавливается из штатного репозитория
 

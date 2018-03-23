@@ -23,7 +23,11 @@ getSettings().then(function(value){
 		var protocol_val = value.protocol,
 		server_val = value.server,	
 		port_val = value.port,
-		socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
+		if(protocol_val === 'https'){
+			socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
+		} else {
+			socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
+		}
 		getDatabase().then(function (database){
 			if(database !== 'error'){
 				clientStorage.dispatch({type:'DB_SYNC', payload: database});
