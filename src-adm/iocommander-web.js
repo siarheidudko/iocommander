@@ -548,7 +548,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var div_val = 0;
 					for(var keyUser in serverStorage.getState().users){
 						AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject' + div_val}>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} checked={(this.state.ParamEight.indexOf(replacer(keyUser, false)) === -1)?false:true} /></div>);
-						if(div_val <=5){
+						if(div_val <5){
 							div_val++;
 						} else {
 							div_val = 0;
