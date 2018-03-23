@@ -51,7 +51,7 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 	}
 	return state;
 }
-function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:false, groups:{}, popuptext:''}, action){
+function editAdmpanelStore(state = {auth: false, popuptext:''}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
@@ -60,18 +60,6 @@ function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, repor
 				if(action.payload.auth === false){
 					state_new.popuptext = 'Авторизация не пройдена!';
 				}
-				return state_new;
-				break;
-			case 'GEN_REPORT':
-				var state_new = _.clone(state);
-				state_new.report = action.payload.report
-				state_new.reportsort = action.payload.reportsort;
-				state_new.reportsortvalid = action.payload.reportsortvalid;
-				return state_new;
-				break;
-			case 'GEN_GROUP':
-				var state_new = _.clone(state);
-				state_new.groups = action.payload.groups;
 				return state_new;
 				break;
 			case 'MSG_POPUP':
@@ -88,11 +76,6 @@ function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, repor
 	}
 	return state;
 }
-
-serverStorage.subscribe(function(){ //подпишем генерацию отчетов на изменение состояния постоянного хранилища
-	GenerateReport();
-	GenerateGroup();
-});
 
 
 
@@ -280,106 +263,5 @@ function replacer(data_val, value_val){
 		console.log(datetime() + "Ошибка преобразования имени пользователя!");
 		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка преобразования имени пользователя!"}});
 	}	
-}
-
-//функция обработки заданий (отчеты)
-function GenerateReport(){
-	try {
-		var tempStorage = serverStorage.getState().tasks;
-		var reportStore = {};
-		var reportSortStore = {};
-		for(var keyObject in tempStorage){
-			try {
-				for(var keyTask in tempStorage[keyObject]){
-					try {
-						if(typeof(reportStore[keyTask]) === 'undefined'){
-							reportStore[keyTask] = {complete:[],incomplete:[],objects:{}};
-						}
-						if(tempStorage[keyObject][keyTask].complete === 'true'){
-							reportStore[keyTask].complete.push(keyObject);
-						} else {
-							reportStore[keyTask].incomplete.push(keyObject);
-						}
-						if(typeof(reportStore[keyTask].objects[keyObject]) === 'undefined'){
-							reportStore[keyTask].objects[keyObject] = {};
-						}
-						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].timeoncompl) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].datetimeout = (new Date(tempStorage[keyObject][keyTask].timeoncompl)).getTime();
-						}
-						if(typeof(tempStorage[keyObject][keyTask].tryval) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].tryval = tempStorage[keyObject][keyTask].tryval;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].datetimecompl) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].complete) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].answer) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
-							reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].comment) !== 'undefined'){
-							reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
-						}
-					} catch(e){
-						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
-						adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!"}});
-					}
-				}
-				var reportSortValidate1 = 0;
-				var reportSortValidate2 = 0;
-				var reportSortValidate = false;
-				reportSortStore = {};
-				var reportSortStoreTemp = {};
-				var reportSortStoreArray = [];
-				for(var keyTask in reportStore){
-					reportSortStoreTemp[reportStore[keyTask].datetime] = keyTask;
-					reportSortStoreArray.push(reportStore[keyTask].datetime);
-					reportSortValidate1++;
-				}
-				reportSortStoreArray = reportSortStoreArray.sort();
-				for(var i = reportSortStoreArray.length-1; i>-1; i--){
-					reportSortStore[reportSortStoreArray[i]] = reportSortStoreTemp[reportSortStoreArray[i]];
-				}
-				for(var keyTime in reportSortStore){
-					reportSortValidate2++;
-				}
-				if(reportSortValidate1 === reportSortValidate2){
-					reportSortValidate = true;
-				}
-			} catch(e){
-				console.log(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!");
-				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации отчета по таскам для " + keyObject + "!"}});
-			}
-		}
-		adminpanelStorage.dispatch({type:'GEN_REPORT', payload: {report:reportStore, reportsort:reportSortStore, reportsortvalid:reportSortValidate}});
-	} catch(e){
-		console.log(datetime() + "Ошибка генерации отчетов по таскам!");
-		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации отчетов по таскам!"}});
-	}
-}
-
-//функция генерации груп
-function GenerateGroup(){
-	var tempStorage = serverStorage.getState().users;
-	var groupStorage = {};
-	groupStorage['all'] = [];
-	for(var keyObject in tempStorage){
-		var replaceKeyObject = replacer(keyObject, false);
-		var groupNameArr = replaceKeyObject.split('.');
-		var groupName = groupNameArr[0];
-		if(typeof(groupStorage[groupName]) === 'undefined'){
-			groupStorage[groupName] = [];
-		}
-		groupStorage[groupName].push(replaceKeyObject);
-		groupStorage['all'].push(replaceKeyObject);
-	}
-	adminpanelStorage.dispatch({type:'GEN_GROUP', payload: {groups:groupStorage}});
 }
 

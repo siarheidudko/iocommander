@@ -258,7 +258,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'SetParamEleven':
 				if(e.target.value !== ""){
-					var tempArr = _.clone(adminpanelStorage.getState().groups[e.target.value]);
+					var tempArr = _.clone(connectionStorage.getState().groups[e.target.value]);
 					var tempNewArr = _.clone(this.state.ParamEight);
 					for(var i =0; i< tempArr.length;i++){
 						if(tempNewArr.indexOf(tempArr[i]) === -1){
@@ -268,7 +268,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamEight: tempNewArr});
 					this.setState({ParamEleven: e.target.value});
 				} else {
-					var tempArr = _.clone(adminpanelStorage.getState().groups[this.state.ParamEleven]);
+					var tempArr = _.clone(connectionStorage.getState().groups[this.state.ParamEleven]);
 					var tempNewArr = _.clone(this.state.ParamEight);
 					for(var i =0; i< tempArr.length;i++){
 						if(tempNewArr.indexOf(tempArr[i]) !== -1){
@@ -556,7 +556,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					}
 					var AdminIoCommanderPanelBodyMiddleGroupsSet = new Array;
 					AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value="">Выберите группу (не обязательно)</option>);
-					for(var keyGroup in adminpanelStorage.getState().groups){
+					for(var keyGroup in connectionStorage.getState().groups){
 						AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value={keyGroup} selected={(this.state.ParamEleven === keyGroup)?true:false}>{keyGroup}</option>);
 					}
 					var AdminIoCommanderPanelBodyMiddleGroups = <p><select size="1" name="SetParamEleven" onChange={this.onChangeHandler.bind(this)}> {AdminIoCommanderPanelBodyMiddleGroupsSet} </select></p>;
@@ -599,22 +599,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 				//отчеты по таскам
 				var adm_TaskReportOption = new Array;
 				adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
-				if(adminpanelStorage.getState().reportsortvalid){ //если у нас не было двух uid в одну мс, сортируем объект по времени
-					for(var keyTime in adminpanelStorage.getState().reportsort){ 
-						var keyTask = adminpanelStorage.getState().reportsort[keyTime];
-						var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
-						adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
-					}
-				} else {
-					for(var keyTask in adminpanelStorage.getState().report){
-						var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
-						adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
-					}
+				for(var keyTask in connectionStorage.getState().report){ 
+					var dateEpochToString = new Date(connectionStorage.getState().report[keyTask].datetime);
+					adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + connectionStorage.getState().report[keyTask].comment}</option>);
 				}
 				var adm_TaskReport = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>;
 				var adm_TaskReportResult = new Array;
 				if(this.state.ParamOne !== ""){
-					var tempStorage = adminpanelStorage.getState().report;
+					var tempStorage = connectionStorage.getState().report;
 					adm_TaskReportResult.push(<div className={'reportTableRow'}>{this.state.ParamOne}</div>)
 					if(typeof(tempStorage[this.state.ParamOne]) !== 'undefined'){
 						var tempObjects = tempStorage[this.state.ParamOne].objects;
