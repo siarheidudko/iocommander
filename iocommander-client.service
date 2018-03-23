@@ -1,0 +1,12 @@
+[Unit]
+Description=Web and Socket client for iocommander
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/farmin/iocom/
+ExecStart=/bin/node /farmin/iocom/src-user/iocommander-usr.js
+ExecStop=/bin/kill -9 $(pidof node)
+
+[Install]
+WantedBy=multi-user.target
