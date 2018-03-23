@@ -799,7 +799,8 @@ try {
 				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {
 					try {
-						var thisSocketAddress = io.sockets.sockets[socket.id].handshake.headers.host.split(':')[0];
+						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
+						var thisSocketAddress = thisSocketAddressArr[thisSocketAddressArr.length-1];
 						if(typeof(connectionStorage.getState().iptoban) === 'object'){
 							if(typeof(connectionStorage.getState().iptoban[replacer(thisSocketAddress, true)]) === 'object') {
 								var ThisSocketAttemp = connectionStorage.getState().iptoban[replacer(thisSocketAddress, true)].attemp;
