@@ -6,6 +6,39 @@
 */
 
 "use strict"
+class AdminIoCommanderPanelPopup extends React.Component{
+  
+   constructor(props, context) {
+      super(props, context);
+      this.state = {
+        PopupText: '',
+      };
+      this.onDivClickHandler = this.onDivClickHandler.bind(this);
+    }
+      
+	componentDidMount() {
+		var self = this;
+		adminpanelStorage.subscribe(function(){
+			self.setState({PopupText: adminpanelStorage.getState().popuptext});
+			if(adminpanelStorage.getState().popuptext !== ''){
+				setTimeout(function(){adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:''}});}, 2000);
+			}
+		});
+	}
+      
+  	onDivClickHandler(e) {
+		this.setState({PopupText: ''});
+	}
+      
+  	render() {
+      return (
+        <div className={(this.state.PopupText == "")?"popup unshow":"popup show"} onClick={this.onDivClickHandler}>
+  			<span className="popuptext" id="myPopup">{this.state.PopupText}</span>
+        </div>
+      );
+	}
+};
+
 class AdminIoCommanderPanelAuth extends React.Component{
   
 	constructor(props, context){
@@ -35,10 +68,12 @@ class AdminIoCommanderPanelAuth extends React.Component{
 	
 	render() {
 		var AdminIoCommanderPanelAuth = new Array;
+		var AdminIoCommanderPanelAuthForm = new Array;
 		//поле ввода логина
-		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
+		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamLogin" autocomplete="username" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
 		//поле ввода пароля
-		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter">Пароль: <input type="password" name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter">Пароль: <input type="password" name="SetParamPassword" autocomplete="current-password" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuth.push(<form>{AdminIoCommanderPanelAuthForm}</form>);
 		//кнопка входа
 		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
 		
@@ -118,6 +153,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var regexp = new RegExp("^.*[^A-z0-9\._-].*$");
 				if(!regexp.test(e.target.value)){
 					this.setState({ParamOne: e.target.value});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamTwo':
@@ -129,11 +166,15 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
 				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execCommand')) {
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamFour':
 				if(!regexpAll.test(e.target.value)){
 					this.setState({ParamFour: e.target.value.replace(/\\/gi,"/")});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamFive':
@@ -142,11 +183,15 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
 				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execFile')) {
 					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamSix':
 				if(!regexpAll.test(e.target.value)){
 					this.setState({ParamSix: e.target.value});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamSeven':
@@ -154,6 +199,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				if(!regexp.test(e.target.value)){
 					var ParamSeven = e.target.value.split(';');
 					this.setState({ParamSeven: ParamSeven});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamEight':
@@ -167,12 +214,16 @@ class AdminIoCommanderPanelBody extends React.Component{
 						ParamEight.splice(ParamEight.indexOf(e.target.value), 1);
 						this.setState({ParamEight: ParamEight});
 					}
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamNine':
 				var regexp = new RegExp("^.*[^A-z0-9А-я ].*$");
 				if(!regexp.test(e.target.value)){
 					this.setState({ParamNine: e.target.value});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamTen':
@@ -201,6 +252,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							}
 							break;
 					}
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamEleven':
@@ -251,6 +304,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
 								case 'execFile':
@@ -259,6 +313,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
 								case 'execCommand':
@@ -267,11 +322,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
 							}
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						if((onSetTask) && (this.state.ParamEight.length > 0)){
 							for(var i=0;i<this.state.ParamEight.length;i++){
@@ -290,6 +347,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
+							//adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Проблема генерации задачи!"}});
 						}
 						break;
 					case 'adm_setUser':
@@ -310,6 +368,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_setAdmin':
@@ -330,6 +389,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_delUser':
@@ -349,6 +409,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_delAdmin':
@@ -368,6 +429,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_TaskReport':
@@ -387,6 +449,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_TaskOnline':
@@ -406,11 +469,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 				}
 			} else {
 				console.log(datetime() + "Сокет недоступен!");
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Сокет недоступен!"}});
 			}
 		}
 	}
@@ -749,6 +814,7 @@ class AdminIoCommanderPanel extends React.Component{
 		return (
 			<div className="AdminIoCommanderPanel">
 				<AdminIoCommanderPanelHeader />
+				<AdminIoCommanderPanelPopup />
 				{(this.state.auth)?<AdminIoCommanderPanelBody />:<AdminIoCommanderPanelAuth />}
 				<AdminIoCommanderPanelBottom data={this.state.OnlineUsers} />
 			</div>

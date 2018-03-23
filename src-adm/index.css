@@ -7,10 +7,12 @@ input[type="text"], input[type="password"], select {
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
 }
 input[type="checkbox"] {
+	cursor: pointer;
 	border: 1px solid #b3c9ce;
 	border-radius: 4px;
 }
 button{
+	cursor: pointer;
 	padding:2px;
 	border: 1px solid #b3c9ce;
 	border-radius: 4px;
@@ -19,6 +21,9 @@ button{
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
+}
+select{
+	cursor: pointer;
 }
 
 /* Скелет админки */
@@ -228,4 +233,37 @@ button{
 	color: #333;
 	background: #fff;
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+
+/* всплывающее  окно */
+.popup {
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.popup .popuptext {
+    width: 150px;
+    background-color: #f1ba59;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 0;
+    position: absolute;
+    z-index: 1;
+	margin-top: 150px;
+    left: 50%;
+    margin-left: -75px;
+}
+.show {
+    visibility: visible;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s;
+}
+.unshow {
+    visibility: hidden;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s;
 }
