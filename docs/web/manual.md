@@ -91,3 +91,8 @@
 ![Screenshot_2](https://github.com/siarheidudko/iocommander/raw/master/docs/web/img/Screenshot_2.png)
 
 ![Screenshot_3](https://github.com/siarheidudko/iocommander/raw/master/docs/web/img/Screenshot_3.png)
+
+## Всплывающие ведомления
+Уведомления, в частности об ошибках выводятся в всплывающем окне (закрывается по клику или через 2 секунды).
+
+![Screenshot_13](https://github.com/siarheidudko/iocommander/raw/master/docs/web/img/Screenshot_13.png)
