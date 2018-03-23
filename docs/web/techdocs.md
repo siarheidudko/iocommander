@@ -69,6 +69,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 		}
 	} catch(e){
 		console.log(datetime() + "Ошибка при обновлении хранилища:" + e);
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка при обновлении хранилища serverStorage:" + e}});
 	}
 	return state;
 }
@@ -94,6 +95,7 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 		}
 	} catch(e){
 		console.log(datetime() + "Ошибка при обновлении хранилища соединений:" + e);
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка при обновлении хранилища connectionStorage:" + e}});
 	}
 	return state;
 }
@@ -103,13 +105,17 @@ function editConnStore(state = {uids:{}, users:{}}, action){
   - AUTH - устанавливает флаг авторизации, payload:{auth:TRUE}, TRUE - true или false флаг авторизации (Boolean). 
   - GEN_REPORT - добавляет в хранилище сгенерированные отчеты, payload:{report:{},reportsort:{},reportsortvalid:TRUE}, {}(report) - сгенерированные отчеты (Object), {}(reportsort) - связка, отсортированных отчетов по мс (Object), TRUE - true или false что количество отчетов в связке равно количеству сгенерированных отчетов.
   - GEN_GROUP - добавляет в хранилище сгенерированные группы пользователей по строке до символа ".", payload:{groups:{}}, {}(groups) - сгенерированные группы (Object).
+  - MSG_POPUP - текст всплывающего уведомления, payload:{popuptext:TEXT}, TEXT - строка текста (String).
 ```
-function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:false, groups:{}}, action){
+function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:false, groups:{}, popuptext:''}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
 				var state_new = _.clone(state);
 				state_new.auth = action.payload.auth;
+				if(action.payload.auth === false){
+					state_new.popuptext = 'Авторизация не пройдена!';
+				}
 				return state_new;
 				break;
 			case 'GEN_REPORT':
@@ -124,11 +130,17 @@ function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, repor
 				state_new.groups = action.payload.groups;
 				return state_new;
 				break;
+			case 'MSG_POPUP':
+				var state_new = _.clone(state);
+				state_new.popuptext = action.payload.popuptext;
+				return state_new;
+				break;
 			default:
 				break;
 		}
 	} catch(e){
 		console.log(datetime() + "Ошибка при обновлении хранилища админпанели:" + e);
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка при обновлении хранилища adminpanelStorage:" + e}});
 	}
 	return state;
 }
@@ -158,6 +170,7 @@ function login(socket, user_val, password_val) {
 		}
 	} catch(e){
 		console.log(datetime() + "Ошибка авторизации в сокете:" + e);
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка авторизации в сокете:" + e}});
 	}
 }
 ```
@@ -181,7 +194,8 @@ function datetime() {
 		var dt = new Date();
 		return '[' + dt.getDate() + '.' + (dt.getMonth()+1) + '.' + dt.getFullYear() + ' - ' + dt.getHours() + '.' + dt.getMinutes() + '.' + dt.getSeconds() + '] ';
 	} catch(e) {
-		console.log(colors.red("Проблема с функцией datetime()!"));
+		console.log("Проблема с функцией datetime()!");
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Проблема с функцией datetime()!"}});
 	}
 }
 ```
@@ -261,7 +275,8 @@ function generateUID() {
 			return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
 		});
 	} catch(e) {
-		console.log(colors.red(datetime() + "Ошибка генерации uid!"));
+		console.log(datetime() + "Ошибка генерации uid!");
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации uid!"}});
 	}
 }
 ```
@@ -286,6 +301,7 @@ function listenSocket(socket){
 				serverStorage.dispatch({type:'SYNC_OBJECT', payload: data});
 			} catch (e) {
 				console.log(datetime() + "Ошибка обновления хранилища данных: " + e);
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка обновления хранилища данных: " + e}});
 			}
 		});
 		socket.on('sendConnStorageToAdmin', function (data) {
@@ -293,6 +309,7 @@ function listenSocket(socket){
 				connectionStorage.dispatch({type:'SYNC_OBJECT', payload: data});
 			} catch (e) {
 				console.log(datetime() + "Ошибка обновления хранилища соединений: " + e);
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка обновления хранилища соединений: " + e}});
 			}
 		});
 		socket.on('disconnect', () => {
@@ -300,12 +317,14 @@ function listenSocket(socket){
 				serverStorage.dispatch({type:'CLEAR_STORAGE'});
 				connectionStorage.dispatch({type:'CLEAR_STORAGE'});
 				console.log(datetime() + "Соединение разорвано!");
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Соединение разорвано!"}});
 			} catch (e) {
 				console.log(datetime() + "Ошибка очистки хранилищ, при разрыве соединения: " + e);
 			}
 		});
 	} catch(e){
 		console.log(datetime() + "Ошибка прослушивания сокета: " + e);
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка прослушивания сокета: " + e}});
 	}
 }
 ```
@@ -333,6 +352,7 @@ function initialiseSocket(login_val, password_val){
 			JsonInitString = (JSON.parse(InitString));
 		} catch (e) {
 			console.log(datetime() + "Не могу распарсить строку конфигурации!");
+			adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не могу распарсить строку конфигурации!"}});
 		}
 		if(typeof(JsonInitString) === 'object'){
 			var user_val = JsonInitString.login; 
@@ -371,9 +391,11 @@ function initialiseSocket(login_val, password_val){
 			} while (typeof(socket) === 'undefined');
 		} else {
 			console.log(datetime() + "Не могу распознать объект конфигурации!");
+			adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не могу распознать объект конфигурации!"}});
 		}
 	} catch(e){
-		console.log(datetime() + "Критическая ошибка инициализации сервера!");
+		console.log(datetime() + "Критическая ошибка инициализации клиента!");
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Критическая ошибка инициализации клиента!"}});
 	}
 }
 ```
@@ -406,6 +428,7 @@ function replacer(data_val, value_val){
 		}
 	} catch(e) {
 		console.log(datetime() + "Ошибка преобразования имени пользователя!");
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка преобразования имени пользователя!"}});
 	}	
 }
 ```
@@ -470,6 +493,7 @@ function GenerateReport(){
 						}
 					} catch(e){
 						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
+						adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!"}});
 					}
 				}
 				var reportSortValidate1 = 0;
@@ -495,11 +519,13 @@ function GenerateReport(){
 				}
 			} catch(e){
 				console.log(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!");
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации отчета по таскам для " + keyObject + "!"}});
 			}
 		}
 		adminpanelStorage.dispatch({type:'GEN_REPORT', payload: {report:reportStore, reportsort:reportSortStore, reportsortvalid:reportSortValidate}});
 	} catch(e){
 		console.log(datetime() + "Ошибка генерации отчетов по таскам!");
+		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации отчетов по таскам!"}});
 	}
 }
 ```
@@ -575,6 +601,7 @@ class AdminIoCommanderPanel extends React.Component{
 		return (
 			<div className="AdminIoCommanderPanel">
 				<AdminIoCommanderPanelHeader />
+				<AdminIoCommanderPanelPopup />
 				{(this.state.auth)?<AdminIoCommanderPanelBody />:<AdminIoCommanderPanelAuth />}
 				<AdminIoCommanderPanelBottom data={this.state.OnlineUsers} />
 			</div>
@@ -685,6 +712,44 @@ class AdminIoCommanderPanelBottom extends React.Component{
 }
 ```
 
+### Всплывающие уведомления
+Выводит текст во всплывающем окне.
+
+```
+class AdminIoCommanderPanelPopup extends React.Component{
+  
+   constructor(props, context) {
+      super(props, context);
+      this.state = {
+        PopupText: '',
+      };
+      this.onDivClickHandler = this.onDivClickHandler.bind(this);
+    }
+      
+	componentDidMount() {
+		var self = this;
+		adminpanelStorage.subscribe(function(){
+			self.setState({PopupText: adminpanelStorage.getState().popuptext});
+			if(adminpanelStorage.getState().popuptext !== ''){
+				setTimeout(function(){adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:''}});}, 2000);
+			}
+		});
+	}
+      
+  	onDivClickHandler(e) {
+		this.setState({PopupText: ''});
+	}
+      
+  	render() {
+      return (
+        <div className={(this.state.PopupText == "")?"popup unshow":"popup show"} onClick={this.onDivClickHandler}>
+  			<span className="popuptext" id="myPopup">{this.state.PopupText}</span>
+        </div>
+      );
+	}
+};
+```
+
 ### Форма авторизации
 Выводит поле для ввода логина и пароля для авторизации в сокете.
 
@@ -718,10 +783,12 @@ class AdminIoCommanderPanelAuth extends React.Component{
 	
 	render() {
 		var AdminIoCommanderPanelAuth = new Array;
+		var AdminIoCommanderPanelAuthForm = new Array;
 		//поле ввода логина
-		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
+		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamLogin" autocomplete="username" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
 		//поле ввода пароля
-		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter">Пароль: <input type="password" name="SetParamPassword" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter">Пароль: <input type="password" name="SetParamPassword" autocomplete="current-password" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuth.push(<form>{AdminIoCommanderPanelAuthForm}</form>);
 		//кнопка входа
 		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
 		
@@ -790,6 +857,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var regexp = new RegExp("^.*[^A-z0-9\._-].*$");
 				if(!regexp.test(e.target.value)){
 					this.setState({ParamOne: e.target.value});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamTwo':
@@ -801,11 +870,15 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
 				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execCommand')) {
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamFour':
 				if(!regexpAll.test(e.target.value)){
 					this.setState({ParamFour: e.target.value.replace(/\\/gi,"/")});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamFive':
@@ -814,11 +887,15 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
 				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execFile')) {
 					this.setState({ParamFive: e.target.value.replace(/\\/gi,"/")});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamSix':
 				if(!regexpAll.test(e.target.value)){
 					this.setState({ParamSix: e.target.value});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamSeven':
@@ -826,6 +903,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				if(!regexp.test(e.target.value)){
 					var ParamSeven = e.target.value.split(';');
 					this.setState({ParamSeven: ParamSeven});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamEight':
@@ -839,12 +918,16 @@ class AdminIoCommanderPanelBody extends React.Component{
 						ParamEight.splice(ParamEight.indexOf(e.target.value), 1);
 						this.setState({ParamEight: ParamEight});
 					}
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamNine':
 				var regexp = new RegExp("^.*[^A-z0-9А-я ].*$");
 				if(!regexp.test(e.target.value)){
 					this.setState({ParamNine: e.target.value});
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamTen':
@@ -873,6 +956,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 							}
 							break;
 					}
+				} else {
+					adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:'Некорректный символ!'}});
 				}
 				break;
 			case 'SetParamEleven':
@@ -923,6 +1008,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
 								case 'execFile':
@@ -931,6 +1017,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
 								case 'execCommand':
@@ -939,11 +1026,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
 							}
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						if((onSetTask) && (this.state.ParamEight.length > 0)){
 							for(var i=0;i<this.state.ParamEight.length;i++){
@@ -962,6 +1051,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							}
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
+							//adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Проблема генерации задачи!"}});
 						}
 						break;
 					case 'adm_setUser':
@@ -982,6 +1072,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_setAdmin':
@@ -1002,6 +1093,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_delUser':
@@ -1021,6 +1113,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_delAdmin':
@@ -1040,6 +1133,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_TaskReport':
@@ -1059,6 +1153,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 					case 'adm_TaskOnline':
@@ -1078,11 +1173,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamEleven: ''});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
+							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						break;
 				}
 			} else {
 				console.log(datetime() + "Сокет недоступен!");
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Сокет недоступен!"}});
 			}
 		}
 	}
