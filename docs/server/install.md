@@ -14,19 +14,23 @@
 
 ![Screenshot_3](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_3.png)
 
-- Выбираете способы входа и включаете вход по адресу электронной почты и паролю
-
 ![Screenshot_4](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_4.png)
 
-- Выбираете пользователи и создаете нового
+- Выбираете способы входа и включаете вход по адресу электронной почты и паролю
 
 ![Screenshot_5](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_5.png)
 
-- Выбираете Базы данных/База данных реального времени
+- Выбираете пользователи и создаете нового
 
 ![Screenshot_6](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_6.png)
 
+- Выбираете Базы данных/База данных реального времени
+
+![Screenshot_7](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_7.png)
+
 - Выбираете правила и задаете права на чтение/запись только для созданного выше пользователя:
+
+![Screenshot_8](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_8.png)
 
 ```
 {
@@ -37,11 +41,7 @@
 }
 ```
 
-![Screenshot_7](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_7.png)
-
 - Заходите в настройки/настройки проекта
-
-![Screenshot_8](https://github.com/siarheidudko/iocommander/raw/master/docs/server/img/Screenshot_8.png)
 
 - Запоминаете Идентификатор проекта и ключ апи веб-приложения
 
