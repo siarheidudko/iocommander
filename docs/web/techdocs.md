@@ -433,135 +433,6 @@ function replacer(data_val, value_val){
 }
 ```
 
-### Функция генерации отчетов по заданиям
-
-##### Описание
-При изменении serverStorage генерирует валидные отчеты в adminpanelStorage.
-
-##### Входящие параметры
-undefined
-
-##### Возвращаемое значение 
-undefined
-
-##### Исходный код
-
-```
-function GenerateReport(){
-	try {
-		var tempStorage = serverStorage.getState().tasks;
-		var reportStore = {};
-		var reportSortStore = {};
-		for(var keyObject in tempStorage){
-			try {
-				for(var keyTask in tempStorage[keyObject]){
-					try {
-						if(typeof(reportStore[keyTask]) === 'undefined'){
-							reportStore[keyTask] = {complete:[],incomplete:[],objects:{}};
-						}
-						if(tempStorage[keyObject][keyTask].complete === 'true'){
-							reportStore[keyTask].complete.push(keyObject);
-						} else {
-							reportStore[keyTask].incomplete.push(keyObject);
-						}
-						if(typeof(reportStore[keyTask].objects[keyObject]) === 'undefined'){
-							reportStore[keyTask].objects[keyObject] = {};
-						}
-						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].timeoncompl) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].datetimeout = (new Date(tempStorage[keyObject][keyTask].timeoncompl)).getTime();
-						}
-						if(typeof(tempStorage[keyObject][keyTask].tryval) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].tryval = tempStorage[keyObject][keyTask].tryval;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].datetimecompl) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].complete) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].answer) !== 'undefined'){
-							reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
-							reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
-						}
-						if(typeof(tempStorage[keyObject][keyTask].comment) !== 'undefined'){
-							reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
-						}
-					} catch(e){
-						console.log(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!");
-						adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!"}});
-					}
-				}
-				var reportSortValidate1 = 0;
-				var reportSortValidate2 = 0;
-				var reportSortValidate = false;
-				reportSortStore = {};
-				var reportSortStoreTemp = {};
-				var reportSortStoreArray = [];
-				for(var keyTask in reportStore){
-					reportSortStoreTemp[reportStore[keyTask].datetime] = keyTask;
-					reportSortStoreArray.push(reportStore[keyTask].datetime);
-					reportSortValidate1++;
-				}
-				reportSortStoreArray = reportSortStoreArray.sort();
-				for(var i = reportSortStoreArray.length-1; i>-1; i--){
-					reportSortStore[reportSortStoreArray[i]] = reportSortStoreTemp[reportSortStoreArray[i]];
-				}
-				for(var keyTime in reportSortStore){
-					reportSortValidate2++;
-				}
-				if(reportSortValidate1 === reportSortValidate2){
-					reportSortValidate = true;
-				}
-			} catch(e){
-				console.log(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!");
-				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации отчета по таскам для " + keyObject + "!"}});
-			}
-		}
-		adminpanelStorage.dispatch({type:'GEN_REPORT', payload: {report:reportStore, reportsort:reportSortStore, reportsortvalid:reportSortValidate}});
-	} catch(e){
-		console.log(datetime() + "Ошибка генерации отчетов по таскам!");
-		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка генерации отчетов по таскам!"}});
-	}
-}
-```
-
-### Функция генерации групп пользователей
-
-##### Описание
-При изменении serverStorage генерирует группы пользователей в adminpanelStorage. Имя группы это строка до символа "."
-
-##### Входящие параметры
-undefined
-
-##### Возвращаемое значение 
-undefined
-
-##### Исходный код
-
-```
-function GenerateGroup(){
-	var tempStorage = serverStorage.getState().users;
-	var groupStorage = {};
-	groupStorage['all'] = [];
-	for(var keyObject in tempStorage){
-		var replaceKeyObject = replacer(keyObject, false);
-		var groupNameArr = replaceKeyObject.split('.');
-		var groupName = groupNameArr[0];
-		if(typeof(groupStorage[groupName]) === 'undefined'){
-			groupStorage[groupName] = [];
-		}
-		groupStorage[groupName].push(replaceKeyObject);
-		groupStorage['all'].push(replaceKeyObject);
-	}
-	adminpanelStorage.dispatch({type:'GEN_GROUP', payload: {groups:groupStorage}});
-}
-```
-
 ## Визуализация
 
 ### Тело программы
@@ -962,7 +833,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'SetParamEleven':
 				if(e.target.value !== ""){
-					var tempArr = _.clone(adminpanelStorage.getState().groups[e.target.value]);
+					var tempArr = _.clone(connectionStorage.getState().groups[e.target.value]);
 					var tempNewArr = _.clone(this.state.ParamEight);
 					for(var i =0; i< tempArr.length;i++){
 						if(tempNewArr.indexOf(tempArr[i]) === -1){
@@ -972,7 +843,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamEight: tempNewArr});
 					this.setState({ParamEleven: e.target.value});
 				} else {
-					var tempArr = _.clone(adminpanelStorage.getState().groups[this.state.ParamEleven]);
+					var tempArr = _.clone(connectionStorage.getState().groups[this.state.ParamEleven]);
 					var tempNewArr = _.clone(this.state.ParamEight);
 					for(var i =0; i< tempArr.length;i++){
 						if(tempNewArr.indexOf(tempArr[i]) !== -1){
@@ -1252,7 +1123,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					var div_val = 0;
 					for(var keyUser in serverStorage.getState().users){
 						AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject' + div_val}>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} checked={(this.state.ParamEight.indexOf(replacer(keyUser, false)) === -1)?false:true} /></div>);
-						if(div_val <=5){
+						if(div_val <5){
 							div_val++;
 						} else {
 							div_val = 0;
@@ -1260,7 +1131,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					}
 					var AdminIoCommanderPanelBodyMiddleGroupsSet = new Array;
 					AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value="">Выберите группу (не обязательно)</option>);
-					for(var keyGroup in adminpanelStorage.getState().groups){
+					for(var keyGroup in connectionStorage.getState().groups){
 						AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value={keyGroup} selected={(this.state.ParamEleven === keyGroup)?true:false}>{keyGroup}</option>);
 					}
 					var AdminIoCommanderPanelBodyMiddleGroups = <p><select size="1" name="SetParamEleven" onChange={this.onChangeHandler.bind(this)}> {AdminIoCommanderPanelBodyMiddleGroupsSet} </select></p>;
@@ -1303,22 +1174,14 @@ class AdminIoCommanderPanelBody extends React.Component{
 				//отчеты по таскам
 				var adm_TaskReportOption = new Array;
 				adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
-				if(adminpanelStorage.getState().reportsortvalid){ //если у нас не было двух uid в одну мс, сортируем объект по времени
-					for(var keyTime in adminpanelStorage.getState().reportsort){ 
-						var keyTask = adminpanelStorage.getState().reportsort[keyTime];
-						var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
-						adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
-					}
-				} else {
-					for(var keyTask in adminpanelStorage.getState().report){
-						var dateEpochToString = new Date(adminpanelStorage.getState().report[keyTask].datetime);
-						adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + adminpanelStorage.getState().report[keyTask].comment}</option>);
-					}
+				for(var keyTask in connectionStorage.getState().report){ 
+					var dateEpochToString = new Date(connectionStorage.getState().report[keyTask].datetime);
+					adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.ParamOne === keyTask)?true:false} >{timeStamp(dateEpochToString) + '_' + connectionStorage.getState().report[keyTask].comment}</option>);
 				}
 				var adm_TaskReport = <p><select size="1" name="SetParamOne" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>;
 				var adm_TaskReportResult = new Array;
 				if(this.state.ParamOne !== ""){
-					var tempStorage = adminpanelStorage.getState().report;
+					var tempStorage = connectionStorage.getState().report;
 					adm_TaskReportResult.push(<div className={'reportTableRow'}>{this.state.ParamOne}</div>)
 					if(typeof(tempStorage[this.state.ParamOne]) !== 'undefined'){
 						var tempObjects = tempStorage[this.state.ParamOne].objects;

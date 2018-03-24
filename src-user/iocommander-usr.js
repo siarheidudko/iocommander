@@ -13,25 +13,18 @@ download = require("download-file"),
 os = require("os"),
 child_process = require("child_process"),
 redux=require("redux"),
-lodash=require("lodash");
-var user_val, password_val;
+lodash=require("lodash"),
+socketclient = require('socket.io-client');
+var user_val, password_val, socket;
 var SyncDatabaseTimeout = false;
 
 getSettings().then(function(value){
 	if(value !== 'error'){
 		user_val = value.login; 
 		password_val = cryptojs.Crypto.SHA256(user_val + value.password+'icommander');
-		if(typeof(socket) !== 'undefined'){
-			socket.close();
-		}
 		var protocol_val = value.protocol,
 		server_val = value.server,	
 		port_val = value.port;
-		if(value.protocol === 'https'){
-			var socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
-		} else {
-			var socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
-		}
 		getDatabase().then(function (database){
 			if(database !== 'error'){
 				clientStorage.dispatch({type:'DB_SYNC', payload: database});
@@ -39,29 +32,7 @@ getSettings().then(function(value){
 			} else {
 				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
 			}
-			do {
-				if (typeof(socket) !== 'undefined'){
-					socket.on('connect', () => {
-						console.log(colors.green(datetime() + "Соединение установлено!"));
-					});
-					socket.on('initialize', function (data) {
-						if(data.value === 'whois'){
-							login(socket);
-						}
-					});
-					socket.on('authorisation', function (data) {
-						if(data.value === 'true'){
-							console.log(colors.green(datetime() + "Авторизация пройдена!"));
-						} else {
-							//если авторизация неудачна, пробую каждые 5 минут
-							console.log(colors.red(datetime() + "Авторизация не пройдена!"));
-							setTimeout(login, 300000);
-						}
-					});
-					//слушаем сокет
-					listenSocket(socket);
-				}
-			} while (typeof(socket) === 'undefined');
+			Reconnect(protocol_val, server_val, port_val);
 			//проверяем задания каждые 15 сек
 			setInterval(function(){
 				try {
@@ -227,6 +198,38 @@ clientStorage.subscribe(function(){
 
 
 /* ### Раздел функций ### */
+//функция пересоединения с сокетом 
+function Reconnect(protocol_val, server_val, port_val){
+	try {
+		if(protocol_val === 'https'){
+			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
+		} else {
+			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val);
+		}
+		socket.on('connect', () => {
+			console.log(colors.green(datetime() + "Соединение установлено!"));
+		});
+		socket.on('initialize', function (data) {
+			if(data.value === 'whois'){
+				login(socket);
+			}
+		});
+		socket.on('authorisation', function (data) {
+			if(data.value === 'true'){
+				console.log(colors.green(datetime() + "Авторизация пройдена!"));
+			} else {
+				//если авторизация неудачна, пробую каждые 5 минут
+				console.log(colors.red(datetime() + "Авторизация не пройдена!"));
+			}
+		});
+		//слушаем сокет
+		listenSocket(socket, protocol_val, server_val, port_val);
+	}catch(e){
+		console.log(colors.red(datetime() + "Ошибка подключения к сокету: " + e));
+		setTimeout(Reconnect, 300000, protocol_val, server_val, port_val);
+	}
+}
+
 //функция чтения файла конфигурации
 function getSettings(){
 	return new Promise(function (resolve){
@@ -318,7 +321,7 @@ function datetime() {
 }
 
 //функция работы с сокетом
-function listenSocket(socket){
+function listenSocket(socket, protocol_val, server_val, port_val){
 	try {
 		socket.on('sendtask', function (data) {
 			try {
@@ -355,6 +358,7 @@ function listenSocket(socket){
 		});
 		socket.on('disconnect', () => {
 			console.log(colors.red(datetime() + "Соединение разорвано!"));
+			setTimeout(Reconnect, 300000, protocol_val, server_val, port_val);
 		});
 	} catch (e){
 		console.log(colors.red(datetime() + "Проблема прослушки открытого сокета!"));

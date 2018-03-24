@@ -1,6 +1,6 @@
 # IoCommander v1.0.0 - Техническая документация по работе с клиентом
 
-## Запуск сервера
+## Запуск клиента
 
 - Запускается загрузка файла конфигурации iocommander-usr.conf объектом ожидание (Promise) getSettings(). Если загрузка не была выполнена - работа клиента будет прекращена.
 - Создается объект ожидание (Promise) getDatabase, где загружаются данные из storage.db (по сути JSON файл) в redux (clientStorage), если данные не были выгружены, повреждены - данные не выгружаются. При ошибке работы с хранилищем, его нужно удалить.
@@ -17,17 +17,9 @@ getSettings().then(function(value){
 	if(value !== 'error'){
 		user_val = value.login; 
 		password_val = cryptojs.Crypto.SHA256(user_val + value.password+'icommander');
-		if(typeof(socket) !== 'undefined'){
-			socket.close();
-		}
 		var protocol_val = value.protocol,
 		server_val = value.server,	
-		port_val = value.port,
-		if(protocol_val === 'https'){
-			socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
-		} else {
-			socket = require('socket.io-client').connect(protocol_val + '://' + server_val + ':' + port_val);
-		}
+		port_val = value.port;
 		getDatabase().then(function (database){
 			if(database !== 'error'){
 				clientStorage.dispatch({type:'DB_SYNC', payload: database});
@@ -35,29 +27,7 @@ getSettings().then(function(value){
 			} else {
 				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
 			}
-			do {
-				if (typeof(socket) !== 'undefined'){
-					socket.on('connect', () => {
-						console.log(colors.green(datetime() + "Соединение установлено!"));
-					});
-					socket.on('initialize', function (data) {
-						if(data.value === 'whois'){
-							login(socket);
-						}
-					});
-					socket.on('authorisation', function (data) {
-						if(data.value === 'true'){
-							console.log(colors.green(datetime() + "Авторизация пройдена!"));
-						} else {
-							//если авторизация неудачна, пробую каждые 5 минут
-							console.log(colors.red(datetime() + "Авторизация не пройдена!"));
-							setTimeout(login, 300000);
-						}
-					});
-					//слушаем сокет
-					listenSocket(socket);
-				}
-			} while (typeof(socket) === 'undefined');
+			Reconnect(protocol_val, server_val, port_val);
 			//проверяем задания каждые 15 сек
 			setInterval(function(){
 				try {
@@ -391,13 +361,15 @@ function datetime() {
 }
 ```
 
-### Функция работы с сокетом
+### Функция работы соединения с сокетом
 
 ##### Описание
-Слушает сокет на событие получения заданий, анализирует статус выполнения заданий. В случае расхождения статусов, отправит актуальный в сокет. Добавляет новые задачи.
+Соединяется с сокетом, запускает функцию авторизации в сокете, функцию прослушки сокета.
 
 ##### Входящие параметры
-socket - объект socket.io (Object)
+protocol_val = протокол сокет сервера http или https (String)
+server_val = адрес сокет-сервера (String)
+port_val = порт подключения к сокет-серверу (Integer)
 
 ##### Возвращаемое значение 
 undefined
@@ -405,7 +377,56 @@ undefined
 ##### Исходный код
 
 ```
-function listenSocket(socket){
+function Reconnect(protocol_val, server_val, port_val){
+	try {
+		if(protocol_val === 'https'){
+			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
+		} else {
+			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val);
+		}
+		socket.on('connect', () => {
+			console.log(colors.green(datetime() + "Соединение установлено!"));
+		});
+		socket.on('initialize', function (data) {
+			if(data.value === 'whois'){
+				login(socket);
+			}
+		});
+		socket.on('authorisation', function (data) {
+			if(data.value === 'true'){
+				console.log(colors.green(datetime() + "Авторизация пройдена!"));
+			} else {
+				//если авторизация неудачна, пробую каждые 5 минут
+				console.log(colors.red(datetime() + "Авторизация не пройдена!"));
+			}
+		});
+		//слушаем сокет
+		listenSocket(socket, protocol_val, server_val, port_val);
+	}catch(e){
+		console.log(colors.red(datetime() + "Ошибка подключения к сокету: " + e));
+		setTimeout(Reconnect, 300000, protocol_val, server_val, port_val);
+	}
+}
+```
+
+### Функция работы с сокетом
+
+##### Описание
+Слушает сокет на событие получения заданий, анализирует статус выполнения заданий. В случае расхождения статусов, отправит актуальный в сокет. Добавляет новые задачи.
+
+##### Входящие параметры
+socket - объект socket.io (Object)
+protocol_val = протокол сокет сервера http или https (String)
+server_val = адрес сокет-сервера (String)
+port_val = порт подключения к сокет-серверу (Integer)
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function listenSocket(socket, protocol_val, server_val, port_val){
 	try {
 		socket.on('sendtask', function (data) {
 			try {
@@ -442,6 +463,7 @@ function listenSocket(socket){
 		});
 		socket.on('disconnect', () => {
 			console.log(colors.red(datetime() + "Соединение разорвано!"));
+			setTimeout(Reconnect, 300000, protocol_val, server_val, port_val);
 		});
 	} catch (e){
 		console.log(colors.red(datetime() + "Проблема прослушки открытого сокета!"));

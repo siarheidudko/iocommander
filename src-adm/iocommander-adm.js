@@ -31,7 +31,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	}
 	return state;
 }
-function editConnStore(state = {uids:{}, users:{}}, action){
+function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}}, action){
 	try {
 		switch (action.type){
 			case 'SYNC_OBJECT':
@@ -205,38 +205,34 @@ function initialiseSocket(login_val, password_val){
 		if(typeof(JsonInitString) === 'object'){
 			var user_val = JsonInitString.login; 
 			var password_val = CryptoJS.SHA256(user_val + JsonInitString.password+'icommander').toString();
-			if(typeof(socket) !== 'undefined'){
-				socket.close();
-			}
 			var protocol_val = JsonInitString.protocol,
 			server_val = JsonInitString.server,	
 			port_val = JsonInitString.port,
 			socket = io(protocol_val + '://' + server_val + ':' + port_val);
 			window.socket = socket;
-			do {
-				if (typeof(socket) !== 'undefined'){
-					socket.on('connect', () => {
-						console.log(datetime() + "Соединение установлено!");
-					});
-					socket.on('initialize', function (data) {
-						if(data.value === 'whois'){
-							login(socket, user_val, password_val);
-						}
-					});
-					socket.on('authorisation', function (data) {
-						if(data.value === 'true'){
-							console.log(datetime() + "Авторизация пройдена!");
-							adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true}});
-						} else {
-							serverStorage.dispatch({type:'CLEAR_STORAGE'});
-							connectionStorage.dispatch({type:'CLEAR_STORAGE'});
-							console.log(datetime() + "Авторизация не пройдена!");
-							adminpanelStorage.dispatch({type:'AUTH', payload: {auth:false}});
-						}
-					});
-					listenSocket(socket);
-				}
-			} while (typeof(socket) === 'undefined');
+			if (typeof(socket) !== 'undefined'){
+				socket.on('connect', () => {
+					console.log(datetime() + "Соединение установлено!");
+				});
+				socket.on('initialize', function (data) {
+					if(data.value === 'whois'){
+						login(socket, user_val, password_val);
+					}
+				});
+				socket.on('authorisation', function (data) {
+					if(data.value === 'true'){
+						console.log(datetime() + "Авторизация пройдена!");
+						adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true}});
+					} else {
+						serverStorage.dispatch({type:'CLEAR_STORAGE'});
+						connectionStorage.dispatch({type:'CLEAR_STORAGE'});
+						console.log(datetime() + "Авторизация не пройдена!");
+						socket.disconnect();
+						adminpanelStorage.dispatch({type:'AUTH', payload: {auth:false}});
+					}
+				});
+				listenSocket(socket);
+			}
 		} else {
 			console.log(datetime() + "Не могу распознать объект конфигурации!");
 			adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не могу распознать объект конфигурации!"}});

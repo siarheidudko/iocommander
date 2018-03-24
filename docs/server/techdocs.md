@@ -10,19 +10,24 @@
 - Если из соединения пришел логин и хэш пароля, проверяет его действительность в хранилище redux. Анализирует является ли входящее соединение клиентом или администратором.
 - Если входящее соединение является клиентом - устанавливает линк данного сокета и имени пользователя в хранилище соединений redux (connectionStorage). Отправляет существующие для данного клиента задачи в сокет. И слушает отчеты клиента.
 - Если входящее соединение является администратором - отправляет оба хранилища redux (serverStorage, connectionStorage) в сокет и слушает сокет на наличие новых задач. Подписывает сокет администратора на изменения в хранилищах.
+- При изменении хранилища serverStorage генерирует группы пользователей и отчеты по таскам в хранилище connectionStorage.
+- Имеет прототип ip2ban, при пятикратном введении неверной комбинации логин-пароль доступ с IP-адреса блокируется на интервал указанный в настройках.
 
 ```
 try {
 	getSettings().then(function(value){
 		//загружаем файл конфигурации
-		port = parseInt(value.port, 10);
+		var port = parseInt(value.port, 10),
 		webport = parseInt(value.webport, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
-		sslkey = value.sslkey;
-		sslcrt = value.sslcrt;
+		var sslkey = value.sslkey,
+		sslcrt = value.sslcrt,
 		sslca = value.sslca;
+		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
+			bantimeout = parseInt(value.bantimeout, 10);
+		}
 		if((typeof(sslkey) !== 'undefined') && (sslkey !== '') && (typeof(sslcrt) !== 'undefined') && (sslcrt !== '') && (typeof(sslca) !== 'undefined') && (sslca !== '')) {
 			SslOptions = {
 				key: fs.readFileSync(sslkey),
@@ -92,92 +97,113 @@ try {
 				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {
 					try {
-						io.sockets.sockets[socket.id].emit('initialize', { value: 'whois' });
-						io.sockets.sockets[socket.id].on('login', function (data) { 
-							if(testUser(data.user, data.password, socket.id)) {
-								try {
-									io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
-									setUser(data.user, 'uid', socket.id);
-									console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-									io.sockets.sockets[socket.id].emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
-									io.sockets.sockets[socket.id].on('completetask', function (data) {
-										serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid, answer:data.answer, tryval:data.tryval}});
-									});
-								} catch (e) {
-									console.log(colors.red(datetime() + "Ошибка взаимодействия с пользователем " + data.user +": " + e));
-								}
-							} else if(testAdmin(data.user, data.password, socket.id)) {
-								try {
-									io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
-									setUser(data.user, 'uid', socket.id);
-									console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id));
-									sendStorageToWeb(io, 'all');
-									io.sockets.sockets[socket.id].on('adm_setUser', function (data) {
-										if(typeof(data) === 'object'){
-											if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'string') && (data[1] !== "")){
-												setUser(data[0], 'password', data[1]);
-											}
-										}
-									});
-									io.sockets.sockets[socket.id].on('adm_setAdmin', function (data) {
-										if(typeof(data) === 'object'){
-											if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'string') && (data[1] !== "")){
-												setAdmin(data[0], 'password', data[1]);
-											}
-										}
-									});
-									io.sockets.sockets[socket.id].on('adm_setTask', function (data) {
-										if(typeof(data) === 'object'){
-											if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'object')){
-												setTask(data[0],data[1]);
-												try {
-													var ReplaceUserName = replacer(data[0], true);
-													if(typeof(connectionStorage.getState().users[ReplaceUserName]) !== 'undefined'){
-														var SocketUserId = connectionStorage.getState().users[ReplaceUserName];
-														if(typeof(io.sockets.sockets[SocketUserId])  !== 'undefined'){
-															io.sockets.sockets[SocketUserId].emit('sendtask', serverStorage.getState().tasks[ReplaceUserName]);
-															console.log(colors.green(datetime() + "Задачи пользователю " + data[0] + " отправлены!"));
-														} else {
-															console.log(colors.red(datetime() + "Пользователь " + data[0] + " не найден в массиве сокетов (рассинхронизация с хранилищем соединений)."));
-														}
-													} else {
-														console.log(colors.yellow(datetime() + "Пользователь " + data[0] + " не найден в хранилище соединений (не подключен). Отправка будет произведена после подключения."));
-													}
-												} catch(e){
-													console.log(colors.red(datetime() + "Не могу отправить задание в сокет:" + e));
+						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
+						var thisSocketAddress = thisSocketAddressArr[thisSocketAddressArr.length-1];
+						if(typeof(connectionStorage.getState().iptoban) === 'object'){
+							if(typeof(connectionStorage.getState().iptoban[replacer(thisSocketAddress, true)]) === 'object') {
+								var ThisSocketAttemp = connectionStorage.getState().iptoban[replacer(thisSocketAddress, true)].attemp;
+								var ThisSocketDatetime = connectionStorage.getState().iptoban[replacer(thisSocketAddress, true)].datetime;
+							}
+						}
+						if(typeof(ThisSocketAttemp) !== 'number'){
+							ThisSocketAttemp = 0;
+						}
+						if(typeof(ThisSocketDatetime) !== 'number'){
+							ThisSocketDatetime = 0;
+						}
+						if((ThisSocketAttemp > 5) && ((ThisSocketDatetime + bantimeout) > Date.now())){
+							console.log(colors.red(datetime() + 'Попытка входа с заблокированного адреса ' + thisSocketAddress));
+							socket.disconnect();
+						} else {
+							io.sockets.sockets[socket.id].emit('initialize', { value: 'whois' });
+							io.sockets.sockets[socket.id].on('login', function (data) {
+								if(testUser(data.user, data.password, socket.id)) {
+									try {
+										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
+										setUser(data.user, 'uid', socket.id);
+										console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
+										io.sockets.sockets[socket.id].emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
+										io.sockets.sockets[socket.id].on('completetask', function (data) {
+											serverStorage.dispatch({type:'COMPLETE_TASK', payload: {user:connectionStorage.getState().uids[socket.id], task:data.uid, answer:data.answer, tryval:data.tryval}});
+										});
+									} catch (e) {
+										console.log(colors.red(datetime() + "Ошибка взаимодействия с пользователем " + data.user +": " + e));
+									}
+								} else if(testAdmin(data.user, data.password, socket.id)) {
+									try {
+										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
+										setUser(data.user, 'uid', socket.id);
+										console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
+										sendStorageToWeb(io, 'all');
+										io.sockets.sockets[socket.id].on('adm_setUser', function (data) {
+											if(typeof(data) === 'object'){
+												if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'string') && (data[1] !== "")){
+													setUser(data[0], 'password', data[1]);
 												}
 											}
-										}
-									});
-									io.sockets.sockets[socket.id].on('adm_delUser', function (data) {
-										if(typeof(data) === 'object'){
-											if((typeof(data[0]) === 'string') && (data[0] !== "")){
-												serverStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
-												connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+										});
+										io.sockets.sockets[socket.id].on('adm_setAdmin', function (data) {
+											if(typeof(data) === 'object'){
+												if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'string') && (data[1] !== "")){
+													setAdmin(data[0], 'password', data[1]);
+												}
 											}
-										}
-									});
-									io.sockets.sockets[socket.id].on('adm_delAdmin', function (data) {
-										if(typeof(data) === 'object'){
-											if((typeof(data[0]) === 'string') && (data[0] !== "")){
-												serverStorage.dispatch({type:'REMOVE_ADMIN', payload: {user:data[0]}});
-												connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+										});
+										io.sockets.sockets[socket.id].on('adm_setTask', function (data) {
+											if(typeof(data) === 'object'){
+												if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'object')){
+													setTask(data[0],data[1]);
+													try {
+														var ReplaceUserName = replacer(data[0], true);
+														if(typeof(connectionStorage.getState().users[ReplaceUserName]) !== 'undefined'){
+															var SocketUserId = connectionStorage.getState().users[ReplaceUserName];
+															if(typeof(io.sockets.sockets[SocketUserId])  !== 'undefined'){
+																io.sockets.sockets[SocketUserId].emit('sendtask', serverStorage.getState().tasks[ReplaceUserName]);
+																console.log(colors.green(datetime() + "Задачи пользователю " + data[0] + " отправлены!"));
+															} else {
+																console.log(colors.red(datetime() + "Пользователь " + data[0] + " не найден в массиве сокетов (рассинхронизация с хранилищем соединений)."));
+															}
+														} else {
+															console.log(colors.yellow(datetime() + "Пользователь " + data[0] + " не найден в хранилище соединений (не подключен). Отправка будет произведена после подключения."));
+														}
+													} catch(e){
+														console.log(colors.red(datetime() + "Не могу отправить задание в сокет:" + e));
+													}
+												}
 											}
-										}
-									});
-								} catch (e) {
-									console.log(colors.red(datetime() + "Ошибка взаимодействия с администратором " + data.user +": " + e));
-								}
-							} else {
-								socket.emit('authorisation', { value: 'false' });
-								console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
-							} 
-						});
-					  
-						socket.on('disconnect', function () {
-							connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socket.id}});
-							console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(connectionStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
-						});
+										});
+										io.sockets.sockets[socket.id].on('adm_delUser', function (data) {
+											if(typeof(data) === 'object'){
+												if((typeof(data[0]) === 'string') && (data[0] !== "")){
+													serverStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+													connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+												}
+											}
+										});
+										io.sockets.sockets[socket.id].on('adm_delAdmin', function (data) {
+											if(typeof(data) === 'object'){
+												if((typeof(data[0]) === 'string') && (data[0] !== "")){
+													serverStorage.dispatch({type:'REMOVE_ADMIN', payload: {user:data[0]}});
+													connectionStorage.dispatch({type:'REMOVE_USER', payload: {user:data[0]}});
+												}
+											}
+										});
+									} catch (e) {
+										console.log(colors.red(datetime() + "Ошибка взаимодействия с администратором " + data.user +": " + e));
+									}
+								} else {
+									io.sockets.sockets[socket.id].emit('authorisation', { value: 'false' });
+									socket.disconnect();
+									console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
+									connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(thisSocketAddress, true)}});
+								} 
+							});
+						  
+							socket.on('disconnect', function () {
+								connectionStorage.dispatch({type:'REMOVE_UID', payload: {uid:socket.id}});
+								console.log(colors.red(datetime() + "Отключение пользователя\nLogin: " + replacer(connectionStorage.getState().uids[socket.id], false) + "\nUID: " + socket.id));
+							}); 
+						}
 				    } catch (e){
 						console.log(colors.red(datetime() + "Ошибка обработки входящего соединения: " + e));
 					}
@@ -317,9 +343,13 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
   - ADD_UID - добавляет связки пользователь - сокет и сокет - пользователь, payload:{user:USER, uid:SOCKET}, USER - имя пользователя(String), SOCKET - уникальный идентификатор сокета(String).
   - REMOVE_UID - удаляет связки пользователь - сокет и сокет - пользователь, payload:{uid:SOCKET}, SOCKET - уникальный идентификатор сокета(String).
   - REMOVE_USER - удаляет связки пользователь - сокет и сокет - пользователь, payload:{user:USER}, USER - имя пользователя(String).
-
+  - GEN_REPORT - записывает отчет по таскам в хранилище, payload:{report:{}}, {} - объект отчетов по таскам (Object).
+  - GEN_GROUP - записывает группы пользователей в хранилище, payload:{groups:{}}, {} - объект групп пользователей (Object).
+  - WRONG_PASS - устанавливает дату введения неверного пароля для IP-адреса, а также считает число не пройденных авторизаций клиента, payload:{address:IP}, IP - ip-адрес клиента сокета с замененным "." на "_" (String)
+  - GC_WRONG_PASS_CLEAR - сбрасывает дату введения неверного пароля для IP-адреса, а также считает число не пройденных авторизаций клиента, payload:{address:IP}, IP - ip-адрес клиента сокета с замененным "." на "_" (String)
+  
 ```
-function editConnectionStore(state = {uids:{}, users:{}}, action){
+function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, iptoban:{}}, action){
 	try {
 		switch (action.type){
 			case 'ADD_UID':
@@ -330,6 +360,8 @@ function editConnectionStore(state = {uids:{}, users:{}}, action){
 				delete state_new.uids[useruid];
 				state_new.uids[action.payload.uid] = action.payload.user;
 				state_new.users[action.payload.user] = action.payload.uid;
+				state_new.uids = sortObjectFunc(state_new.uids, '', 'string', false);
+				state_new.users = sortObjectFunc(state_new.users, '', 'string', false);
 				return state_new;
 				break;
 			case 'REMOVE_UID':
@@ -346,6 +378,35 @@ function editConnectionStore(state = {uids:{}, users:{}}, action){
 				state_new = lodash.clone(state);
 				delete state_new.users[action.payload.user];
 				delete state_new.uids[useruid];
+				return state_new;
+				break;
+			case 'GEN_REPORT':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				state_new.report = action.payload.report;
+				return state_new;
+				break;
+			case 'GEN_GROUP':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				state_new.groups = action.payload.groups;
+				return state_new;
+				break;
+			case 'WRONG_PASS':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				if(typeof(state_new.iptoban[action.payload.address]) !== 'object'){
+					state_new.iptoban[action.payload.address] = {};
+					state_new.iptoban[action.payload.address].attemp = 0;
+				}
+				state_new.iptoban[action.payload.address].datetime = Date.now();
+				state_new.iptoban[action.payload.address].attemp = state_new.iptoban[action.payload.address].attemp + 1;
+				return state_new;
+				break;
+			case 'GC_WRONG_PASS_CLEAR':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				delete state_new.iptoban[action.payload.address];
 				return state_new;
 				break;
 			default:
@@ -907,7 +968,7 @@ function startWebServer(port){
 ### Сборщик мусора
 
 ##### Описание
-Чистит выполненные задания старше 10 дней. Обрезает ответы (обратную связь) заданий, длиннее 500 символов. Удаляет задания несуществующих пользователей.
+Чистит выполненные задания старше 10 дней. Обрезает ответы (обратную связь) заданий, длиннее 500 символов. Удаляет задания несуществующих пользователей. Чистит объект для ip2ban по таймауту.
 
 ##### Входящие параметры
 undefined
@@ -921,38 +982,249 @@ undefined
 function GarbageCollector(){
 	var lifetime = 86400000 * 10; //устанавливаю срок хранения выполненых задач в 10 дней
 	var actualStorage = serverStorage.getState();
+	var bannedStorage = connectionStorage.getState().iptoban;
 	try{
-		for(var key_object in actualStorage.tasks){
-			try{
-				if(typeof(actualStorage.users[key_object]) === 'undefined'){
-					serverStorage.dispatch({type:'GC_USER', payload: {user:key_object}});
-					console.log(colors.yellow(datetime() + "Найдены задания для несуществующего объекта (" + replacer(key_object, false) + "), удаляю!"));
-				} else {
-					for(var key_task in actualStorage.tasks[key_object]){
-						try {
-							if((actualStorage.tasks[key_object][key_task].complete == 'true') && (actualStorage.tasks[key_object][key_task].datetime < (Date.now()-lifetime))){
-								serverStorage.dispatch({type:'GC_TASK', payload: {user:key_object, task:key_task}});
-								console.log(colors.yellow(datetime() + "Найдены выполненые задания с истекшим сроком (" + key_task + "), удаляю!"));
+		try{
+			for(var key_object in actualStorage.tasks){
+				try{
+					if(typeof(actualStorage.users[key_object]) === 'undefined'){
+						serverStorage.dispatch({type:'GC_USER', payload: {user:key_object}});
+						console.log(colors.yellow(datetime() + "Найдены задания для несуществующего объекта (" + replacer(key_object, false) + "), удаляю!"));
+					} else {
+						for(var key_task in actualStorage.tasks[key_object]){
+							try {
+								if((actualStorage.tasks[key_object][key_task].complete == 'true') && (actualStorage.tasks[key_object][key_task].datetime < (Date.now()-lifetime))){
+									serverStorage.dispatch({type:'GC_TASK', payload: {user:key_object, task:key_task}});
+									console.log(colors.yellow(datetime() + "Найдены выполненые задания с истекшим сроком (" + key_task + "), удаляю!"));
+								}
+							} catch (e){
+								console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
 							}
-						} catch (e){
-							console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
-						}
-						try {
-							if(actualStorage.tasks[key_object][key_task].answer.length > 503){
-								serverStorage.dispatch({type:'GC_TASK_REPLANSW', payload: {user:key_object, task:key_task}});
-								console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + key_task + "(" + replacer(key_object, false) + "), обрезаю!"));
+							try {
+								if(actualStorage.tasks[key_object][key_task].answer.length > 503){
+									serverStorage.dispatch({type:'GC_TASK_REPLANSW', payload: {user:key_object, task:key_task}});
+									console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + key_task + "(" + replacer(key_object, false) + "), обрезаю!"));
+								}
+							} catch(e){
+								console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
 							}
-						} catch(e){
-							console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
 						}
 					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Ошибка обработки объекта "  + replacer(key_object, false) + " сборщиком мусора!"));
 				}
-			} catch(e){
-				console.log(colors.red(datetime() + "Ошибка обработки объекта "  + replacer(key_object, false) + " сборщиком мусора!"));
 			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора постоянного хранилища: "  + e));
+		}
+		try {
+			for(var key_ipaddr in bannedStorage){
+				try {
+					if(typeof(bannedStorage[key_ipaddr]) === 'object'){
+						if(typeof(bannedStorage[key_ipaddr].datetime) !== 'undefined'){
+							if((bannedStorage[key_ipaddr].datetime + bantimeout) < Date.now()){
+								connectionStorage.dispatch({type:'GC_WRONG_PASS_CLEAR', payload: {address:key_ipaddr}});
+							}
+						}
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Ошибка обработки IP адреса "  + replacer(key_ipaddr, false) + " сборщиком мусора!"));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора хранилища соединений: "  + e));
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
+	}
+}
+```
+
+### Функция генерации отчетов по таскам
+
+##### Описание
+При изменении хранилища serverStorage генерирует отчеты по таскам в хранилище connectionStorage.
+
+##### Входящие параметры
+undefined
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function GenerateReport(){
+	try {
+		var tempStorage = serverStorage.getState().tasks;
+		var reportStore = {};
+		var reportSortStore = {};
+		for(var keyObject in tempStorage){
+			try {
+				for(var keyTask in tempStorage[keyObject]){
+					try {
+						if(typeof(reportStore[keyTask]) === 'undefined'){
+							reportStore[keyTask] = {complete:[],incomplete:[],objects:{}};
+						}
+						if(tempStorage[keyObject][keyTask].complete === 'true'){
+							reportStore[keyTask].complete.push(keyObject);
+						} else {
+							reportStore[keyTask].incomplete.push(keyObject);
+						}
+						if(typeof(reportStore[keyTask].objects[keyObject]) === 'undefined'){
+							reportStore[keyTask].objects[keyObject] = {};
+						}
+						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].datetime = tempStorage[keyObject][keyTask].datetime;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].timeoncompl) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].datetimeout = (new Date(tempStorage[keyObject][keyTask].timeoncompl)).getTime();
+						}
+						if(typeof(tempStorage[keyObject][keyTask].tryval) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].tryval = tempStorage[keyObject][keyTask].tryval;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].datetimecompl) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].complete) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].complete = tempStorage[keyObject][keyTask].complete;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].answer) !== 'undefined'){
+							reportStore[keyTask].objects[keyObject].answer = tempStorage[keyObject][keyTask].answer;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
+							reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
+						}
+						if(typeof(tempStorage[keyObject][keyTask].comment) !== 'undefined'){
+							reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
+						}
+					} catch(e){
+						console.log(colors.red(datetime() + "Не обработан таск " + keyTask + " для " + keyObject + " при генерации отчета!"));
+					}
+				}
+			} catch(e){
+				console.log(colors.red(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!"));
+			}
+		}
+		connectionStorage.dispatch({type:'GEN_REPORT', payload: {report:sortObjectFunc(reportStore, 'datetime', 'integer', true)}});
+	} catch(e){
+		console.log(colors.red(datetime() + "Ошибка генерации отчетов по таскам!"));
+	}
+}
+```
+
+### Функция генерации групп пользователей
+
+##### Описание
+При изменении хранилища serverStorage генерирует группы пользователей. Имя группы это строка до символа "."
+
+##### Входящие параметры
+undefined
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function GenerateGroup(){
+	try{
+		var tempStorage = serverStorage.getState().users;
+		var groupStorage = {};
+		groupStorage['all'] = [];
+		for(var keyObject in tempStorage){
+			try{
+				var replaceKeyObject = replacer(keyObject, false);
+				var groupNameArr = replaceKeyObject.split('.');
+				var groupName = groupNameArr[0];
+				if(typeof(groupStorage[groupName]) === 'undefined'){
+					groupStorage[groupName] = [];
+				}
+				groupStorage[groupName].push(replaceKeyObject);
+				groupStorage['all'].push(replaceKeyObject);
+			} catch(e){
+				console.log(colors.red(datetime() + "Ошибка добавления пользователя " + keyObject + " в группы!"));
+			}
+		}
+		connectionStorage.dispatch({type:'GEN_GROUP', payload: {groups:sortObjectFunc(groupStorage, '', 'string', false)}});
+	} catch(e){
+		console.log(colors.red(datetime() + "Ошибка генерации групп пользователей: " + e));
+	}
+}
+```
+
+### Функция сортировки объекта по полю
+
+##### Описание
+Производит переиндексацию ключей объекта. Может работать с строкой и числом, может сортировать в прямом и обратном порядке, может сортировать по ключам вложенных объектов.
+
+##### Входящие параметры
+ObjectForSort - объект для сортировки (Object)
+KeyForSort - ключ вложенного объекта для сортировки, т.е. ObjectForSort = {"ObjectForSortKey":{KeyForSort:""}}. Если "" то сортировка производится по ключам объекта ObjectForSort (String)
+TypeKey - тип ключа для сортировки, может быть integer для чисел или любой другой для строки (String)
+reverse - вид сортировки, true - обратный или false - прямой (Boolean)
+
+##### Возвращаемое значение 
+Object
+
+##### Исходный код
+
+```
+function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
+	try{
+		var SortObject = new Object,
+			tempObject = new Object,
+			tempArray = new Array,
+			validaterone = 0,
+			validatertwo = 0;
+		
+		for(var keyobject in ObjectForSort) { //проходим по всем ключам родителям объекта
+			if(KeyForSort !== ''){
+				if(typeof(ObjectForSort[keyobject][KeyForSort]) !== 'undefined'){ //проверяем что ключ потомок существует
+					tempObject[ObjectForSort[keyobject][KeyForSort]] = keyobject; //создаем объект связку ключа потомка и ключа родителя
+					tempArray.push(ObjectForSort[keyobject][KeyForSort]); //создаем массив ключей потомков
+				}
+			} else {
+				tempArray.push(keyobject); //создаем массив ключей
+			}
+			validaterone++; //считаем число ключей объекта, чтобы потом сравнить с длинной массива
+		}
+		
+		function sortNumber(a,b) { //сортируем массив в зависимости от переданного типа
+			return a - b;
+		}
+		if(TypeKey === 'integer'){
+			tempArray.sort(sortNumber);
+		} else {
+			tempArray.sort();
+		}
+		
+		if(reverse){  //если задан параметр, то переворачиваем массив
+			tempArray.reverse();
+		}
+		
+		for(var i=0; i<tempArray.length; i++){ //проходим по отсортированному массиву ключей потомков
+			if(KeyForSort !== ''){
+				SortObject[tempObject[tempArray[i]]] = ObjectForSort[tempObject[tempArray[i]]]; //используем объект связку и старый объект, чтобы получить новый отсортированный объект
+			} else {
+				SortObject[tempArray[i]] = ObjectForSort[tempArray[i]];
+			}
+		}
+		
+		if(KeyForSort !== ''){ //учитываем, что для первого уровня валидация не нужна, т.к. не используется объект связка, где могли быть затерты одинаковые ключи
+			for(var keyobject in SortObject){
+				validatertwo++; //считаем число ключей нового объекта
+			}
+		}
+		
+		if((validaterone === validatertwo) || (KeyForSort === '')){ //если количество ключей не изменилось - выводим новый объект.
+			return SortObject;
+		} else {
+			return ObjectForSort;
+		}
+	} catch(e){
+		console.log(colors.red(datetime() + "Ошибка переиндексации ключей объекта!"));
+		return ObjectForSort;
 	}
 }
 ```

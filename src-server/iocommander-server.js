@@ -14,7 +14,8 @@ cryptojs=require("cryptojs"),
 redux=require("redux"),
 lodash=require("lodash"),
 firebase=require("firebase");
-var port, firebase_user, firebase_pass, config, SslOptions;
+var port, firebase_user, firebase_pass, config, SslOptions, 
+bantimeout = 10800000;
 var SyncFirebaseTimeout = false;
 
 
@@ -555,7 +556,7 @@ function GarbageCollector(){
 				try {
 					if(typeof(bannedStorage[key_ipaddr]) === 'object'){
 						if(typeof(bannedStorage[key_ipaddr].datetime) !== 'undefined'){
-							if((bannedStorage[key_ipaddr].datetime + 10800000) < Date.now()){
+							if((bannedStorage[key_ipaddr].datetime + bantimeout) < Date.now()){
 								connectionStorage.dispatch({type:'GC_WRONG_PASS_CLEAR', payload: {address:key_ipaddr}});
 							}
 						}
@@ -722,14 +723,17 @@ function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
 try {
 	getSettings().then(function(value){
 		//загружаем файл конфигурации
-		port = parseInt(value.port, 10);
+		var port = parseInt(value.port, 10),
 		webport = parseInt(value.webport, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
-		sslkey = value.sslkey;
-		sslcrt = value.sslcrt;
+		var sslkey = value.sslkey,
+		sslcrt = value.sslcrt,
 		sslca = value.sslca;
+		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
+			bantimeout = parseInt(value.bantimeout, 10);
+		}
 		if((typeof(sslkey) !== 'undefined') && (sslkey !== '') && (typeof(sslcrt) !== 'undefined') && (sslcrt !== '') && (typeof(sslca) !== 'undefined') && (sslca !== '')) {
 			SslOptions = {
 				key: fs.readFileSync(sslkey),
@@ -813,8 +817,9 @@ try {
 						if(typeof(ThisSocketDatetime) !== 'number'){
 							ThisSocketDatetime = 0;
 						}
-						if((ThisSocketAttemp > 5) && ((ThisSocketDatetime + 10800000) > Date.now())){
+						if((ThisSocketAttemp > 5) && ((ThisSocketDatetime + bantimeout) > Date.now())){
 							console.log(colors.red(datetime() + 'Попытка входа с заблокированного адреса ' + thisSocketAddress));
+							socket.disconnect();
 						} else {
 							io.sockets.sockets[socket.id].emit('initialize', { value: 'whois' });
 							io.sockets.sockets[socket.id].on('login', function (data) {
@@ -893,7 +898,8 @@ try {
 										console.log(colors.red(datetime() + "Ошибка взаимодействия с администратором " + data.user +": " + e));
 									}
 								} else {
-									socket.emit('authorisation', { value: 'false' });
+									io.sockets.sockets[socket.id].emit('authorisation', { value: 'false' });
+									socket.disconnect();
 									console.log(colors.red(datetime() + "Неверный пароль для пользователя\nLogin: " + data.user + "\nUID: " + socket.id));
 									connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(thisSocketAddress, true)}});
 								} 
