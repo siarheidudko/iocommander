@@ -544,6 +544,7 @@ function startFileServer(port){
 						} else if(auth){
 							var tmp = auth.split(' ');
 							var buf = new Buffer(tmp[1], 'base64');
+							console.log(buf);
 							var plain_auth = buf.toString();
 							var creds = plain_auth.split(':'); 
 							var username = replacer(creds[0], true);
