@@ -43,6 +43,8 @@
 yum install nodejs -y
 ```
 
+- Устанавливаете зависимости (или копируете из репозитория ./node_modules/* и файл ./package.json)
+
 - Создаете системную службу (на примере CentOS 7.x/systemd):
 
   - создаете файл в /etc/systemd/system/iocommander-client.service
