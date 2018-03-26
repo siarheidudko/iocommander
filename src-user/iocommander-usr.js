@@ -49,7 +49,7 @@ getSettings().then(function(value){
 										var flag = true;
 										if(Array.isArray(data_val[key_val].dependencies)){
 											for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
-												if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
+												if(clientStorage.getState().incomplete.indexOf(data_val[key_val].dependencies[i]) !== -1){
 													flag = false;
 													console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
 												}
