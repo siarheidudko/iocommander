@@ -545,10 +545,9 @@ function startFileServer(port){
 							var tmp = auth.split(' ');
 							var buf = new Buffer(tmp[1], 'base64');
 							var plain_auth = buf.toString();
-							console.log(plain_auth);
 							var creds = plain_auth.split(':'); 
 							var username = replacer(creds[0], true);
-							var password = cryptojs.Crypto.SHA256(creds[0] + creds[1] +'icommander');
+							var password = creds[1];
 							if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
 								fs.readFile(pathFile, (err, file) => {
 									if(err) {

@@ -775,7 +775,6 @@ function download(file, options, callback) {
 		if((typeof(server_global) !== 'undefined') && (typeof(user_global) !== 'undefined') && (typeof(password_global) !== 'undefined')){
 			if(url.parse(file).hostname === server_global){
 				getoptions = url.parse(url.parse(file).protocol + '//' + user_global + ':' + password_global + '@' + url.parse(file).hostname + ':' + url.parse(file).port + url.parse(file).pathname);
-				console.log(getoptions);
 			}
 		}
 		var request = req.get(getoptions, function(response) {
