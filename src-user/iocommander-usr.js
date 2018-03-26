@@ -9,21 +9,25 @@
 const fs=require("fs"),
 colors=require("colors"),
 cryptojs=require("cryptojs"),
-download = require("download-file"),
+//download = require("download-file"),
 os = require("os"),
 child_process = require("child_process"),
 redux=require("redux"),
 lodash=require("lodash"),
-socketclient = require('socket.io-client');
-var user_val, password_val, socket;
+socketclient = require('socket.io-client'),
+http = require('http'),
+https = require('https'),
+url = require('url'),
+mkdirp = require('mkdirp');
+var user_global, password_global, server_global, socket;
 var SyncDatabaseTimeout = false;
 
 getSettings().then(function(value){
 	if(value !== 'error'){
-		user_val = value.login; 
-		password_val = cryptojs.Crypto.SHA256(user_val + value.password+'icommander');
+		user_global = value.login; 
+		password_global = cryptojs.Crypto.SHA256(user_global + value.password+'icommander');
+		server_global = value.server;
 		var protocol_val = value.protocol,
-		server_val = value.server,	
 		port_val = value.port;
 		getDatabase().then(function (database){
 			if(database !== 'error'){
@@ -32,7 +36,7 @@ getSettings().then(function(value){
 			} else {
 				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
 			}
-			Reconnect(protocol_val, server_val, port_val);
+			Reconnect(protocol_val, server_global, port_val);
 			//проверяем задания каждые 15 сек
 			setInterval(function(){
 				try {
@@ -301,7 +305,7 @@ function setDatabase(){
 function login(socket) {
 	try {
 		if(typeof(socket) === 'object'){
-			socket.emit('login', { user: user_val, password: password_val });
+			socket.emit('login', { user: user_global, password: password_global });
 		} else {
 			console.log(colors.red(datetime() + "Аргумент сокет не является объектом!"));
 		}
@@ -744,5 +748,56 @@ function GarbageCollector(){
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
+	}
+}
+
+//измененная библиотека download-file для работы с собственным file-сервером
+function download(file, options, callback) {
+	if (!callback && typeof options === 'function') {
+		callback = options;
+	}
+	try{
+		if (!file) throw("Need a file url to download");
+		options = typeof options === 'object' ? options : {};
+		options.timeout = options.timeout || 20000;
+		options.directory = options.directory ? options.directory : '.';
+		var uri = file.split('/');
+		options.filename = options.filename || uri[uri.length - 1];
+		var path = options.directory + "/" + options.filename;
+		if (url.parse(file).protocol === null) {
+			req = http;
+		} else if (url.parse(file).protocol === 'https:') {
+			req = https;
+		} else {
+			req = http;
+		}
+		var getoptions = url.parse(file);
+		if((typeof(servername_global) !== 'undefined') && (typeof(username_global) !== 'undefined') && (typeof(password_global) !== 'undefined')){
+			if(url.parse(file).hostname === servername_global){
+				getoptions.auth = username_global + ':' + password_global;
+			}
+		}
+		var request = req.get(getoptions, function(response) {
+			if (response.statusCode === 200) {
+				mkdirp(options.directory, function(err) { 
+					if (err) throw err;
+					var file = fs.createWriteStream(path);
+					response.pipe(file);
+				});
+			} else {
+			  if (callback) callback(response.statusCode);
+			}
+			response.on("end", function(){
+				if (callback) callback(false, path);
+			});
+			request.setTimeout(options.timeout, function () {
+				request.abort();
+				callback("Timeout");
+			});
+		}).on('error', function(e) {
+			if (callback) callback(e);
+		});
+	}catch(e) {
+		callback(e);
 	}
 }

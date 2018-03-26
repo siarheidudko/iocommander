@@ -512,6 +512,85 @@ function startWebServer(port){
 	}
 }
 
+//функция запуска file-сервера
+function startFileServer(port){
+	try {
+		var webserverfunc = function(req, res){
+			try {
+				if(typeof(connectionStorage.getState().iptoban) === 'object'){
+					if(typeof(connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)]) === 'object') {
+						var ThisSocketAttemp = connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)].attemp;
+						var ThisSocketDatetime = connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)].datetime;
+					}
+				}
+				if(typeof(ThisSocketAttemp) !== 'number'){
+					ThisSocketAttemp = 0;
+				}
+				if(typeof(ThisSocketDatetime) !== 'number'){
+					ThisSocketDatetime = 0;
+				}
+				if((ThisSocketAttemp > 5) && ((ThisSocketDatetime + bantimeout) > Date.now())){
+					res.writeHead(403, {'Content-Type': 'text/plain'});
+					res.end('Permission denied');
+					console.log(colors.yellow(datetime() + "Попытка входа на file-сервер с заблокированного адреса " + req.connection.remoteAddress));
+				} else {
+					var pathFile = './files/'+req.url;
+					try {
+						var auth = req.headers['authorization'];
+						if(!auth){
+							res.statusCode = 401;
+							res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+							res.end('Permission denied');
+						} else if(auth){
+							var tmp = auth.split(' ');
+							var buf = new Buffer(tmp[1], 'base64');
+							var plain_auth = buf.toString();
+							var creds = plain_auth.split(':'); 
+							var username = replacer(creds[0], true);
+							var password = cryptojs.Crypto.SHA256(creds[0] + creds[1] +'icommander');
+							if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
+								fs.readFile(pathFile, (err, file) => {
+									if(err) {
+										res.writeHead(404, {'Content-Type': 'text/plain'});
+										res.end('Not Found');
+										console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
+									} else {
+										res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+										res.end(file);
+									}
+								});	
+							} else {
+								res.statusCode = 401;
+								res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+								res.end('Permission denied');
+								connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(req.connection.remoteAddress, true)}});
+								console.log(colors.red(datetime() + "Попытка подключения к file-серверу с неверным паролем с адреса " + req.connection.remoteAddress));
+							}
+						}
+					} catch (e){
+						res.writeHead(500, {'Content-Type': 'text/plain'});
+						res.end('Internal Server Error');
+						console.log(colors.red(datetime() + "Ошибка обработки запроса на file-сервере" + e));
+					}
+				}
+			} catch(e){
+				res.writeHead(500, {'Content-Type': 'text/plain'});
+				res.end('Internal Server Error');
+				console.log(colors.red(datetime() + "Ошибка работы file-сервера:" +e));
+			}
+		};
+		if(SslOptions !== 'error'){ 
+			https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
+			console.log(colors.gray(datetime() + 'https-fileserver-server listening on *:' + port));
+		} else {
+			http.createServer(webserverfunc).listen(port, '0.0.0.0');
+			console.log(colors.gray(datetime() + 'http-fileserver-server listening on *:' + port));
+		}
+	} catch (e){
+		console.log(colors.red(datetime() + "Не могу запустить file-сервер!"));
+	}
+}
+
 //функция очистки хранилища
 function GarbageCollector(){
 	var lifetime = 86400000 * 10; //устанавливаю срок хранения выполненых задач в 10 дней
@@ -724,7 +803,8 @@ try {
 	getSettings().then(function(value){
 		//загружаем файл конфигурации
 		var port = parseInt(value.port, 10),
-		webport = parseInt(value.webport, 10);
+		webport = parseInt(value.webport, 10),
+		fileport = parseInt(value.fileport, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
@@ -930,6 +1010,8 @@ try {
 		}); 
 		//запускаю web-сервер
 		startWebServer(webport);
+		//запускаю файловый сервер
+		startFileServer(fileport);
 		//запускаю сборщик мусора раз в час
 		setInterval(GarbageCollector,3600000);
 	}, function(error){
