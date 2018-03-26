@@ -544,8 +544,8 @@ function startFileServer(port){
 						} else if(auth){
 							var tmp = auth.split(' ');
 							var buf = new Buffer(tmp[1], 'base64');
-							console.log(buf);
 							var plain_auth = buf.toString();
+							console.log(plain_auth);
 							var creds = plain_auth.split(':'); 
 							var username = replacer(creds[0], true);
 							var password = cryptojs.Crypto.SHA256(creds[0] + creds[1] +'icommander');
