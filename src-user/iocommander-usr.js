@@ -205,6 +205,13 @@ clientStorage.subscribe(function(){
 //функция пересоединения с сокетом 
 function Reconnect(protocol_val, server_val, port_val){
 	try {
+		if(typeof(socket) !== 'undefined'){
+			try{
+				socket.disconnect();
+			}catch(e){
+				console.log(colors.red(datetime() + "Не могу уничтожить сокет!"));
+			}
+		}
 		if(protocol_val === 'https'){
 			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
 		} else {
@@ -774,7 +781,7 @@ function download(file, options, callback) {
 		var getoptions = url.parse(file); 
 		if((typeof(server_global) !== 'undefined') && (typeof(user_global) !== 'undefined') && (typeof(password_global) !== 'undefined')){
 			if(url.parse(file).hostname === server_global){
-				getoptions = url.parse(url.parse(file).protocol + '//' + user_global + ':' + password_global + '@' + url.parse(file).hostname + ':' + url.parse(file).port + url.parse(file).pathname);
+				getoptions.auth = user_global + ':' + password_global;
 			}
 		}
 		var request = req.get(getoptions, function(response) {

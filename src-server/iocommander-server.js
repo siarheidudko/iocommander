@@ -501,19 +501,21 @@ function startWebServer(port){
 			}
 		};
 		if(SslOptions !== 'error'){ 
-			https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
+			var server = https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
 			console.log(colors.gray(datetime() + 'https-webserver-server listening on *:' + port));
 		} else {
-			http.createServer(webserverfunc).listen(port, '0.0.0.0');
+			var server = http.createServer(webserverfunc).listen(port, '0.0.0.0');
 			console.log(colors.gray(datetime() + 'http-webserver-server listening on *:' + port));
 		}
+		server.maxHeadersCount = 200;
+		server.timeout = 120000;
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу запустить web-сервер!"));
 	}
 }
 
 //функция запуска file-сервера
-function startFileServer(port){
+function startFileServer(port, fileConnLimit){
 	try {
 		var webserverfunc = function(req, res){
 			try {
@@ -559,7 +561,14 @@ function startFileServer(port){
 										res.end(file);
 									}
 								});	
-							} else {
+							} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
+								//res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+								//res.end(req);
+								//console.log(res.pipe(fs.createWriteStream('/iocommander/files/test.txt')));
+								var file = fs.createWriteStream('/2222.txt');
+								req.pipe(file);
+								res.end();
+							}else {
 								res.statusCode = 401;
 								res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
 								res.end('Permission denied');
@@ -580,12 +589,14 @@ function startFileServer(port){
 			}
 		};
 		if(SslOptions !== 'error'){ 
-			https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
+			var server = https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
 			console.log(colors.gray(datetime() + 'https-fileserver-server listening on *:' + port));
 		} else {
-			http.createServer(webserverfunc).listen(port, '0.0.0.0');
+			var server = http.createServer(webserverfunc).listen(port, '0.0.0.0');
 			console.log(colors.gray(datetime() + 'http-fileserver-server listening on *:' + port));
 		}
+		server.maxHeadersCount = fileConnLimit;
+		server.timeout = 120000;
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу запустить file-сервер!"));
 	}
@@ -804,7 +815,8 @@ try {
 		//загружаем файл конфигурации
 		var port = parseInt(value.port, 10),
 		webport = parseInt(value.webport, 10),
-		fileport = parseInt(value.fileport, 10);
+		fileport = parseInt(value.fileport, 10),
+		fileConnLimit = parseInt(value.fileconnlimit, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
@@ -879,7 +891,8 @@ try {
 						console.log(colors.gray(datetime() + 'ws socket-server listening on *:' + port));
 					}); 
 				}
-					
+				server.maxHeadersCount = 100000;
+				server.timeout = 120000;
 				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {
 					try {
