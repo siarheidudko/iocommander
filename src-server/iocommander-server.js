@@ -13,7 +13,9 @@ fs=require("fs"),
 cryptojs=require("cryptojs"),
 redux=require("redux"),
 lodash=require("lodash"),
-firebase=require("firebase");
+firebase=require("firebase"),
+socketio=require("socket.io"),
+multiparty=require("multiparty");
 var port, firebase_user, firebase_pass, config, SslOptions, 
 bantimeout = 10800000;
 var SyncFirebaseTimeout = false;
@@ -544,36 +546,70 @@ function startFileServer(port, fileConnLimit){
 							res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
 							res.end('Permission denied');
 						} else if(auth){
-							var tmp = auth.split(' ');
-							var buf = new Buffer(tmp[1], 'base64');
-							var plain_auth = buf.toString();
-							var creds = plain_auth.split(':'); 
-							var username = replacer(creds[0], true);
-							var password = creds[1];
-							if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
-								fs.readFile(pathFile, (err, file) => {
-									if(err) {
-										res.writeHead(404, {'Content-Type': 'text/plain'});
-										res.end('Not Found');
-										console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
-									} else {
-										res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-										res.end(file);
-									}
-								});	
-							} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
-								//res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-								//res.end(req);
-								//console.log(res.pipe(fs.createWriteStream('/iocommander/files/test.txt')));
-								var file = fs.createWriteStream('/2222.txt');
-								req.pipe(file);
-								res.end();
-							}else {
-								res.statusCode = 401;
-								res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-								res.end('Permission denied');
-								connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(req.connection.remoteAddress, true)}});
-								console.log(colors.red(datetime() + "Попытка подключения к file-серверу с неверным паролем с адреса " + req.connection.remoteAddress));
+							try {
+								var tmp = auth.split(' ');
+								var buf = new Buffer(tmp[1], 'base64');
+								var plain_auth = buf.toString();
+								var creds = plain_auth.split(':'); 
+								var username = replacer(creds[0], true);
+								var password = creds[1];
+								if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
+									fs.readFile(pathFile, (err, file) => {
+										try{
+											if(err) {
+												throw err;
+											} else {
+												res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+												res.end(file);
+											}
+										} catch(e) {
+											res.writeHead(404, {'Content-Type': 'text/plain'});
+											res.end('Not Found');
+											console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
+										}
+									});	
+								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
+									if (req.url === '/upload' && req.method === 'POST') {
+										var form = new multiparty.Form();
+										form.parse(req, function(err, fields, files) {
+											try{
+												if(err){
+													throw err;
+												} else {
+													for(var keyFile in files){
+														fs.copyFile(files[keyFile][0].path, './files/' + files[keyFile][0].originalFilename, (err) => {
+															try{
+																if (err) throw err;
+																res.writeHead(200, {'content-type': 'text/plain'});
+																res.end();
+																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + files[keyFile][0].originalFilename));
+															} catch(e){
+																res.writeHead(500, {'Content-Type': 'text/plain'});
+																res.end('Internal Server Error');
+																console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
+															}
+														}); 
+													}
+												}
+											} catch(e) {
+												res.writeHead(500, {'Content-Type': 'text/plain'});
+												res.end('Internal Server Error');
+												console.log(colors.red(datetime() + "Ошибка обработки formdata на file-сервер!"));
+											}
+										});
+										return;
+									}								
+								}else {
+									res.statusCode = 401;
+									res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+									res.end('Permission denied');
+									connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(req.connection.remoteAddress, true)}});
+									console.log(colors.red(datetime() + "Попытка подключения к file-серверу с неверным паролем с адреса " + req.connection.remoteAddress));
+								}
+							} catch(e){
+								res.writeHead(500, {'Content-Type': 'text/plain'});
+								res.end('Internal Server Error');
+								console.log(colors.red(datetime() + "Ошибка проверки пароля для доступа к file-серверу!"));
 							}
 						}
 					} catch (e){
@@ -893,7 +929,7 @@ try {
 				}
 				server.maxHeadersCount = 100000;
 				server.timeout = 120000;
-				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
+				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {
 					try {
 						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
