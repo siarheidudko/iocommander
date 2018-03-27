@@ -10,7 +10,10 @@
 - lodash
 - firebase
 - os
-- download-file
+- http
+- https
+- url
+- mkdir
 - child_process
 
 ## Настройка проекта

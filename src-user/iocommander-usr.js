@@ -9,7 +9,6 @@
 const fs=require("fs"),
 colors=require("colors"),
 cryptojs=require("cryptojs"),
-//download = require("download-file"),
 os = require("os"),
 child_process = require("child_process"),
 redux=require("redux"),

@@ -15,10 +15,10 @@
 ```
 getSettings().then(function(value){
 	if(value !== 'error'){
-		user_val = value.login; 
-		password_val = cryptojs.Crypto.SHA256(user_val + value.password+'icommander');
+		user_global = value.login; 
+		password_global = cryptojs.Crypto.SHA256(user_global + value.password+'icommander');
+		server_global = value.server;
 		var protocol_val = value.protocol,
-		server_val = value.server,	
 		port_val = value.port;
 		getDatabase().then(function (database){
 			if(database !== 'error'){
@@ -27,7 +27,7 @@ getSettings().then(function(value){
 			} else {
 				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
 			}
-			Reconnect(protocol_val, server_val, port_val);
+			Reconnect(protocol_val, server_global, port_val);
 			//проверяем задания каждые 15 сек
 			setInterval(function(){
 				try {
@@ -44,7 +44,7 @@ getSettings().then(function(value){
 										var flag = true;
 										if(Array.isArray(data_val[key_val].dependencies)){
 											for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
-												if(clientStorage.getState().complete.indexOf(data_val[key_val].dependencies[i]) === -1){
+												if(clientStorage.getState().incomplete.indexOf(data_val[key_val].dependencies[i]) !== -1){
 													flag = false;
 													console.log(colors.yellow(datetime() + "Для задачи " + key_val + " обнаружена невыполненная зависимость: " + data_val[key_val].dependencies[i] + ". Задание будет выполнено в следующий раз."));
 												}
@@ -327,7 +327,7 @@ undefined
 function login(socket) {
 	try {
 		if(typeof(socket) === 'object'){
-			socket.emit('login', { user: user_val, password: password_val });
+			socket.emit('login', { user: user_global, password: password_global });
 		} else {
 			console.log(colors.red(datetime() + "Аргумент сокет не является объектом!"));
 		}
@@ -924,6 +924,73 @@ function GarbageCollector(){
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
+	}
+}
+```
+
+### Функция скачки файла
+
+##### Описание
+Модифицированная библиотека download-file для работы с собственным file-сервером с авторизацией
+
+##### Входящие параметры
+file - ссылка для скачки (String)
+options - опции скачки {directory:DIR, filename: FILENAME, timeout: TIMEOUT} (Object), где DIR - директория для скачки (String), FILENAME - имя файла для (может отличаться от оригинального) (String), TIMEOUT - таймаут запроса (Integer)
+callback - функция обратного вызова (Function)
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function download(file, options, callback) {
+	if (!callback && typeof options === 'function') {
+		callback = options;
+	}
+	try{
+		if (!file) throw("Need a file url to download");
+		options = typeof options === 'object' ? options : {};
+		options.timeout = options.timeout || 20000;
+		options.directory = options.directory ? options.directory : '.';
+		var uri = file.split('/');
+		options.filename = options.filename || uri[uri.length - 1];
+		var path = options.directory + "/" + options.filename;
+		if (url.parse(file).protocol === null) {
+			req = http;
+		} else if (url.parse(file).protocol === 'https:') {
+			req = https;
+		} else {
+			req = http;
+		}
+		var getoptions = url.parse(file); 
+		if((typeof(server_global) !== 'undefined') && (typeof(user_global) !== 'undefined') && (typeof(password_global) !== 'undefined')){
+			if(url.parse(file).hostname === server_global){
+				getoptions.auth = user_global + ':' + password_global;
+			}
+		}
+		var request = req.get(getoptions, function(response) {
+			if (response.statusCode === 200) {
+				mkdirp(options.directory, function(err) { 
+					if (err) throw err;
+					var file = fs.createWriteStream(path);
+					response.pipe(file);
+				});
+			} else {
+			  if (callback) callback(response.statusCode);
+			}
+			response.on("end", function(){
+				if (callback) callback(false, path);
+			});
+			request.setTimeout(options.timeout, function () {
+				request.abort();
+				callback("Timeout");
+			});
+		}).on('error', function(e) {
+			if (callback) callback(e);
+		});
+	}catch(e) {
+		callback(e);
 	}
 }
 ```

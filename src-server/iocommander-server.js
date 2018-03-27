@@ -581,7 +581,7 @@ function startFileServer(port, fileConnLimit){
 															try{
 																if (err) throw err;
 																res.writeHead(200, {'content-type': 'text/plain'});
-																res.end();
+																res.end('upload');
 																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + files[keyFile][0].originalFilename));
 															} catch(e){
 																res.writeHead(500, {'Content-Type': 'text/plain'});

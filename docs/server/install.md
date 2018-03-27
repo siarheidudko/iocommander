@@ -58,6 +58,7 @@
 - redux
 - lodash
 - firebase
+- multiparty
 
 ## Настройка проекта
 
@@ -72,6 +73,8 @@
 {
 "port": "444",
 "webport": "8000",
+"fileport": "500",
+"fileconnlimit": "50",
 "firebase_user": "admin@sergdudko.tk",
 "firebase_pass": "Nw5ld4S8cCgBJKhde7NOS2aQIa72",
 "firebase_config": {
@@ -89,6 +92,8 @@
 
   - port - порт сокет-сервера
   - webport - порт панели администрирования
+  - fileport - порт файлового сервера
+  - fileconnlimit - лимит соединений файлового сервера
   - firebase_user - пользователь, которого мы создали в firebase
   - firebase_pass - пароль пользователя в firebase
   - apiKey - ключ api для веб-приложения
@@ -96,7 +101,7 @@
   - sslkey, sslcrt, sslca - пути к сертификатам и ключу. Если хоть один параметр пуст, то сервер будет http/ws. Если заполнены, то сервер https/wss.
   - bantimeout - таймаут блокировки при введении неверного пароля 5 раз, в мс.
 
-- Устанавливаете nodejs, например в CentOS 7.x он устанавливается из штатного репозитория
+- Устанавливаете nodejs, например в CentOS 7.x он устанавливается из штатного репозитория (внимание: из штатного репозитория ставится node 6, для работы ssl нужен node 8)
 
 ```
 yum install nodejs -y

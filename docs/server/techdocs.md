@@ -12,13 +12,16 @@
 - Если входящее соединение является администратором - отправляет оба хранилища redux (serverStorage, connectionStorage) в сокет и слушает сокет на наличие новых задач. Подписывает сокет администратора на изменения в хранилищах.
 - При изменении хранилища serverStorage генерирует группы пользователей и отчеты по таскам в хранилище connectionStorage.
 - Имеет прототип ip2ban, при пятикратном введении неверной комбинации логин-пароль доступ с IP-адреса блокируется на интервал указанный в настройках.
+- Имеет встроенный защищенный файл-сервер с http-авторизацией и подключенным ip2ban.
 
 ```
 try {
 	getSettings().then(function(value){
 		//загружаем файл конфигурации
 		var port = parseInt(value.port, 10),
-		webport = parseInt(value.webport, 10);
+		webport = parseInt(value.webport, 10),
+		fileport = parseInt(value.fileport, 10),
+		fileConnLimit = parseInt(value.fileconnlimit, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
@@ -93,8 +96,9 @@ try {
 						console.log(colors.gray(datetime() + 'ws socket-server listening on *:' + port));
 					}); 
 				}
-					
-				io=require("socket.io").listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
+				server.maxHeadersCount = 100000;
+				server.timeout = 120000;
+				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
 				io.sockets.on('connection', function (socket) {
 					try {
 						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
@@ -224,6 +228,8 @@ try {
 		}); 
 		//запускаю web-сервер
 		startWebServer(webport);
+		//запускаю файловый сервер
+		startFileServer(fileport);
 		//запускаю сборщик мусора раз в час
 		setInterval(GarbageCollector,3600000);
 	}, function(error){
@@ -1225,6 +1231,143 @@ function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка переиндексации ключей объекта!"));
 		return ObjectForSort;
+	}
+}
+```
+
+### Функция запуска файлового-сервера
+
+##### Описание
+Запускает file-сервер с http авторизацией, ip2ban и распределением ролей (администратор/пользователь) на заданном порту, привязанный к папку ./files/*
+
+##### Входящие параметры
+port - порт file-сервера(Integer)
+fileConnLimit - лимит соединений file-сервера(Integer)
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function startFileServer(port, fileConnLimit){
+	try {
+		var webserverfunc = function(req, res){
+			try {
+				if(typeof(connectionStorage.getState().iptoban) === 'object'){
+					if(typeof(connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)]) === 'object') {
+						var ThisSocketAttemp = connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)].attemp;
+						var ThisSocketDatetime = connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)].datetime;
+					}
+				}
+				if(typeof(ThisSocketAttemp) !== 'number'){
+					ThisSocketAttemp = 0;
+				}
+				if(typeof(ThisSocketDatetime) !== 'number'){
+					ThisSocketDatetime = 0;
+				}
+				if((ThisSocketAttemp > 5) && ((ThisSocketDatetime + bantimeout) > Date.now())){
+					res.writeHead(403, {'Content-Type': 'text/plain'});
+					res.end('Permission denied');
+					console.log(colors.yellow(datetime() + "Попытка входа на file-сервер с заблокированного адреса " + req.connection.remoteAddress));
+				} else {
+					var pathFile = './files/'+req.url;
+					try {
+						var auth = req.headers['authorization'];
+						if(!auth){
+							res.statusCode = 401;
+							res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+							res.end('Permission denied');
+						} else if(auth){
+							try {
+								var tmp = auth.split(' ');
+								var buf = new Buffer(tmp[1], 'base64');
+								var plain_auth = buf.toString();
+								var creds = plain_auth.split(':'); 
+								var username = replacer(creds[0], true);
+								var password = creds[1];
+								if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
+									fs.readFile(pathFile, (err, file) => {
+										try{
+											if(err) {
+												throw err;
+											} else {
+												res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+												res.end(file);
+											}
+										} catch(e) {
+											res.writeHead(404, {'Content-Type': 'text/plain'});
+											res.end('Not Found');
+											console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
+										}
+									});	
+								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
+									if (req.url === '/upload' && req.method === 'POST') {
+										var form = new multiparty.Form();
+										form.parse(req, function(err, fields, files) {
+											try{
+												if(err){
+													throw err;
+												} else {
+													for(var keyFile in files){
+														fs.copyFile(files[keyFile][0].path, './files/' + files[keyFile][0].originalFilename, (err) => {
+															try{
+																if (err) throw err;
+																res.writeHead(200, {'content-type': 'text/plain'});
+																res.end();
+																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + files[keyFile][0].originalFilename));
+															} catch(e){
+																res.writeHead(500, {'Content-Type': 'text/plain'});
+																res.end('Internal Server Error');
+																console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
+															}
+														}); 
+													}
+												}
+											} catch(e) {
+												res.writeHead(500, {'Content-Type': 'text/plain'});
+												res.end('Internal Server Error');
+												console.log(colors.red(datetime() + "Ошибка обработки formdata на file-сервер!"));
+											}
+										});
+										return;
+									}								
+								}else {
+									res.statusCode = 401;
+									res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+									res.end('Permission denied');
+									connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(req.connection.remoteAddress, true)}});
+									console.log(colors.red(datetime() + "Попытка подключения к file-серверу с неверным паролем с адреса " + req.connection.remoteAddress));
+								}
+							} catch(e){
+								res.writeHead(500, {'Content-Type': 'text/plain'});
+								res.end('Internal Server Error');
+								console.log(colors.red(datetime() + "Ошибка проверки пароля для доступа к file-серверу!"));
+							}
+						}
+					} catch (e){
+						res.writeHead(500, {'Content-Type': 'text/plain'});
+						res.end('Internal Server Error');
+						console.log(colors.red(datetime() + "Ошибка обработки запроса на file-сервере" + e));
+					}
+				}
+			} catch(e){
+				res.writeHead(500, {'Content-Type': 'text/plain'});
+				res.end('Internal Server Error');
+				console.log(colors.red(datetime() + "Ошибка работы file-сервера:" +e));
+			}
+		};
+		if(SslOptions !== 'error'){ 
+			var server = https.createServer(SslOptions, webserverfunc).listen(port, '0.0.0.0');
+			console.log(colors.gray(datetime() + 'https-fileserver-server listening on *:' + port));
+		} else {
+			var server = http.createServer(webserverfunc).listen(port, '0.0.0.0');
+			console.log(colors.gray(datetime() + 'http-fileserver-server listening on *:' + port));
+		}
+		server.maxHeadersCount = fileConnLimit;
+		server.timeout = 120000;
+	} catch (e){
+		console.log(colors.red(datetime() + "Не могу запустить file-сервер!"));
 	}
 }
 ```
