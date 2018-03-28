@@ -352,7 +352,7 @@ function initialiseSocket(login_val, passwd_val){
 			var protocol_val = JsonInitString.protocol,
 			server_val = JsonInitString.server,	
 			port_val = JsonInitString.port,
-			socket = io(protocol_val + '://' + server_val + ':' + port_val);
+			socket = io(protocol_val + '://' + server_val + ':' + port_val, {transports: ['websocket']});
 			window.socket = socket;
 			if (typeof(socket) !== 'undefined'){
 				socket.on('connect', () => {

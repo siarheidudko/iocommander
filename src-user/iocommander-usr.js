@@ -212,9 +212,9 @@ function Reconnect(protocol_val, server_val, port_val){
 			}
 		}
 		if(protocol_val === 'https'){
-			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true});
+			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true, transports: ['websocket']});
 		} else {
-			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val);
+			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {transports: ['websocket']});
 		}
 		socket.on('connect', () => {
 			console.log(colors.green(datetime() + "Соединение установлено!"));

@@ -1061,7 +1061,7 @@ try {
 				}
 				server.maxHeadersCount = 100000;
 				server.timeout = 120000;
-				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000});
+				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket","polling"]});
 				io.sockets.on('connection', function (socket) {
 					try {
 						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
