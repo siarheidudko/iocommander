@@ -79,7 +79,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
   - SYNC_OBJECT - загружает хранилище целиком, payload:{}, {} - хранилище serverStorage полученное из socket.oi (Object). 
   - CLEAR_STORAGE - очищает хранилище полностью payload:undefined, т.е. отсутствует.
 ```
-function editConnStore(state = {uids:{}, users:{}}, action){
+function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}, fileport:''}, action){
 	try {
 		switch (action.type){
 			case 'SYNC_OBJECT':
@@ -103,31 +103,23 @@ function editConnStore(state = {uids:{}, users:{}}, action){
 
 - Редьюсер для adminpanelStorage
   - AUTH - устанавливает флаг авторизации, payload:{auth:TRUE}, TRUE - true или false флаг авторизации (Boolean). 
-  - GEN_REPORT - добавляет в хранилище сгенерированные отчеты, payload:{report:{},reportsort:{},reportsortvalid:TRUE}, {}(report) - сгенерированные отчеты (Object), {}(reportsort) - связка, отсортированных отчетов по мс (Object), TRUE - true или false что количество отчетов в связке равно количеству сгенерированных отчетов.
-  - GEN_GROUP - добавляет в хранилище сгенерированные группы пользователей по строке до символа ".", payload:{groups:{}}, {}(groups) - сгенерированные группы (Object).
   - MSG_POPUP - текст всплывающего уведомления, payload:{popuptext:TEXT}, TEXT - строка текста (String).
 ```
-function editAdmpanelStore(state = {auth: false, report:{}, reportsort:{}, reportsortvalid:false, groups:{}, popuptext:''}, action){
+function editAdmpanelStore(state = {auth: false, popuptext:'', session:{}}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
 				var state_new = _.clone(state);
 				state_new.auth = action.payload.auth;
+				state_new.session = {};
 				if(action.payload.auth === false){
 					state_new.popuptext = 'Авторизация не пройдена!';
+					state_new.session.login = '';
+					state_new.session.password = '';
+				} else {
+					state_new.session.login = action.payload.login;
+					state_new.session.password = action.payload.pass;
 				}
-				return state_new;
-				break;
-			case 'GEN_REPORT':
-				var state_new = _.clone(state);
-				state_new.report = action.payload.report
-				state_new.reportsort = action.payload.reportsort;
-				state_new.reportsortvalid = action.payload.reportsortvalid;
-				return state_new;
-				break;
-			case 'GEN_GROUP':
-				var state_new = _.clone(state);
-				state_new.groups = action.payload.groups;
 				return state_new;
 				break;
 			case 'MSG_POPUP':
@@ -344,9 +336,9 @@ undefined
 
 ##### Исходный код
 ```
-function initialiseSocket(login_val, password_val){
+function initialiseSocket(login_val, passwd_val){
 	try {
-		var InitString = '{"protocol":"' + window.location.protocol.substr(0,window.location.protocol.length - 1) + '","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
+		var InitString = '{"protocol":"' + window.location.protocol.substr(0,window.location.protocol.length - 1) + '","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + passwd_val + '"}';
 		var JsonInitString;
 		try {			
 			JsonInitString = (JSON.parse(InitString));
@@ -357,38 +349,34 @@ function initialiseSocket(login_val, password_val){
 		if(typeof(JsonInitString) === 'object'){
 			var user_val = JsonInitString.login; 
 			var password_val = CryptoJS.SHA256(user_val + JsonInitString.password+'icommander').toString();
-			if(typeof(socket) !== 'undefined'){
-				socket.close();
-			}
 			var protocol_val = JsonInitString.protocol,
 			server_val = JsonInitString.server,	
 			port_val = JsonInitString.port,
 			socket = io(protocol_val + '://' + server_val + ':' + port_val);
 			window.socket = socket;
-			do {
-				if (typeof(socket) !== 'undefined'){
-					socket.on('connect', () => {
-						console.log(datetime() + "Соединение установлено!");
-					});
-					socket.on('initialize', function (data) {
-						if(data.value === 'whois'){
-							login(socket, user_val, password_val);
-						}
-					});
-					socket.on('authorisation', function (data) {
-						if(data.value === 'true'){
-							console.log(datetime() + "Авторизация пройдена!");
-							adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true}});
-						} else {
-							serverStorage.dispatch({type:'CLEAR_STORAGE'});
-							connectionStorage.dispatch({type:'CLEAR_STORAGE'});
-							console.log(datetime() + "Авторизация не пройдена!");
-							adminpanelStorage.dispatch({type:'AUTH', payload: {auth:false}});
-						}
-					});
-					listenSocket(socket);
-				}
-			} while (typeof(socket) === 'undefined');
+			if (typeof(socket) !== 'undefined'){
+				socket.on('connect', () => {
+					console.log(datetime() + "Соединение установлено!");
+				});
+				socket.on('initialize', function (data) {
+					if(data.value === 'whois'){
+						login(socket, user_val, password_val);
+					}
+				});
+				socket.on('authorisation', function (data) {
+					if(data.value === 'true'){
+						console.log(datetime() + "Авторизация пройдена!");
+						adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true, login:login_val, pass:password_val}});
+					} else {
+						serverStorage.dispatch({type:'CLEAR_STORAGE'});
+						connectionStorage.dispatch({type:'CLEAR_STORAGE'});
+						console.log(datetime() + "Авторизация не пройдена!");
+						socket.disconnect();
+						adminpanelStorage.dispatch({type:'AUTH', payload: {auth:false}});
+					}
+				});
+				listenSocket(socket);
+			}
 		} else {
 			console.log(datetime() + "Не могу распознать объект конфигурации!");
 			adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Не могу распознать объект конфигурации!"}});
@@ -430,6 +418,68 @@ function replacer(data_val, value_val){
 		console.log(datetime() + "Ошибка преобразования имени пользователя!");
 		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка преобразования имени пользователя!"}});
 	}	
+}
+```
+
+### Функция замены "." на "_" и обратно
+
+##### Описание
+Заменяет в строке "." на "_" или "_" на "." для валидной записи в json/object и чтения из него.
+
+##### Входящие параметры
+files - массив файлов для отправки (используется только один)(Files)
+ParamOne - уникальный идентификатор задачи(String)
+ParamFour - путь к локальному каталогу на клиенте(String)
+ParamSix - тип платформы win32, linux или all(String)
+ParamSeven - массив зависимостей(Array)
+ParamNine - комментарий для удобного поиска отчета(String)
+timeOnCompl - отсрочка выполнения(Integer)
+ParamEight - массив клиентов (Array)
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight){
+	var result = new Promise(function(resolve){
+		var fd = new FormData();
+		fd.append(files[0].name, files[0]);
+		var xmlhttp=new XMLHttpRequest();
+		xmlhttp.onreadystatechange=function() {
+			if (this.readyState==4 && this.status==200) {
+				resolve(this.responseText);
+			} else if (this.readyState==4) {
+				if(typeof(this.responseText) === 'string'){
+					resolve(this.responseText);
+				} else {
+					resolve('unidentified error');
+				}
+			}
+		}
+		var serverlink = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + window.location.port + '/upload';
+		xmlhttp.open("POST",serverlink,true);
+		xmlhttp.setRequestHeader('Authorization', 'Basic ' + btoa(adminpanelStorage.getState().session.login + ':' + adminpanelStorage.getState().session.password));
+		xmlhttp.send(fd);
+	});
+	result.then(
+		function(value){
+			if(value === 'upload'){
+				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + files[0].name;
+				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:'false', complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl.getTime()}};
+				for(var i=0;i<ParamEight.length;i++){
+					var EmitMessage = new Array(ParamEight[i], tempTask);
+					window.socket.emit('adm_setTask', EmitMessage);
+				}
+			} else {
+				console.log(datetime() + "Проблема загрузки файла на внутренний сервер!");
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:value}});
+			}
+		}, 
+		function(error){
+			adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:error}});
+	});
 }
 ```
 
@@ -900,26 +950,37 @@ class AdminIoCommanderPanelBody extends React.Component{
 											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
+								case 'getFileFromFileserver':
+										if((typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '')){
+											SendFileToInternalFS(this.refs.FileUploadToServer.files, this.state.ParamOne, this.state.ParamFour, this.state.ParamSix, this.state.ParamSeven, this.state.ParamNine, timeOnCompl, this.state.ParamEight);
+											onSetTask = true;
+										} else {
+											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
+										}
+									break;
 							}
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
 						if((onSetTask) && (this.state.ParamEight.length > 0)){
-							for(var i=0;i<this.state.ParamEight.length;i++){
-								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
-								window.socket.emit('adm_setTask', EmitMessage);
-								this.setState({ParamOne: generateUID()});
-								this.setState({ParamThird: ''});
-								this.setState({ParamFour: ''});
-								this.setState({ParamFive: ''});
-								this.setState({ParamSix: ''});
-								this.setState({ParamSeven: new Array});
-								this.setState({ParamEight: new Array});
-								this.setState({ParamNine: ''});
-								this.setState({ParamTen: ''});
-								this.setState({ParamEleven: ''});
+							if(this.state.ParamTwo !== 'getFileFromFileserver'){
+								for(var i=0;i<this.state.ParamEight.length;i++){
+									var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
+									window.socket.emit('adm_setTask', EmitMessage);
+								}
 							}
+							this.setState({ParamOne: generateUID()});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
 							//adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Проблема генерации задачи!"}});
@@ -1073,7 +1134,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				//выпадающий список типов заданий
 				var adm_setTaskOption = new Array;
 				adm_setTaskOption.push(<option value="">Выберите тип задания</option>);
-				adm_setTaskOption.push(<option value="getFileFromWWW" selected={(this.state.ParamTwo === 'getFileFromWWW')?true:false}>Скачать файл в папку</option>);
+				adm_setTaskOption.push(<option value="getFileFromWWW" selected={(this.state.ParamTwo === 'getFileFromWWW')?true:false}>Скачать файл по ссылке</option>);
+				adm_setTaskOption.push(<option value="getFileFromFileserver" selected={(this.state.ParamTwo === 'getFileFromFileserver')?true:false}>Передать файл</option>);
 				adm_setTaskOption.push(<option value="execFile" selected={(this.state.ParamTwo === 'execFile')?true:false}>Запустить локальный скрипт</option>);
 				adm_setTaskOption.push(<option value="execCommand" selected={(this.state.ParamTwo === 'execCommand')?true:false}>Выполнить команду</option>);
 				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOption} </select></p>;
@@ -1088,7 +1150,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
 						//поле ввода ссылки для скачки
-						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.ParamThird) === 'string')?this.state.ParamThird:null} /></div>);
 						//поле ввода локального пути для сохранения
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода имени файла для сохранения
@@ -1096,7 +1158,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 						break;
 					case 'execFile':
 						//поле ввода пути к скрипту
-						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.ParamThird) === 'string')?this.state.ParamThird:null} /></div>);
 						//поле ввода имени скрипта
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Имя скрипта: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода параметров запуска
@@ -1104,7 +1166,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 						break;
 					case 'execCommand':
 						//поле ввода команды запуска
-						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.ParamThird) === 'string')?this.state.ParamThird:null} /></div>);
+						break;
+					case 'getFileFromFileserver':
+						//поле выбора файла для передачи
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Файл: <input type="file" ref="FileUploadToServer" /></div>);
+						//поле ввода локального пути для сохранения
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						break;
 				}
 				if(this.state.ParamTwo !== ''){
