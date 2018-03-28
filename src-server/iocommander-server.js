@@ -116,7 +116,7 @@ serverStorage.subscribe(function(){
 	GenerateGroup();
 });
 
-function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, iptoban:{}}, action){
+function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, iptoban:{}, fileport:''}, action){
 	try {
 		switch (action.type){
 			case 'ADD_UID':
@@ -174,6 +174,14 @@ function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, i
 				var state_new = {};
 				state_new = lodash.clone(state);
 				delete state_new.iptoban[action.payload.address];
+				return state_new;
+				break;
+			case 'PARAM_PORTS':
+				var state_new = {};
+				state_new = lodash.clone(state);
+				if(typeof(action.payload.fileportval) !== 'undefined'){
+					state_new.fileport = action.payload.fileportval;
+				}
 				return state_new;
 				break;
 			default:
@@ -456,50 +464,159 @@ function sendStorageToWeb(io, param){
 function startWebServer(port){
 	try {
 		var webserverfunc = function(req, res){
-			var pathFile;
-			if(req.url === '/'){
-				pathFile = './src-adm/index.html';
-			} else {
-				pathFile = './src-adm'+req.url;
-			}
 			try {
-				fs.readFile(pathFile, (err, file) => {
-					if(err) {
-						res.writeHead(404, {'Content-Type': 'text/plain'});
-						res.end('Not Found');
+				if(typeof(connectionStorage.getState().iptoban) === 'object'){
+					if(typeof(connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)]) === 'object') {
+						var ThisSocketAttemp = connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)].attemp;
+						var ThisSocketDatetime = connectionStorage.getState().iptoban[replacer(req.connection.remoteAddress, true)].datetime;
+					}
+				}
+				if(typeof(ThisSocketAttemp) !== 'number'){
+					ThisSocketAttemp = 0;
+				}
+				if(typeof(ThisSocketDatetime) !== 'number'){
+					ThisSocketDatetime = 0;
+				}
+				if((ThisSocketAttemp > 5) && ((ThisSocketDatetime + bantimeout) > Date.now())){
+					res.writeHead(403, {'Content-Type': 'text/plain'});
+					res.end('Permission denied');
+					console.log(colors.yellow(datetime() + "Попытка входа на web-сервер с заблокированного адреса " + req.connection.remoteAddress));
+				} else {
+					if(req.method === 'GET'){
+						var pathFile;
+						if(req.url === '/'){
+							pathFile = './src-adm/index.html';
+						} else {
+							pathFile = './src-adm'+req.url;
+						}
+						try {
+							fs.readFile(pathFile, (err, file) => {
+								if(err) {
+									res.writeHead(404, {'Content-Type': 'text/plain'});
+									res.end('Not Found');
+								} else {
+									try{
+										var ContentType = req.url.split('.');
+										ContentType = ContentType[ContentType.length -1];
+										switch(ContentType){
+											case '/':
+												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+												break;
+											case 'html':
+												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+												break;
+											case 'js':
+												res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8'});
+												break;
+											case 'css':
+												res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8'});
+												break;
+											case 'ico':
+												res.writeHead(200, {'Content-Type': 'image/x-icon'});
+												break;
+											default:
+												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+												break;
+										}
+									} catch(e){
+										res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+									}
+									res.end(file);
+								}
+							});	
+						} catch (e){
+							res.writeHead(500, {'Content-Type': 'text/plain'});
+							res.end('Internal Server Error');
+						}
 					} else {
-						try{
-							var ContentType = req.url.split('.');
-							ContentType = ContentType[ContentType.length -1];
-							switch(ContentType){
-								case '/':
-									res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-									break;
-								case 'html':
-									res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-									break;
-								case 'js':
-									res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8'});
-									break;
-								case 'css':
-									res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8'});
-									break;
-								case 'ico':
-									res.writeHead(200, {'Content-Type': 'image/x-icon'});
-									break;
-								default:
-									res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-									break;
+						try {
+							var pathFile = './files/'+req.url;
+							try {
+								if(typeof(req.headers['authorization']) !== 'undefined'){
+									var auth = req.headers['authorization'];
+								}
+								if(!auth){
+									res.statusCode = 401;
+									res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+									res.end('Permission denied');
+								} else if(auth){
+									try {
+										var tmp = auth.split(' ');
+										var buf = new Buffer(tmp[1], 'base64');
+										var plain_auth = buf.toString();
+										var creds = plain_auth.split(':'); 
+										var username = replacer(creds[0], true);
+										var password = creds[1];
+										if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
+											if (req.url === '/upload') {									
+												var form = new multiparty.Form();
+												form.parse(req, function(err, fields, files) {
+													try{
+														if(err){
+															throw err;
+														} else {
+															var FilesNull = true;
+															for(var keyFile in files){
+																FilesNull = false;
+																fs.copyFile(files[keyFile][0].path, './files/' + files[keyFile][0].originalFilename, (err) => {
+																	try{
+																		if (err) throw err;
+																		res.writeHead(200, {'content-type': 'text/plain'});
+																		res.end('upload');
+																		console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + files[keyFile][0].originalFilename));
+																	} catch(e){
+																		res.writeHead(500, {'Content-Type': 'text/plain'});
+																		res.end('Internal Server Error');
+																		console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
+																	}
+																});
+															}
+															if(FilesNull){
+																res.writeHead(500, {'Content-Type': 'text/plain'});
+																res.end('Internal Server Error');
+																console.log(colors.red(datetime() + "Файлы не получены!"));
+															}
+														}
+													} catch(e) {
+														res.writeHead(500, {'Content-Type': 'text/plain'});
+														res.end('Internal Server Error');
+														console.log(e);
+														console.log(colors.red(datetime() + "Ошибка обработки formdata на web(POST)-сервере!"));
+													}
+												}); 
+												return;
+											} else {
+												res.writeHead(500, {'Content-Type': 'text/plain'});
+												res.end('Internal Server Error');
+												console.log(colors.red(datetime() + "Некорректный запрос на web(POST)-сервер!"));
+											}							
+										}else {
+											res.statusCode = 401;
+											res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+											res.end('Permission denied');
+											connectionStorage.dispatch({type:'WRONG_PASS', payload: {address:replacer(req.connection.remoteAddress, true)}});
+											console.log(colors.red(datetime() + "Попытка подключения к web(POST)-серверу с неверным паролем с адреса " + req.connection.remoteAddress));
+										}
+									} catch(e){
+										res.writeHead(500, {'Content-Type': 'text/plain'});
+										res.end('Internal Server Error');
+										console.log(colors.red(datetime() + "Ошибка проверки пароля для доступа к web(POST)-серверу!"));
+									}
+								}
+							} catch (e){
+								res.writeHead(500, {'Content-Type': 'text/plain'});
+								res.end('Internal Server Error');
+								console.log(colors.red(datetime() + "Ошибка обработки запроса на web(POST)-сервере:" + e));
 							}
 						} catch(e){
-							res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+							res.writeHead(500, {'Content-Type': 'text/plain'});
+							res.end('Internal Server Error');
+							console.log(colors.red(datetime() + "Ошибка работы web(POST)-сервера:" +e));
 						}
-						res.end(file);
 					}
-				});	
-			} catch (e){
-				res.writeHead(500, {'Content-Type': 'text/plain'});
-				res.end('Internal Server Error');
+				}
+			}catch(e){
+				console.log(colors.red(datetime() + "Критическая работы web-сервера:" +e));
 			}
 		};
 		if(SslOptions !== 'error'){ 
@@ -540,7 +657,9 @@ function startFileServer(port, fileConnLimit){
 				} else {
 					var pathFile = './files/'+req.url;
 					try {
-						var auth = req.headers['authorization'];
+						if(typeof(req.headers['authorization']) !== 'undefined'){
+							var auth = req.headers['authorization'];
+						}
 						if(!auth){
 							res.statusCode = 401;
 							res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -568,15 +687,17 @@ function startFileServer(port, fileConnLimit){
 											console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
 										}
 									});	
-								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
-									if (req.url === '/upload' && req.method === 'POST') {
+								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
+									if (req.url === '/upload' && req.method === 'POST') {									
 										var form = new multiparty.Form();
 										form.parse(req, function(err, fields, files) {
 											try{
 												if(err){
 													throw err;
 												} else {
+													var FilesNull = true;
 													for(var keyFile in files){
+														FilesNull = false;
 														fs.copyFile(files[keyFile][0].path, './files/' + files[keyFile][0].originalFilename, (err) => {
 															try{
 																if (err) throw err;
@@ -590,15 +711,24 @@ function startFileServer(port, fileConnLimit){
 															}
 														}); 
 													}
+													if(FilesNull){
+														res.writeHead(500, {'Content-Type': 'text/plain'});
+														res.end('Internal Server Error');
+														console.log(colors.red(datetime() + "Файлы не получены!"));
+													}
 												}
 											} catch(e) {
 												res.writeHead(500, {'Content-Type': 'text/plain'});
 												res.end('Internal Server Error');
-												console.log(colors.red(datetime() + "Ошибка обработки formdata на file-сервер!"));
+												console.log(colors.red(datetime() + "Ошибка обработки formdata на file-сервере!"));
 											}
-										});
+										}); 
 										return;
-									}								
+									} else {
+										res.writeHead(500, {'Content-Type': 'text/plain'});
+										res.end('Internal Server Error');
+										console.log(colors.red(datetime() + "Некорректный запрос на file-сервер!"));
+									}							
 								}else {
 									res.statusCode = 401;
 									res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -615,7 +745,7 @@ function startFileServer(port, fileConnLimit){
 					} catch (e){
 						res.writeHead(500, {'Content-Type': 'text/plain'});
 						res.end('Internal Server Error');
-						console.log(colors.red(datetime() + "Ошибка обработки запроса на file-сервере" + e));
+						console.log(colors.red(datetime() + "Ошибка обработки запроса на file-сервере:" + e));
 					}
 				}
 			} catch(e){
@@ -859,6 +989,8 @@ try {
 		var sslkey = value.sslkey,
 		sslcrt = value.sslcrt,
 		sslca = value.sslca;
+		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
+		connectionStorage.dispatch({type:'PARAM_PORTS', payload: {fileportval:fileport}});
 		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
 			bantimeout = parseInt(value.bantimeout, 10);
 		}

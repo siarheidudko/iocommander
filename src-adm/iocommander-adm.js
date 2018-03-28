@@ -31,7 +31,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	}
 	return state;
 }
-function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}}, action){
+function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}, fileport:''}, action){
 	try {
 		switch (action.type){
 			case 'SYNC_OBJECT':
@@ -51,14 +51,20 @@ function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}}, action
 	}
 	return state;
 }
-function editAdmpanelStore(state = {auth: false, popuptext:''}, action){
+function editAdmpanelStore(state = {auth: false, popuptext:'', session:{}}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
 				var state_new = _.clone(state);
 				state_new.auth = action.payload.auth;
+				state_new.session = {};
 				if(action.payload.auth === false){
 					state_new.popuptext = 'Авторизация не пройдена!';
+					state_new.session.login = '';
+					state_new.session.password = '';
+				} else {
+					state_new.session.login = action.payload.login;
+					state_new.session.password = action.payload.pass;
 				}
 				return state_new;
 				break;
@@ -192,9 +198,9 @@ function listenSocket(socket){
 }
 
 //функция инициализации проекта
-function initialiseSocket(login_val, password_val){
+function initialiseSocket(login_val, passwd_val){
 	try {
-		var InitString = '{"protocol":"' + window.location.protocol.substr(0,window.location.protocol.length - 1) + '","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + password_val + '"}';
+		var InitString = '{"protocol":"' + window.location.protocol.substr(0,window.location.protocol.length - 1) + '","server":"' + window.location.hostname + '","port":"444","login":"' + login_val + '","password":"' + passwd_val + '"}';
 		var JsonInitString;
 		try {			
 			JsonInitString = (JSON.parse(InitString));
@@ -222,7 +228,7 @@ function initialiseSocket(login_val, password_val){
 				socket.on('authorisation', function (data) {
 					if(data.value === 'true'){
 						console.log(datetime() + "Авторизация пройдена!");
-						adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true}});
+						adminpanelStorage.dispatch({type:'AUTH', payload: {auth:true, login:login_val, pass:password_val}});
 					} else {
 						serverStorage.dispatch({type:'CLEAR_STORAGE'});
 						connectionStorage.dispatch({type:'CLEAR_STORAGE'});
@@ -259,5 +265,30 @@ function replacer(data_val, value_val){
 		console.log(datetime() + "Ошибка преобразования имени пользователя!");
 		adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Ошибка преобразования имени пользователя!"}});
 	}	
+}
+
+//функция отправки файлов на внутренний файл-сервер
+function SendFileToInternalFS(files){
+	return (new Promise(function(resolve){
+		var fd = new FormData();
+		fd.append(files[0].name, files[0]);
+		console.log(fd);
+		xmlhttp=new XMLHttpRequest();
+		xmlhttp.onreadystatechange=function() {
+			if (this.readyState==4 && this.status==200) {
+				resolve(this.responseText);
+			} else if (this.readyState==4) {
+				if(typeof(this.responseText) === 'string'){
+					resolve(this.responseText);
+				} else {
+					resolve('unidentified error');
+				}
+			}
+		}
+		var serverlink = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + window.location.port + '/upload';
+		xmlhttp.open("POST",serverlink,true);
+		xmlhttp.setRequestHeader('Authorization', 'Basic ' + btoa(adminpanelStorage.getState().session.login + ':' + adminpanelStorage.getState().session.password));
+		xmlhttp.send(fd);
+	}));
 }
 

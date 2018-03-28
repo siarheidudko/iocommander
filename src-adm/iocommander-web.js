@@ -325,12 +325,46 @@ class AdminIoCommanderPanelBody extends React.Component{
 											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 										}
 									break;
+								case 'getFileFromFileserver':
+										var self = this;
+										if(true){
+											SendFileToInternalFS(this.refs.FileUploadToServer.files).then(function(value){
+													if(value === 'upload'){
+														var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + adminpanelStorage.getState().fileport + '/' + self.refs.FileUploadToServer.files[0].name;
+														var tempTask = {uid:self.state.ParamOne, task: {nameTask:self.state.ParamTwo, extLink:link, intLink:self.state.ParamFour, fileName: self.refs.FileUploadToServer.files[0].name, exec:'false', complete:'false', answer:'', platform:self.state.ParamSix, dependencies:self.state.ParamSeven, comment:self.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
+														for(var i=0;i<self.state.ParamEight.length;i++){
+															var EmitMessage = new Array(self.state.ParamEight[i], tempTask);
+															window.socket.emit('adm_setTask', EmitMessage);
+															self.setState({ParamOne: generateUID()});
+															self.setState({ParamThird: ''});
+															self.setState({ParamFour: ''});
+															self.setState({ParamFive: ''});
+															self.setState({ParamSix: ''});
+															self.setState({ParamSeven: new Array});
+															self.setState({ParamEight: new Array});
+															self.setState({ParamNine: ''});
+															self.setState({ParamTen: ''});
+															self.setState({ParamEleven: ''});
+														}
+													} else {
+														console.log(datetime() + "Проблема загрузки файла на внутренний сервер!");
+														adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:value}});
+													}
+												}, 
+												function(error){
+													adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:error}});
+											});
+										} else {
+											console.log(datetime() + "Некорректные аргументы!");
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
+										}
+									break;
 							}
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
-						if((onSetTask) && (this.state.ParamEight.length > 0)){
+						if((onSetTask) && (this.state.ParamEight.length > 0) && (this.state.ParamTwo !== getFileFromFileserver)){ //для getFileFromFileserver код уже асинхронный
 							for(var i=0;i<this.state.ParamEight.length;i++){
 								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
 								window.socket.emit('adm_setTask', EmitMessage);
@@ -498,7 +532,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 				//выпадающий список типов заданий
 				var adm_setTaskOption = new Array;
 				adm_setTaskOption.push(<option value="">Выберите тип задания</option>);
-				adm_setTaskOption.push(<option value="getFileFromWWW" selected={(this.state.ParamTwo === 'getFileFromWWW')?true:false}>Скачать файл в папку</option>);
+				adm_setTaskOption.push(<option value="getFileFromWWW" selected={(this.state.ParamTwo === 'getFileFromWWW')?true:false}>Скачать файл по ссылке</option>);
+				adm_setTaskOption.push(<option value="getFileFromFileserver" selected={(this.state.ParamTwo === 'getFileFromFileserver')?true:false}>Передать файл</option>);
 				adm_setTaskOption.push(<option value="execFile" selected={(this.state.ParamTwo === 'execFile')?true:false}>Запустить локальный скрипт</option>);
 				adm_setTaskOption.push(<option value="execCommand" selected={(this.state.ParamTwo === 'execCommand')?true:false}>Выполнить команду</option>);
 				var adm_setTask = <p><select size="1" name="SetParamTwo" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOption} </select></p>;
@@ -513,7 +548,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				switch(this.state.ParamTwo){
 					case 'getFileFromWWW':
 						//поле ввода ссылки для скачки
-						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Ссылка для скачки: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.ParamThird) === 'string')?this.state.ParamThird:null} /></div>);
 						//поле ввода локального пути для сохранения
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода имени файла для сохранения
@@ -521,7 +556,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 						break;
 					case 'execFile':
 						//поле ввода пути к скрипту
-						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Путь к скрипту: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.ParamThird) === 'string')?this.state.ParamThird:null} /></div>);
 						//поле ввода имени скрипта
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Имя скрипта: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода параметров запуска
@@ -529,7 +564,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 						break;
 					case 'execCommand':
 						//поле ввода команды запуска
-						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamThird} /></div>);
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Команда: <input type="text" name="SetParamThird" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.ParamThird) === 'string')?this.state.ParamThird:null} /></div>);
+						break;
+					case 'getFileFromFileserver':
+						//поле выбора файла для передачи
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Файл: <input type="file" ref="FileUploadToServer" /></div>);
+						//поле ввода локального пути для сохранения
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						break;
 				}
 				if(this.state.ParamTwo !== ''){
