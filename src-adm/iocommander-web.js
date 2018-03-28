@@ -328,32 +328,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 								case 'getFileFromFileserver':
 										var self = this;
 										if(true){
-											SendFileToInternalFS(this.refs.FileUploadToServer.files).then(function(value){
-													if(value === 'upload'){
-														var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + self.refs.FileUploadToServer.files[0].name;
-														var tempTask = {uid:self.state.ParamOne, task: {nameTask:self.state.ParamTwo, extLink:link, intLink:self.state.ParamFour, fileName: self.refs.FileUploadToServer.files[0].name, exec:'false', complete:'false', answer:'', platform:self.state.ParamSix, dependencies:self.state.ParamSeven, comment:self.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
-														for(var i=0;i<self.state.ParamEight.length;i++){
-															var EmitMessage = new Array(self.state.ParamEight[i], tempTask);
-															window.socket.emit('adm_setTask', EmitMessage);
-															self.setState({ParamOne: generateUID()});
-															self.setState({ParamThird: ''});
-															self.setState({ParamFour: ''});
-															self.setState({ParamFive: ''});
-															self.setState({ParamSix: ''});
-															self.setState({ParamSeven: new Array});
-															self.setState({ParamEight: new Array});
-															self.setState({ParamNine: ''});
-															self.setState({ParamTen: ''});
-															self.setState({ParamEleven: ''});
-														}
-													} else {
-														console.log(datetime() + "Проблема загрузки файла на внутренний сервер!");
-														adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:value}});
-													}
-												}, 
-												function(error){
-													adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:error}});
-											});
+											SendFileToInternalFS(this.refs.FileUploadToServer.files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight);
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
 											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -364,21 +339,23 @@ class AdminIoCommanderPanelBody extends React.Component{
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
-						if((onSetTask) && (this.state.ParamEight.length > 0) && (this.state.ParamTwo !== 'getFileFromFileserver')){ //для getFileFromFileserver код уже асинхронный
-							for(var i=0;i<this.state.ParamEight.length;i++){
-								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
-								window.socket.emit('adm_setTask', EmitMessage);
-								this.setState({ParamOne: generateUID()});
-								this.setState({ParamThird: ''});
-								this.setState({ParamFour: ''});
-								this.setState({ParamFive: ''});
-								this.setState({ParamSix: ''});
-								this.setState({ParamSeven: new Array});
-								this.setState({ParamEight: new Array});
-								this.setState({ParamNine: ''});
-								this.setState({ParamTen: ''});
-								this.setState({ParamEleven: ''});
+						if((onSetTask) && (this.state.ParamEight.length > 0)){
+							if(this.state.ParamTwo !== 'getFileFromFileserver'){
+								for(var i=0;i<this.state.ParamEight.length;i++){
+									var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
+									window.socket.emit('adm_setTask', EmitMessage);
+								}
 							}
+							this.setState({ParamOne: generateUID()});
+							this.setState({ParamThird: ''});
+							this.setState({ParamFour: ''});
+							this.setState({ParamFive: ''});
+							this.setState({ParamSix: ''});
+							this.setState({ParamSeven: new Array});
+							this.setState({ParamEight: new Array});
+							this.setState({ParamNine: ''});
+							this.setState({ParamTen: ''});
+							this.setState({ParamEleven: ''});
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
 							//adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Проблема генерации задачи!"}});

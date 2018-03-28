@@ -268,11 +268,10 @@ function replacer(data_val, value_val){
 }
 
 //функция отправки файлов на внутренний файл-сервер
-function SendFileToInternalFS(files){
-	return (new Promise(function(resolve){
+function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight){
+	var result = new Promise(function(resolve){
 		var fd = new FormData();
 		fd.append(files[0].name, files[0]);
-		console.log(fd);
 		xmlhttp=new XMLHttpRequest();
 		xmlhttp.onreadystatechange=function() {
 			if (this.readyState==4 && this.status==200) {
@@ -289,6 +288,23 @@ function SendFileToInternalFS(files){
 		xmlhttp.open("POST",serverlink,true);
 		xmlhttp.setRequestHeader('Authorization', 'Basic ' + btoa(adminpanelStorage.getState().session.login + ':' + adminpanelStorage.getState().session.password));
 		xmlhttp.send(fd);
-	}));
+	});
+	result.then(
+		function(value){
+			if(value === 'upload'){
+				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + self.refs.FileUploadToServer.files[0].name;
+				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:'false', complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl.getTime()}};
+				for(var i=0;i<ParamEight.length;i++){
+					var EmitMessage = new Array(ParamEight[i], tempTask);
+					window.socket.emit('adm_setTask', EmitMessage);
+				}
+			} else {
+				console.log(datetime() + "Проблема загрузки файла на внутренний сервер!");
+				adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:value}});
+			}
+		}, 
+		function(error){
+			adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:error}});
+	});
 }
 
