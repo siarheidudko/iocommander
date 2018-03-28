@@ -445,7 +445,7 @@ undefined
 function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight){
 	var result = new Promise(function(resolve){
 		var fd = new FormData();
-		fd.append(files[0].name, files[0]);
+		fd.append(ParamOne, files[0]);
 		var xmlhttp=new XMLHttpRequest();
 		xmlhttp.onreadystatechange=function() {
 			if (this.readyState==4 && this.status==200) {
@@ -466,7 +466,7 @@ function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, 
 	result.then(
 		function(value){
 			if(value === 'upload'){
-				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + files[0].name;
+				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + ParamOne;
 				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:'false', complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl.getTime()}};
 				for(var i=0;i<ParamEight.length;i++){
 					var EmitMessage = new Array(ParamEight[i], tempTask);
@@ -784,6 +784,18 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'SetParamTwo':
 				this.setState({ParamTwo: e.target.value});
+				if(this.state.CommandType === 'adm_setTask'){
+					this.setState({ParamOne: generateUID()});
+					this.setState({ParamThird: ''});
+					this.setState({ParamFour: ''});
+					this.setState({ParamFive: ''});
+					this.setState({ParamSix: ''});
+					this.setState({ParamSeven: new Array});
+					this.setState({ParamEight: new Array});
+					this.setState({ParamNine: ''});
+					this.setState({ParamTen: ''});
+					this.setState({ParamEleven: ''});
+				}
 				break;
 			case 'SetParamThird':
 				var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!@-].*$");
@@ -951,13 +963,13 @@ class AdminIoCommanderPanelBody extends React.Component{
 										}
 									break;
 								case 'getFileFromFileserver':
-										if((typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '')){
+										if((typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.refs.FileUploadToServer.files) === 'object') && (this.refs.FileUploadToServer.files.length === 1)){ //длинна массива файлов =1, если выбран один файл
 											SendFileToInternalFS(this.refs.FileUploadToServer.files, this.state.ParamOne, this.state.ParamFour, this.state.ParamSix, this.state.ParamSeven, this.state.ParamNine, timeOnCompl, this.state.ParamEight);
-											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
-											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});	
 										}
+										onSetTask = true; //чистим поля
 									break;
 							}
 						} else {

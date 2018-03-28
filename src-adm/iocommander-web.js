@@ -159,6 +159,18 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'SetParamTwo':
 				this.setState({ParamTwo: e.target.value});
+				if(this.state.CommandType === 'adm_setTask'){
+					this.setState({ParamOne: generateUID()});
+					this.setState({ParamThird: ''});
+					this.setState({ParamFour: ''});
+					this.setState({ParamFive: ''});
+					this.setState({ParamSix: ''});
+					this.setState({ParamSeven: new Array});
+					this.setState({ParamEight: new Array});
+					this.setState({ParamNine: ''});
+					this.setState({ParamTen: ''});
+					this.setState({ParamEleven: ''});
+				}
 				break;
 			case 'SetParamThird':
 				var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!@-].*$");
@@ -328,11 +340,11 @@ class AdminIoCommanderPanelBody extends React.Component{
 								case 'getFileFromFileserver':
 										if((typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.refs.FileUploadToServer.files) === 'object') && (this.refs.FileUploadToServer.files.length === 1)){ //длинна массива файлов =1, если выбран один файл
 											SendFileToInternalFS(this.refs.FileUploadToServer.files, this.state.ParamOne, this.state.ParamFour, this.state.ParamSix, this.state.ParamSeven, this.state.ParamNine, timeOnCompl, this.state.ParamEight);
-											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
-											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
+											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});	
 										}
+										onSetTask = true; //чистим поля
 									break;
 							}
 						} else {

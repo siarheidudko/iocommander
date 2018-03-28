@@ -271,7 +271,7 @@ function replacer(data_val, value_val){
 function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight){
 	var result = new Promise(function(resolve){
 		var fd = new FormData();
-		fd.append(files[0].name, files[0]);
+		fd.append(ParamOne, files[0]);
 		var xmlhttp=new XMLHttpRequest();
 		xmlhttp.onreadystatechange=function() {
 			if (this.readyState==4 && this.status==200) {
@@ -292,7 +292,7 @@ function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, 
 	result.then(
 		function(value){
 			if(value === 'upload'){
-				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + files[0].name;
+				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + ParamOne;
 				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:'false', complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl.getTime()}};
 				for(var i=0;i<ParamEight.length;i++){
 					var EmitMessage = new Array(ParamEight[i], tempTask);

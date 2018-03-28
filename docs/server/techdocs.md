@@ -1018,12 +1018,12 @@ function startWebServer(port){
 															var FilesNull = true;
 															for(var keyFile in files){
 																FilesNull = false;
-																fs.copyFile(files[keyFile][0].path, './files/' + files[keyFile][0].originalFilename, (err) => {
+																fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
 																	try{
 																		if (err) throw err;
 																		res.writeHead(200, {'content-type': 'text/plain'});
 																		res.end('upload');
-																		console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + files[keyFile][0].originalFilename));
+																		console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
 																	} catch(e){
 																		res.writeHead(500, {'Content-Type': 'text/plain'});
 																		res.end('Internal Server Error');
@@ -1437,12 +1437,12 @@ function startFileServer(port, fileConnLimit){
 													var FilesNull = true;
 													for(var keyFile in files){
 														FilesNull = false;
-														fs.copyFile(files[keyFile][0].path, './files/' + files[keyFile][0].originalFilename, (err) => {
+														fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
 															try{
 																if (err) throw err;
 																res.writeHead(200, {'content-type': 'text/plain'});
 																res.end('upload');
-																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + files[keyFile][0].originalFilename));
+																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
 															} catch(e){
 																res.writeHead(500, {'Content-Type': 'text/plain'});
 																res.end('Internal Server Error');
