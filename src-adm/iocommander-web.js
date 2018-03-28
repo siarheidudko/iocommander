@@ -327,8 +327,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 									break;
 								case 'getFileFromFileserver':
 										var self = this;
-										if(true){
+										if((typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '')){
 											SendFileToInternalFS(this.refs.FileUploadToServer.files, this.state.ParamOne, this.state.ParamFour, this.state.ParamSix, this.state.ParamSeven, this.state.ParamNine, timeOnCompl, this.state.ParamEight);
+											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
 											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
