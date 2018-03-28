@@ -364,7 +364,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
 						}
-						if((onSetTask) && (this.state.ParamEight.length > 0) && (this.state.ParamTwo !== getFileFromFileserver)){ //для getFileFromFileserver код уже асинхронный
+						if((onSetTask) && (this.state.ParamEight.length > 0) && (this.state.ParamTwo !== 'getFileFromFileserver')){ //для getFileFromFileserver код уже асинхронный
 							for(var i=0;i<this.state.ParamEight.length;i++){
 								var EmitMessage = new Array(this.state.ParamEight[i], tempTask);
 								window.socket.emit('adm_setTask', EmitMessage);
