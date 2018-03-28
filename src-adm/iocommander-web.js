@@ -330,7 +330,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 										if(true){
 											SendFileToInternalFS(this.refs.FileUploadToServer.files).then(function(value){
 													if(value === 'upload'){
-														var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + adminpanelStorage.getState().fileport + '/' + self.refs.FileUploadToServer.files[0].name;
+														var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + self.refs.FileUploadToServer.files[0].name;
 														var tempTask = {uid:self.state.ParamOne, task: {nameTask:self.state.ParamTwo, extLink:link, intLink:self.state.ParamFour, fileName: self.refs.FileUploadToServer.files[0].name, exec:'false', complete:'false', answer:'', platform:self.state.ParamSix, dependencies:self.state.ParamSeven, comment:self.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 														for(var i=0;i<self.state.ParamEight.length;i++){
 															var EmitMessage = new Array(self.state.ParamEight[i], tempTask);
