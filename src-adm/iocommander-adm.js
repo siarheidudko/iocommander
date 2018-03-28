@@ -272,7 +272,7 @@ function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, 
 	var result = new Promise(function(resolve){
 		var fd = new FormData();
 		fd.append(files[0].name, files[0]);
-		xmlhttp=new XMLHttpRequest();
+		var xmlhttp=new XMLHttpRequest();
 		xmlhttp.onreadystatechange=function() {
 			if (this.readyState==4 && this.status==200) {
 				resolve(this.responseText);
