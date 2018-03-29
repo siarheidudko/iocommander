@@ -174,6 +174,43 @@ select{
 	box-shadow: 0px 0px 0px;
 }
 
+/* Мигающие уведомления в отчетах */
+.textRED{
+	color: #ff0000;
+}
+.textGREEN{
+	color: #3cb371;
+}
+#blink1 {
+  -webkit-animation: blink1 1s linear infinite;
+  animation: blink1 1s linear infinite;
+}
+@-webkit-keyframes blink1 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+@keyframes blink1 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+#blink2 {
+  -webkit-animation: blink2 1s linear infinite;
+  animation: blink2 1s linear infinite;
+}
+@-webkit-keyframes blink2 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+@keyframes blink2 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+#blink3 {
+  -webkit-animation: blink3 1s linear infinite;
+  animation: blink3 1s linear infinite;
+}
+@-webkit-keyframes blink3 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+@keyframes blink3 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
 /* Отчеты по таскам */
 .reportTableRow{
 	display:table;

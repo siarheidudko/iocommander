@@ -1247,6 +1247,12 @@ function GenerateReport(){
 						}
 						if(typeof(tempStorage[keyObject][keyTask].tryval) !== 'undefined'){
 							reportStore[keyTask].objects[keyObject].tryval = tempStorage[keyObject][keyTask].tryval;
+							if(typeof(reportStore[keyTask].errors) !== 'number'){
+								reportStore[keyTask].errors = 0;
+							}
+							if(tempStorage[keyObject][keyTask].tryval === 100){
+								reportStore[keyTask].errors = reportStore[keyTask].errors + 1;
+							}
 						}
 						if(typeof(tempStorage[keyObject][keyTask].datetimecompl) !== 'undefined'){
 							reportStore[keyTask].objects[keyObject].datetimecompl = tempStorage[keyObject][keyTask].datetimecompl;
@@ -1260,6 +1266,26 @@ function GenerateReport(){
 						if(typeof(tempStorage[keyObject][keyTask].datetime) !== 'undefined'){
 							reportStore[keyTask].datetime = tempStorage[keyObject][keyTask].datetime;
 						}
+						switch(tempStorage[keyObject][keyTask].nameTask){
+							case 'getFileFromWWW':
+								reportStore[keyTask].text = "Скачать файл " + tempStorage[keyObject][keyTask].extLink + " в " + tempStorage[keyObject][keyTask].intLink + tempStorage[keyObject][keyTask].fileName;
+								break;
+							case 'execFile':
+								var thisparams = '';
+								if(typeof(tempStorage[keyObject][keyTask].paramArray) === 'object'){
+									thisparams = tempStorage[keyObject][keyTask].paramArray.join(' ');
+								}
+								reportStore[keyTask].text = "Запустить скрипт " + tempStorage[keyObject][keyTask].intLink + tempStorage[keyObject][keyTask].fileName + ' ' + thisparams;
+								break;
+							case 'execCommand':
+								reportStore[keyTask].text = "Выполнить команду " + tempStorage[keyObject][keyTask].execCommand;
+								break;
+						}
+						var thisdependencies = '';
+						if(typeof(tempStorage[keyObject][keyTask].dependencies) === 'object'){
+							thisdependencies = tempStorage[keyObject][keyTask].dependencies.join(' ');
+						}
+						reportStore[keyTask].dependencies = thisdependencies;
 						if(typeof(tempStorage[keyObject][keyTask].comment) !== 'undefined'){
 							reportStore[keyTask].comment = tempStorage[keyObject][keyTask].comment;
 						}

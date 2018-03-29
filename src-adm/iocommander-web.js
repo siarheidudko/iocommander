@@ -637,7 +637,26 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_TaskReportResult = new Array;
 				if(this.state.ParamOne !== ""){
 					var tempStorage = connectionStorage.getState().report;
-					adm_TaskReportResult.push(<div className={'reportTableRow'}>{this.state.ParamOne}</div>)
+					var reportTaskCOMPLETE = '',
+						reportTaskERRORS = '',
+						reportTaskTEXT = '',
+						reportTaskDEPEN = '';
+					if(tempStorage[this.state.ParamOne].incomplete.length > 0) {
+						reportTaskCOMPLETE = <div className="textRED" id="blink1"> Есть невыполненные задания! </div>;
+					} else if (tempStorage[this.state.ParamOne].errors === 0) {
+						reportTaskCOMPLETE = <div className="textGREEN" id="blink1"> Все задания выполнены! </div>;
+					}
+					if(tempStorage[this.state.ParamOne].errors > 0) {
+						reportTaskERRORS = <div className="textRED" id="blink2"> Есть ошибки выполнения! </div>;
+					}
+					var reportTaskUID = <div> UID: {this.state.ParamOne} </div>;
+					if((typeof(tempStorage[this.state.ParamOne].text) === 'string') && (tempStorage[this.state.ParamOne].text !== '')){
+						reportTaskTEXT = <div> {tempStorage[this.state.ParamOne].text} </div>;
+					}
+					if((typeof(tempStorage[this.state.ParamOne].dependencies) === 'string') && (tempStorage[this.state.ParamOne].dependencies !== '')){
+						reportTaskDEPEN = <div> Зависимости: {tempStorage[this.state.ParamOne].dependencies} </div>;
+					}
+					adm_TaskReportResult.push(<div className={'reportTableRow'}> {reportTaskUID} {reportTaskCOMPLETE} {reportTaskERRORS} {reportTaskTEXT} {reportTaskDEPEN}  <br /> </div>)
 					if(typeof(tempStorage[this.state.ParamOne]) !== 'undefined'){
 						var tempObjects = tempStorage[this.state.ParamOne].objects;
 						if(typeof(tempObjects) !== 'undefined'){
