@@ -633,7 +633,7 @@ function taskOnComplete(socket, uid_val, answer_val){
 			realAnswer = answer_val;
 		}
 		if(realAnswer.length > 503){
-			realAnswer = realAnswer.substring(0,500) + '...';
+			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 501 ,realAnswer.length - 1);
 		}
 		//realAnswer = realAnswer.replace(/([^>])\n+/g, '<br \\>');
 	} catch (e){}
