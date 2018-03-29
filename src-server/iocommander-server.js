@@ -98,7 +98,8 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 			case 'GC_TASK_REPLANSW':
 				var state_new = {};
 				state_new = lodash.clone(state);
-				state_new.tasks[action.payload.user][action.payload.task].answer = state_new.tasks[action.payload.user][action.payload.task].answer.substring(0,500) + '...';
+				var thisanswr = state_new.tasks[action.payload.user][action.payload.task].answer;
+				state_new.tasks[action.payload.user][action.payload.task].answer =  '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
 				return state_new;
 				break;
 			default:

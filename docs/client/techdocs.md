@@ -187,7 +187,8 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 			case 'DB_REPLANSW_TASK':
 				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
 				state_new = lodash.clone(state);
-				state_new.tasks[action.payload.uid].answer = state.tasks[action.payload.uid].answer.substring(0,500) + '...';
+				var thisanswr = state.tasks[action.payload.uid].answer;
+				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
 				return state_new;
 				break;
 			case 'DB_CLEAR_EXECUTETASK':
