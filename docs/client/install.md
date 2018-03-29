@@ -1,4 +1,4 @@
-# IoCommander v1.0.0 - Установка клиента
+﻿# IoCommander v1.0.0 - Установка клиента
 
 ## Зависимости проекта
 
@@ -8,7 +8,6 @@
 - cryptojs
 - redux
 - lodash
-- firebase
 - os
 - http
 - https
