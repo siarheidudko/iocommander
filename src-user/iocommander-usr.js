@@ -688,8 +688,14 @@ function GarbageCollector(){
 		try{
 			for(var keyTask in actualStorage.tasks){
 				try{
-					if((actualStorage.tasks[keyTask].datetime + lifetime) < Date.now()){
-						clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+					if((actualStorage.tasks[keyTask].datetime + lifetime) < Date.now()){ //если у задания нет отсрочки, оно будет уничтожено через 10 дней. если есть отсрочка, то через 10 дней после даты отсрочки.
+						if(typeof(actualStorage.tasks[keyTask].timeoncompl) !== 'undefined'){
+							if((actualStorage.tasks[keyTask].timeoncompl + lifetime) < Date.now()){
+								clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+							}
+						} else {
+							clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+						}
 					}
 				} catch(e){
 					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));

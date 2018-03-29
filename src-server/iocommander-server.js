@@ -771,6 +771,7 @@ function startFileServer(port, fileConnLimit){
 //функция очистки хранилища
 function GarbageCollector(){
 	var lifetime = 86400000 * 10; //устанавливаю срок хранения выполненых задач в 10 дней
+	var lifetimetwo = 86400000 * 100; //устанавливаю срок хранения задач в 100 дней
 	var actualStorage = serverStorage.getState();
 	var bannedStorage = connectionStorage.getState().iptoban;
 	try{
@@ -786,6 +787,9 @@ function GarbageCollector(){
 								if((actualStorage.tasks[key_object][key_task].complete == 'true') && (actualStorage.tasks[key_object][key_task].datetime < (Date.now()-lifetime))){
 									serverStorage.dispatch({type:'GC_TASK', payload: {user:key_object, task:key_task}});
 									console.log(colors.yellow(datetime() + "Найдены выполненые задания с истекшим сроком (" + key_task + "), удаляю!"));
+								} else if(actualStorage.tasks[key_object][key_task].datetime < (Date.now()-lifetimetwo)){
+									serverStorage.dispatch({type:'GC_TASK', payload: {user:key_object, task:key_task}});
+									console.log(colors.yellow(datetime() + "Найдены задания старше 100 дней (" + key_task + "), удаляю!"));
 								}
 							} catch (e){
 								console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
@@ -823,6 +827,37 @@ function GarbageCollector(){
 			}
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора хранилища соединений: "  + e));
+		}
+		try{
+			fs.readdir('./files/', function(err, items) {
+				try{
+					if (err) throw err;
+					for (var i=0; i<items.length; i++) {
+						try {
+							var unlink = true;
+							for(var key_object in actualStorage.tasks){
+								if(typeof(actualStorage.tasks[key_object][items[i]]) !== 'undefined'){
+									unlink = false;
+								}
+							}
+							if(unlink){
+								try{
+									fs.unlinkSync('./files/'+items[i]);
+									console.log(colors.yellow(datetime() + "Cборщиком мусора удален файл "  + items[i] + ' !'));
+								} catch(e){
+									console.log(colors.red(datetime() + "Ошибка удаления сборщиком мусора файла "  + items[i] + ' !'));
+								}
+							}
+						}catch(e){
+							console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора файла "  + items[i] + ' !'));
+						}
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Ошибка чтения сборщиком мусора директории с файлами: "  + e));
+				}
+			});
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора хранилища файлов: "  + e));
 		}
 	} catch(e){
 		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
@@ -1061,7 +1096,7 @@ try {
 				}
 				server.maxHeadersCount = 100000;
 				server.timeout = 120000;
-				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket","polling"]});
+				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket"]});
 				io.sockets.on('connection', function (socket) {
 					try {
 						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
