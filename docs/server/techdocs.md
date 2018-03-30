@@ -100,7 +100,7 @@ try {
 				}
 				server.maxHeadersCount = 100000;
 				server.timeout = 120000;
-				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket","polling"]});
+				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket"]});
 				io.sockets.on('connection', function (socket) {
 					try {
 						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');
@@ -125,6 +125,13 @@ try {
 							io.sockets.sockets[socket.id].on('login', function (data) {
 								if(testUser(data.user, data.password, socket.id)) {
 									try {
+										try{
+											if(typeof(connectionStorage.getState().users[replacer(data.user, true)]) !== 'undefined'){
+												io.sockets.sockets[connectionStorage.getState().users[replacer(data.user, true)]].disconnect();
+											}
+										} catch(e){
+											console.log(colors.red(datetime() + "Ошибка закрытия сокета: " + e));
+										}
 										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
 										setUser(data.user, 'uid', socket.id);
 										console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
@@ -137,6 +144,13 @@ try {
 									}
 								} else if(testAdmin(data.user, data.password, socket.id)) {
 									try {
+										try{
+											if(typeof(connectionStorage.getState().users[replacer(data.user, true)]) !== 'undefined'){
+												io.sockets.sockets[connectionStorage.getState().users[replacer(data.user, true)]].disconnect();
+											}
+										} catch(e){
+											console.log(colors.red(datetime() + "Ошибка закрытия сокета: " + e));
+										}
 										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
 										setUser(data.user, 'uid', socket.id);
 										console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));

@@ -701,10 +701,13 @@ function startFileServer(port, fileConnLimit){
 														FilesNull = false;
 														fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
 															try{
-																if (err) throw err;
-																res.writeHead(200, {'content-type': 'text/plain'});
-																res.end('upload');
-																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																if (err) {
+																	throw err;
+																} else{
+																	res.writeHead(200, {'content-type': 'text/plain'});
+																	res.end('upload');
+																	console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																}
 															} catch(e){
 																res.writeHead(500, {'Content-Type': 'text/plain'});
 																res.end('Internal Server Error');
@@ -832,25 +835,28 @@ function GarbageCollector(){
 		try{
 			fs.readdir('./files/', function(err, items) {
 				try{
-					if (err) throw err;
-					for (var i=0; i<items.length; i++) {
-						try {
-							var unlink = true;
-							for(var key_object in actualStorage.tasks){
-								if(typeof(actualStorage.tasks[key_object][items[i]]) !== 'undefined'){
-									unlink = false;
+					if (err) {
+						throw err;
+					} else {
+						for (var i=0; i<items.length; i++) {
+							try {
+								var unlink = true;
+								for(var key_object in actualStorage.tasks){
+									if(typeof(actualStorage.tasks[key_object][items[i]]) !== 'undefined'){
+										unlink = false;
+									}
 								}
-							}
-							if(unlink){
-								try{
-									fs.unlinkSync('./files/'+items[i]);
-									console.log(colors.yellow(datetime() + "Cборщиком мусора удален файл "  + items[i] + ' !'));
-								} catch(e){
-									console.log(colors.red(datetime() + "Ошибка удаления сборщиком мусора файла "  + items[i] + ' !'));
+								if(unlink){
+									try{
+										fs.unlinkSync('./files/'+items[i]);
+										console.log(colors.yellow(datetime() + "Cборщиком мусора удален файл "  + items[i] + ' !'));
+									} catch(e){
+										console.log(colors.red(datetime() + "Ошибка удаления сборщиком мусора файла "  + items[i] + ' !'));
+									}
 								}
+							}catch(e){
+								console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора файла "  + items[i] + ' !'));
 							}
-						}catch(e){
-							console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора файла "  + items[i] + ' !'));
 						}
 					}
 				} catch(e){
@@ -1148,6 +1154,13 @@ try {
 							io.sockets.sockets[socket.id].on('login', function (data) {
 								if(testUser(data.user, data.password, socket.id)) {
 									try {
+										try{
+											if(typeof(connectionStorage.getState().users[replacer(data.user, true)]) !== 'undefined'){
+												io.sockets.sockets[connectionStorage.getState().users[replacer(data.user, true)]].disconnect();
+											}
+										} catch(e){
+											console.log(colors.red(datetime() + "Ошибка закрытия сокета: " + e));
+										}
 										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
 										setUser(data.user, 'uid', socket.id);
 										console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
@@ -1160,6 +1173,13 @@ try {
 									}
 								} else if(testAdmin(data.user, data.password, socket.id)) {
 									try {
+										try{
+											if(typeof(connectionStorage.getState().users[replacer(data.user, true)]) !== 'undefined'){
+												io.sockets.sockets[connectionStorage.getState().users[replacer(data.user, true)]].disconnect();
+											}
+										} catch(e){
+											console.log(colors.red(datetime() + "Ошибка закрытия сокета: " + e));
+										}
 										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
 										setUser(data.user, 'uid', socket.id);
 										console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
