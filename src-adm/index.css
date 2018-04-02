@@ -88,7 +88,7 @@ select{
 	float: left;
 }
 .clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
-	width: 140px;
+	width: 160px;
 	margin:auto;
 }
 .clientObject0, .AdminIoCommanderPanelBodyBottom{
@@ -121,7 +121,7 @@ select{
 }
 .objectTable{
 	margin:auto;
-	width: 70%;
+	width: 80%;
 }
 
 /* Кнопки управления */

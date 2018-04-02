@@ -576,13 +576,21 @@ class AdminIoCommanderPanelBody extends React.Component{
 					//флаг выбора объектов
 					var AdminIoCommanderPanelBodyMiddleClients = new Array;
 					var div_val = 0;
+					var tempGroup = '';
 					for(var keyUser in serverStorage.getState().users){
+						var thisGroupArr = keyUser.split('_');
+						var thisGroup = thisGroupArr[0];
+						if(!((tempGroup === '') || (tempGroup === thisGroup))){
+							AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject0'}><br /></div>);
+							div_val = 0;
+						}
 						AdminIoCommanderPanelBodyMiddleClients.push(<div className={'clientObject' + div_val}>{replacer(keyUser, false)}: <input type="checkbox" name="SetParamEight" onChange={this.onChangeHandler.bind(this)} value={replacer(keyUser, false)} checked={(this.state.ParamEight.indexOf(replacer(keyUser, false)) === -1)?false:true} /></div>);
 						if(div_val <5){
 							div_val++;
 						} else {
 							div_val = 0;
 						}
+						tempGroup = thisGroup;
 					}
 					var AdminIoCommanderPanelBodyMiddleGroupsSet = new Array;
 					AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value="">Выберите группу (не обязательно)</option>);
