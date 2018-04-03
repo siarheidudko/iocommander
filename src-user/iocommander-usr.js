@@ -223,7 +223,7 @@ function Reconnect(protocol_val, server_val, port_val){
 			}catch(e){
 				console.log(colors.red(datetime() + "Не могу уничтожить сокет!"));
 			}
-		}
+		} 
 		if(protocol_val === 'https'){
 			socket = socketclient.connect(protocol_val + '://' + server_val + ':' + port_val, {secure:true, transports: ['websocket']});
 		} else {
@@ -243,6 +243,7 @@ function Reconnect(protocol_val, server_val, port_val){
 			} else {
 				//если авторизация неудачна, пробую каждые 5 минут
 				console.log(colors.red(datetime() + "Авторизация не пройдена!"));
+				setTimeout(Reconnect, 300000, protocol_val, server_val, port_val);
 			}
 		});
 		//слушаем сокет
@@ -381,7 +382,6 @@ function listenSocket(socket, protocol_val, server_val, port_val){
 		});
 		socket.on('disconnect', () => {
 			console.log(colors.red(datetime() + "Соединение разорвано!"));
-			setTimeout(Reconnect, 300000, protocol_val, server_val, port_val);
 		});
 	} catch (e){
 		console.log(colors.red(datetime() + "Проблема прослушки открытого сокета!"));
