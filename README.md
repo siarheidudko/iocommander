@@ -13,7 +13,7 @@
 
 Тестируется на LTS (8.10.0 - текущая).
 
-В каталоге [/production](https://github.com/siarheidudko/iocommander/tree/master/production) есть архивы с полной установкой (исходные коды скриптов) под win32 и linux (Для linux .tar упакован в 7zip для уменьшения размера)
+В каталоге [/production](https://github.com/siarheidudko/iocommander/tree/master/production) есть архивы с полной установкой (исходные коды скриптов) под win32 и linux.
 
 ### Скрипт сервера
 Для запуска и клиента и сервера на linux достаточно бинарника из архива node (https://nodejs.org/en/download/), для windows соответственно node.exe из аналогичного архива под windows. Для удобства, можете закинуть его в /bin/node с правами x+ (linux) или C:\Windows\System32\ (windows).
