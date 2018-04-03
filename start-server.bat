@@ -1,1 +1,0 @@
-node .\src-server\iocommander-server.js
