@@ -86,10 +86,9 @@ select{
 }
 .clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
 	float: left;
-}
-.clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
 	width: 160px;
 	margin:auto;
+	text-align:right;
 }
 .clientObject0, .AdminIoCommanderPanelBodyBottom{
 	clear:left;
@@ -165,7 +164,7 @@ select{
 	border: 1px solid #b3c9ce;
 	border-radius: 5px;
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
-	width: 118px;
+	width: 140px;
 	height:18px;
 	float:left;
 }
@@ -241,22 +240,22 @@ select{
 	padding-top: 5px;
 }
 .reportTableColumnName{
-	width: 120px;
+	width: 150px;
 }
 .reportTableColumnStatus{
-	width: 120px;
+	width: 110px;
 }
 .reportTableColumnAnswer{
-	width: 430px;
+	width: 440px;
 }
 .reportTableColumnDate{
-	width: 110px;
+	width: 100px;
 }
 .reportTableColumnDateTimeout{
-	width: 110px;
+	width: 100px;
 }
 .reportTableColumnDateCompl{
-	width: 110px;
+	width: 100px;
 	border-right: 0px;
 }
 
