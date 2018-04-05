@@ -20,8 +20,7 @@ try {
 		//загружаем файл конфигурации
 		var port = parseInt(value.port, 10),
 		webport = parseInt(value.webport, 10),
-		fileport = parseInt(value.fileport, 10),
-		fileConnLimit = parseInt(value.fileconnlimit, 10);
+		fileport = parseInt(value.fileport, 10);
 		firebase_user = value.firebase_user;
 		firebase_pass = value.firebase_pass;
 		config = value.firebase_config;
@@ -98,8 +97,6 @@ try {
 						console.log(colors.gray(datetime() + 'ws socket-server listening on *:' + port));
 					}); 
 				}
-				server.maxHeadersCount = 100000;
-				server.timeout = 120000;
 				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket"]});
 				io.sockets.on('connection', function (socket) {
 					try {
@@ -832,10 +829,10 @@ undefined
 function FirebaseSync(){
 	AuthUserFirebase(firebase_user, firebase_pass).then(function(value){
 		if(value === 'auth'){
-			if(!SyncFirebaseTimeout){ //проверяем что флаг ожидания синхронизации еще не установлен
-				SyncFirebaseTimeout = true; //установим флаг, что в хранилище есть данные ожидающие синхронизации
-				setTimeout(SendData,60000); //синхронизируем хранилище через минуту (т.е. запрос не будет чаще, чем раз в минуту)
-			}
+			SendData(); //синхронизируем хранилище
+		} else {
+			setTimeout(FirebaseSync,60000); //при ошибке запустим саму себя через минуту
+			console.log(colors.red(datetime() + "Ошибка авторизации в firebase:" + value));
 		}
 	}, function(error){
 		console.log(colors.red(datetime() + "Ошибка при обновлении firebase:" + error));
@@ -1044,7 +1041,7 @@ function startWebServer(port){
 																		res.end('Internal Server Error');
 																		console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
 																	}
-																});
+																}); 
 															}
 															if(FilesNull){
 																res.writeHead(500, {'Content-Type': 'text/plain'});
@@ -1091,7 +1088,7 @@ function startWebServer(port){
 					}
 				}
 			}catch(e){
-				console.log(colors.red(datetime() + "Критическая работы web-сервера:" +e));
+				console.log(colors.red(datetime() + "Критическая ошибка работы web-сервера:" +e));
 			}
 		};
 		if(SslOptions !== 'error'){ 
@@ -1101,7 +1098,6 @@ function startWebServer(port){
 			var server = http.createServer(webserverfunc).listen(port, '0.0.0.0');
 			console.log(colors.gray(datetime() + 'http-webserver-server listening on *:' + port));
 		}
-		server.maxHeadersCount = 200;
 		server.timeout = 120000;
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу запустить web-сервер!"));
@@ -1312,8 +1308,10 @@ function GenerateReport(){
 			}
 		}
 		connectionStorage.dispatch({type:'GEN_REPORT', payload: {report:sortObjectFunc(reportStore, 'datetime', 'integer', true)}});
+		GenerateReportTimeout = false;
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка генерации отчетов по таскам!"));
+		setTimeout(GenerateReport, 15000);
 	}
 }
 ```
@@ -1352,8 +1350,10 @@ function GenerateGroup(){
 			}
 		}
 		connectionStorage.dispatch({type:'GEN_GROUP', payload: {groups:sortObjectFunc(groupStorage, '', 'string', false)}});
+		GenerateGroupTimeout = false;
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка генерации групп пользователей: " + e));
+		setTimeout(GenerateGroup, 1000);
 	}
 }
 ```
@@ -1449,7 +1449,7 @@ undefined
 ##### Исходный код
 
 ```
-function startFileServer(port, fileConnLimit){
+function startFileServer(port){
 	try {
 		var webserverfunc = function(req, res){
 			try {
@@ -1470,7 +1470,7 @@ function startFileServer(port, fileConnLimit){
 					res.end('Permission denied');
 					console.log(colors.yellow(datetime() + "Попытка входа на file-сервер с заблокированного адреса " + req.connection.remoteAddress));
 				} else {
-					var pathFile = './files/'+req.url;
+					var pathFile = './files'+req.url;
 					try {
 						if(typeof(req.headers['authorization']) !== 'undefined'){
 							var auth = req.headers['authorization'];
@@ -1488,20 +1488,30 @@ function startFileServer(port, fileConnLimit){
 								var username = replacer(creds[0], true);
 								var password = creds[1];
 								if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
-									fs.readFile(pathFile, (err, file) => {
-										try{
-											if(err) {
-												throw err;
-											} else {
-												res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-												res.end(file);
+									try {
+										fs.stat(pathFile, function (err, stats) {
+											try {
+												if (err) {
+													throw err;
+												} else {
+													if (stats.isFile()) {
+														res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+														fs.createReadStream(pathFile).pipe(res);
+													} else {
+														throw 'Not Found';
+													}
+												}
+											} catch(e){
+												res.writeHead(404, {'Content-Type': 'text/plain'});
+												res.end('Not Found');
+												console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
 											}
-										} catch(e) {
-											res.writeHead(404, {'Content-Type': 'text/plain'});
-											res.end('Not Found');
-											console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
-										}
-									});	
+										});
+									} catch(e){
+										res.writeHead(500, {'Content-Type': 'text/plain'});
+										res.end('Internal Server Error');
+										console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
+									}
 								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
 									if (req.url === '/upload' && req.method === 'POST') {									
 										var form = new multiparty.Form();
@@ -1515,10 +1525,13 @@ function startFileServer(port, fileConnLimit){
 														FilesNull = false;
 														fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
 															try{
-																if (err) throw err;
-																res.writeHead(200, {'content-type': 'text/plain'});
-																res.end('upload');
-																console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																if (err) {
+																	throw err;
+																} else{
+																	res.writeHead(200, {'content-type': 'text/plain'});
+																	res.end('upload');
+																	console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																}
 															} catch(e){
 																res.writeHead(500, {'Content-Type': 'text/plain'});
 																res.end('Internal Server Error');
@@ -1576,7 +1589,6 @@ function startFileServer(port, fileConnLimit){
 			var server = http.createServer(webserverfunc).listen(port, '0.0.0.0');
 			console.log(colors.gray(datetime() + 'http-fileserver-server listening on *:' + port));
 		}
-		server.maxHeadersCount = fileConnLimit;
 		server.timeout = 120000;
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу запустить file-сервер!"));

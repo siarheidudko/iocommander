@@ -55,11 +55,13 @@ getSettings().then(function(value){
 														}
 													}
 													if(flag){
-														if(items.indexOf(key_val + '.lock') === -1){
+														if(items.indexOf(key_val + '.lock') === -1) {
 															runTask(socket, key_val, data_val).then(function(value){
 																if(value === 'error'){
 																	unlinkLockFile(key_val);
 																}
+															}, function(error){
+																unlinkLockFile(key_val);
 															});
 														} else {
 															taskOnComplete(socket, key_val, 'Во время выполнения команды служба была остановлена!', 100);
@@ -787,6 +789,7 @@ undefined
 function taskOnComplete(socket, uid_val, answer_val, forceerr){
 	unlinkLockFile(uid_val);
 	var realAnswer = 'none';
+	var TryVal = 0;
 	try {
 		if((typeof(answer_val) !== 'string') && (typeof(answer_val) !== 'undefined') && (answer_val !== '')){
 			realAnswer = answer_val.toString();
@@ -805,12 +808,10 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 	}
 	try {
 		if(typeof(clientStorage.getState().tasks[uid_val].tryval) !== 'undefined'){
-			var TryVal = clientStorage.getState().tasks[uid_val].tryval;
-		} else {
-			var TryVal = 0;
+			TryVal = clientStorage.getState().tasks[uid_val].tryval;
 		}
 		if(forceerr === 100){ //принудительно выставляем 100 (ошибку)
-			var TryVal = 100;
+			TryVal = 100;
 			clientStorage.dispatch({type:'FORCE_ERROR', payload: {uid:uid_val}});
 		}
 		socket.emit('completetask', { uid: uid_val, answer:realAnswer, tryval: TryVal});
