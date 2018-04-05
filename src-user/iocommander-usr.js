@@ -841,10 +841,30 @@ function download(file, options, callback) {
 					response.pipe(file);
 				});
 			} else {
-			  if (callback) callback(response.statusCode);
+				if (callback) callback(response.statusCode);
 			}
 			response.on("end", function(){
-				if (callback) callback(false, path);
+				if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
+					fs.stat(path, function (err, stats) {
+						try {
+							if (err) {
+								throw err;
+							} else {
+								if (stats.isFile()) {
+									if(stats.size.toString() !== response.headers['content-length']){
+										throw 'File not full!';
+									} else {
+										if (callback) callback(false, path);
+									}
+								} else {
+									throw 'Not Found';
+								}
+							}
+						}catch(e){
+							callback(e);
+						}
+					});
+				} else if (callback) callback(false, path);
 			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();

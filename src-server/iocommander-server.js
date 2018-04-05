@@ -691,7 +691,7 @@ function startFileServer(port){
 													throw err;
 												} else {
 													if (stats.isFile()) {
-														res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+														res.writeHead(200, {'Content-Type': 'application/octet-stream', 'Content-Length':stats.size});
 														fs.createReadStream(pathFile).pipe(res);
 													} else {
 														throw 'Not Found';
