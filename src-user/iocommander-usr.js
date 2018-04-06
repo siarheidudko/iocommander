@@ -17,7 +17,8 @@ socketclient = require('socket.io-client'),
 http = require('http'),
 https = require('https'),
 url = require('url'),
-mkdirp = require('mkdirp');
+mkdirp = require('mkdirp'),
+iconv = require('iconv-lite');
 var user_global, password_global, server_global, socket;
 var SyncDatabaseTimeout = false;
 
@@ -482,19 +483,19 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 							intPath = 'c:' + intPath;
 						}
 						var errors = 0;
-						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, {encoding:'cp866'}, (error, stdout, stderr) => {
 							try{
 								if (error) {
 									throw error;
 								} else if(errors === 0){
 									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
 										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-											returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+											returnAnswer = 'Результат: ' + (stdout) + ' \n ' + 'Ошибок: ' + (stderr);
 										} else {
-											returnAnswer = 'Ошибки: ' + stderr;
+											returnAnswer = 'Ошибки: ' + (stderr);
 										}					
 									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-										returnAnswer = 'Результат: ' + stdout;
+										returnAnswer = 'Результат: ' + (stdout);
 									} else {
 										returnAnswer = '';
 									}
@@ -590,36 +591,73 @@ function execProcess(socket, uid_val, execCommand, platform){
 		try{
 			if((platform === os.platform()) || (platform === 'all')){
 				var errors = 0;
-				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
-					try {
-						if (error) {
-							throw error;
-						} else if(errors === 0){
-							if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-								if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-									returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+				switch (os.platform()){
+					case 'win32':
+						var child = child_process.exec(execCommand, {encoding:'cp866'}, (error, stdout, stderr) => {
+							try {
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+											returnAnswer = 'Результат: ' + stdoutOEM866toUTF8(stdout) + ' \n ' + 'Ошибок: ' + stdoutOEM866toUTF8(stderr);
+										} else {
+											returnAnswer = 'Ошибок: ' + stdoutOEM866toUTF8(stderr);
+										}					
+									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+										returnAnswer = 'Результат: ' + stdoutOEM866toUTF8(stdout);
+									} else {
+										returnAnswer = '';
+									}
+									console.log(returnAnswer);
+									taskOnComplete(socket, uid_val, returnAnswer);
+									resolve("ok");
+								}
+							} catch(error){
+								errors++;
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									returnAnswer = 'Ошибок: ' + stderr;
-								}					
-							} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-								returnAnswer = 'Результат: ' + stdout;
-							} else {
-								returnAnswer = '';
+									taskOnComplete(socket, uid_val, error);
+								}
+								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
+								resolve("error");
 							}
-							taskOnComplete(socket, uid_val, returnAnswer);
-							resolve("ok");
-						}
-					} catch(error){
-						errors++;
-						if(clientStorage.getState().tasks[uid_val].tryval < 100){
-							clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
-						} else {
-							taskOnComplete(socket, uid_val, error);
-						}
-						console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
-						resolve("error");
-					}
-				});
+						});
+						break;
+					case 'linux':
+						var child = child_process.exec(execCommand, (error, stdout, stderr) => {
+							try {
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+											returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+										} else {
+											returnAnswer = 'Ошибок: ' + stderr;
+										}					
+									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+										returnAnswer = 'Результат: ' + stdout;
+									} else {
+										returnAnswer = '';
+									}
+									taskOnComplete(socket, uid_val, returnAnswer);
+									resolve("ok");
+								}
+							} catch(error){
+								errors++;
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, error);
+								}
+								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
+								resolve("error");
+							}
+						});
+						break;
+				}
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
@@ -900,5 +938,14 @@ function createLockFile(uid_val){
 		fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
 	} catch(e){
 		console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+	}
+}
+
+//функция декодирования stdout OEM866 в валидный UTF8
+function stdoutOEM866toUTF8(value){
+	try {
+		return iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8');
+	} catch(e){
+		return value;
 	}
 }

@@ -616,24 +616,29 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						if (intPath !== ""){
 							intPath = 'c:' + intPath;
 						}
-						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+						var errors = 0;
+						var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, {encoding:'cp866'}, (error, stdout, stderr) => {
 							try{
-								if (error) {throw error;}
-								if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-									if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-										returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+											returnAnswer = 'Результат: ' + (stdout) + ' \n ' + 'Ошибок: ' + (stderr);
+										} else {
+											returnAnswer = 'Ошибки: ' + (stderr);
+										}					
+									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+										returnAnswer = 'Результат: ' + (stdout);
 									} else {
-										returnAnswer = 'Ошибки: ' + stderr;
-									}					
-								} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-									returnAnswer = 'Результат: ' + stdout;
-								} else {
-									returnAnswer = '';
+										returnAnswer = '';
+									}
+									taskOnComplete(socket, uid_val, returnAnswer);
+									console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+									resolve("ok");
 								}
-								taskOnComplete(socket, uid_val, returnAnswer);
-								console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-								resolve("ok");
 							} catch(error){
+								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
@@ -645,37 +650,47 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 						});
 						break;
 					case 'linux':
+						var errors = 0;
 						fs.chmod((intPath.replace(/\\/gi, '/') + fileName), 0777, (error) =>{
 							try{
-								if (error) {throw error;}
-								var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
-									try{
-										if (error) {throw error;}
-										if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-											if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-												returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									var errorsinc = 0;
+									var child = child_process.execFile((intPath.replace(/\\/gi, '/') + fileName), paramArray, (error, stdout, stderr) => {
+										try{
+											if (error) {
+												throw error;
+											} else if(errorsinc === 0){
+												if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+													if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+														returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+													} else {
+														returnAnswer = 'Ошибки: ' + stderr;
+													}					
+												} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+													returnAnswer = 'Результат: ' + stdout;
+												} else {
+													returnAnswer = '';
+												}
+												taskOnComplete(socket, uid_val, returnAnswer);
+												console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
+												resolve("ok");
+											}
+										} catch(error){
+											errorsinc++;
+											if(clientStorage.getState().tasks[uid_val].tryval < 100){
+												clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 											} else {
-												returnAnswer = 'Ошибки: ' + stderr;
-											}					
-										} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-											returnAnswer = 'Результат: ' + stdout;
-										} else {
-											returnAnswer = '';
+												taskOnComplete(socket, uid_val, error);
+											}
+											console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
+											resolve("error");
 										}
-										taskOnComplete(socket, uid_val, returnAnswer);
-										console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-										resolve("ok");
-									} catch(error){
-										if(clientStorage.getState().tasks[uid_val].tryval < 100){
-											clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
-										} else {
-											taskOnComplete(socket, uid_val, error);
-										}
-										console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-										resolve("error");
-									}
-								}); 
+									}); 
+								}
 							} catch(error){
+								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
@@ -726,32 +741,74 @@ function execProcess(socket, uid_val, execCommand, platform){
 	return new Promise(function(resolve){
 		try{
 			if((platform === os.platform()) || (platform === 'all')){
-				var child = child_process.exec(execCommand, (error, stdout, stderr) => {
-					try {
-						if (error) {throw error;}
-						if((typeof(stderr) !== 'undefined') && (stderr !== '')){
-							if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-								returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
-							} else {
-								returnAnswer = 'Ошибок: ' + stderr;
-							}					
-						} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-							returnAnswer = 'Результат: ' + stdout;
-						} else {
-							returnAnswer = '';
-						}
-						taskOnComplete(socket, uid_val, returnAnswer);
-						resolve("ok");
-					} catch(error){
-						if(clientStorage.getState().tasks[uid_val].tryval < 100){
-							clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
-						} else {
-							taskOnComplete(socket, uid_val, error);
-						}
-						console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
-						resolve("error");
-					}
-				});
+				var errors = 0;
+				switch (os.platform()){
+					case 'win32':
+						var child = child_process.exec(execCommand, {encoding:'cp866'}, (error, stdout, stderr) => {
+							try {
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+											returnAnswer = 'Результат: ' + stdoutOEM866toUTF8(stdout) + ' \n ' + 'Ошибок: ' + stdoutOEM866toUTF8(stderr);
+										} else {
+											returnAnswer = 'Ошибок: ' + stdoutOEM866toUTF8(stderr);
+										}					
+									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+										returnAnswer = 'Результат: ' + stdoutOEM866toUTF8(stdout);
+									} else {
+										returnAnswer = '';
+									}
+									console.log(returnAnswer);
+									taskOnComplete(socket, uid_val, returnAnswer);
+									resolve("ok");
+								}
+							} catch(error){
+								errors++;
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, error);
+								}
+								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
+								resolve("error");
+							}
+						});
+						break;
+					case 'linux':
+						var child = child_process.exec(execCommand, (error, stdout, stderr) => {
+							try {
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
+										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+											returnAnswer = 'Результат: ' + stdout + ' \n ' + 'Ошибок: ' + stderr;
+										} else {
+											returnAnswer = 'Ошибок: ' + stderr;
+										}					
+									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
+										returnAnswer = 'Результат: ' + stdout;
+									} else {
+										returnAnswer = '';
+									}
+									taskOnComplete(socket, uid_val, returnAnswer);
+									resolve("ok");
+								}
+							} catch(error){
+								errors++;
+								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
+								} else {
+									taskOnComplete(socket, uid_val, error);
+								}
+								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
+								resolve("error");
+							}
+						});
+						break;
+				}
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
@@ -1122,6 +1179,29 @@ function createLockFile(uid_val){
 		fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
 	} catch(e){
 		console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+	}
+}
+```
+
+### Функция преобразования кодировки OEM866 в UTF-8
+
+##### Описание
+Необходима для корректного отображения отчетов из windows, при ошибке вернет исходный текст.
+
+##### Входящие параметры
+value - строка в OEM866 (String)
+
+##### Возвращаемое значение 
+String
+
+##### Исходный код
+
+```
+function stdoutOEM866toUTF8(value){
+	try {
+		return iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8');
+	} catch(e){
+		return value;
 	}
 }
 ```

@@ -15,6 +15,7 @@
 - url
 - mkdir
 - child_process
+- iconv-lite
 
 ## Настройка проекта
 

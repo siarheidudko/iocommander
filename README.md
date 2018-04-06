@@ -84,6 +84,7 @@
   - url
   - mkdir
   - child_process
+  - iconv-lite
   
 - Представлен тремя файлами
   - src-user\iocommander-usr.js - исполняемый скрипт сервера
