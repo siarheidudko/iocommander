@@ -4,3 +4,5 @@ src-user/*.db
 src-server/*.conf
 files/*
 temp/*
+test.js
+test.txt

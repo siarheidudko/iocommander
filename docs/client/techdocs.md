@@ -989,7 +989,7 @@ function GarbageCollector(){
 ### Функция скачки файла
 
 ##### Описание
-Модифицированная библиотека download-file для работы с собственным file-сервером с авторизацией. Определяет линк сервера, если он соответствует сокет-серверу, то будет использована Basic авторизация. В зависимости от протокола использует http или https юиюлиотеку, скачивает файл в заданную папку (в случае присутствия файла с таким же именем, он будет затерт). Принимает имя файла и каталог для сохранения в качестве входящих аргументов.
+Модифицированная библиотека download-file для работы с собственным file-сервером с авторизацией. Определяет линк сервера, если он соответствует сокет-серверу, то будет использована Basic авторизация. В зависимости от протокола использует http или https юиюлиотеку, скачивает файл в заданную папку (в случае присутствия файла с таким же именем, он будет затерт). Принимает имя файла и каталог для сохранения в качестве входящих аргументов. Принимает Content-length в качестве количества байт входящего потока для контроля размера файла.
 
 ##### Входящие параметры
 file - ссылка для скачки (String)
@@ -1035,10 +1035,30 @@ function download(file, options, callback) {
 					response.pipe(file);
 				});
 			} else {
-			  if (callback) callback(response.statusCode);
+				if (callback) callback(response.statusCode);
 			}
 			response.on("end", function(){
-				if (callback) callback(false, path);
+				if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
+					fs.stat(path, function (err, stats) {
+						try {
+							if (err) {
+								throw err;
+							} else {
+								if (stats.isFile()) {
+									if(stats.size.toString() !== response.headers['content-length']){
+										throw 'File not full!';
+									} else {
+										if (callback) callback(false, path);
+									}
+								} else {
+									throw 'Not Found';
+								}
+							}
+						}catch(e){
+							callback(e);
+						}
+					});
+				} else if (callback) callback(false, path);
 			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();

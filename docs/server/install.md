@@ -76,7 +76,6 @@
 "port": "444",
 "webport": "8000",
 "fileport": "500",
-"fileconnlimit": "50",
 "firebase_user": "admin@sergdudko.tk",
 "firebase_pass": "Nw5ld4S8cCgBJKhde7NOS2aQIa72",
 "firebase_config": {
@@ -95,7 +94,6 @@
   - port - порт сокет-сервера
   - webport - порт панели администрирования
   - fileport - порт файлового сервера
-  - fileconnlimit - лимит соединений файлового сервера
   - firebase_user - пользователь, которого мы создали в firebase
   - firebase_pass - пароль пользователя в firebase
   - apiKey - ключ api для веб-приложения

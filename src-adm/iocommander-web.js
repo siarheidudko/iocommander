@@ -173,7 +173,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				}
 				break;
 			case 'SetParamThird':
-				var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!@-].*$");
+				var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!<>@-].*$");
 				if((!regexpAll.test(e.target.value)) && (this.state.ParamTwo !== 'execCommand')){
 					this.setState({ParamThird: e.target.value.replace(/\\/gi,"/")});
 				} else if ((!regexp.test(e.target.value)) && (this.state.ParamTwo === 'execCommand')) {
@@ -330,7 +330,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									break;
 								case 'execCommand':
 										if((typeof(this.state.ParamThird) === 'string') && (this.state.ParamThird !== '')){
-											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, execCommand:this.state.ParamThird.replace(/\\/gi,"\\\\"), platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, execCommand:this.state.ParamThird, platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
