@@ -618,9 +618,9 @@ function execProcess(socket, uid_val, execCommand, platform){
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error);
+									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error));
 								}
-								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
+								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + stdoutOEM866toUTF8(error)));
 								resolve("error");
 							}
 						});
