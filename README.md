@@ -15,6 +15,8 @@
 
 В каталоге [/production](https://github.com/siarheidudko/iocommander/tree/master/production) есть архивы с полной установкой (исходные коды скриптов) под win32 и linux.
 
+Про нюансы разработки можно почитать [у меня в блоге](http://blog.sergdudko.tk/2018/04/07/full-stack-%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B0-javascript/).
+
 ### Скрипт сервера
 Для запуска и клиента и сервера на linux достаточно бинарника из архива node (https://nodejs.org/en/download/), для windows соответственно node.exe из аналогичного архива под windows. Для удобства, можете закинуть его в /bin/node с правами x+ (linux) или C:\Windows\System32\ (windows).
 Вместо /node_modules/* и /package.json можно установить зависимости командами npm init и npm install ... --save, где "..." - имя зависимости. Я же привожу универсальную сборку модулей для клиента и сервера.

@@ -1308,6 +1308,9 @@ function GenerateReport(){
 			}
 		}
 		connectionStorage.dispatch({type:'GEN_REPORT', payload: {report:sortObjectFunc(reportStore, 'datetime', 'integer', true)}});
+		delete tempStorage;
+		delete reportStore;
+		delete reportSortStore;
 		GenerateReportTimeout = false;
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка генерации отчетов по таскам!"));
@@ -1350,6 +1353,7 @@ function GenerateGroup(){
 			}
 		}
 		connectionStorage.dispatch({type:'GEN_GROUP', payload: {groups:sortObjectFunc(groupStorage, '', 'string', false)}});
+		delete tempStorage;
 		GenerateGroupTimeout = false;
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка генерации групп пользователей: " + e));
@@ -1415,16 +1419,19 @@ function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
 				SortObject[tempArray[i]] = ObjectForSort[tempArray[i]];
 			}
 		}
+		delete tempObject;
+		delete tempArray;
 		
 		if(KeyForSort !== ''){ //учитываем, что для первого уровня валидация не нужна, т.к. не используется объект связка, где могли быть затерты одинаковые ключи
 			for(var keyobject in SortObject){
 				validatertwo++; //считаем число ключей нового объекта
 			}
 		}
-		
 		if((validaterone === validatertwo) || (KeyForSort === '')){ //если количество ключей не изменилось - выводим новый объект.
+			delete ObjectForSort;
 			return SortObject;
 		} else {
+			delete SortObject;
 			return ObjectForSort;
 		}
 	} catch(e){
