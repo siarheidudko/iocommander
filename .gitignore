@@ -6,3 +6,5 @@ files/*
 temp/*
 test.js
 test.txt
+start-server.cmd
+start-user.cmd

@@ -268,7 +268,7 @@ function replacer(data_val, value_val){
 }
 
 //функция отправки файлов на внутренний файл-сервер
-function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight){
+function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight, ParamTwelve){
 	var result = new Promise(function(resolve){
 		var fd = new FormData();
 		fd.append(ParamOne, files[0]);
@@ -293,7 +293,7 @@ function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, 
 		function(value){
 			if(value === 'upload'){
 				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + connectionStorage.getState().fileport + '/' + ParamOne;
-				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:'false', complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl.getTime()}};
+				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:ParamTwelve, complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl.getTime()}};
 				for(var i=0;i<ParamEight.length;i++){
 					var EmitMessage = new Array(ParamEight[i], tempTask);
 					window.socket.emit('adm_setTask', EmitMessage);

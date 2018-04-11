@@ -88,6 +88,33 @@
 "sslcrt":"/etc/webmin/letsencrypt-cert.pem",
 "sslca":"/etc/webmin/letsencrypt-ca.pem",
 "bantimeout":"10800000"
+"env":{
+		"ps1":{
+			"link":"",
+			"com":"powershell",
+			"param":"-ExecutionPolicy bypass   -file "
+			},
+		"sql":{
+			"link":"",
+			"com":"sqlcmd",
+			"param":"-U ***** -P **** -d aptekajet -i "
+		},
+		"cmd":{
+			"link":"",
+			"com":"cmd",
+			"param":"/C "
+		},
+		"bat":{
+			"link":"",
+			"com":"cmd",
+			"param":"/C "
+		},
+		"sh":{
+			"link":"",
+			"com":"bash",
+			"param":""
+		}
+	}
 }
 ```
 
@@ -99,6 +126,7 @@
   - apiKey - ключ api для веб-приложения
   - в трех ссылках (authDomain, databaseURL, storageBucket) заменить test-612c2 на ваш идентификатор проекта
   - sslkey, sslcrt, sslca - пути к сертификатам и ключу. Если хоть один параметр пуст, то сервер будет http/ws. Если заполнены, то сервер https/wss.
+  - env - переменные окружения, где [ps1,sql,cmd] - типы файлов, в которых link - путь к интерпретатору, com - имя интерпретатора, param - параметры запуска (должны заканчиваться на пробел, после которого будет следовать путь к скрипту). Можно не указывать путь и разрешение, если интерпретатор находится в папке системных переменных (по умолчанию для windows C:\Windows\System32, для Linux /bin/)
   - bantimeout - таймаут блокировки при введении неверного пароля 5 раз, в мс.
 
 - Устанавливаете nodejs, например в CentOS 7.x он устанавливается из штатного репозитория (внимание: из штатного репозитория ставится node 6, для работы ssl нужен node 8)

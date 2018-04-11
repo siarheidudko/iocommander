@@ -33,37 +33,32 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try{
 		switch (action.type){
 			case 'ADD_USER':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				state_new.users[action.payload.user] = action.payload.password;
 				state_new.users = sortObjectFunc(state_new.users, '', 'string', false);
 				return state_new;
 				break;
 			case 'REMOVE_USER':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.users[action.payload.user];
 				delete state_new.tasks[action.payload.user];
 				console.log(colors.yellow(datetime() + "Удаление пользователя\nLogin: " + action.payload.user));
 				return state_new;
 				break;
 			case 'ADD_ADMIN':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				state_new.admins[action.payload.user] = action.payload.password;
 				state_new.admins = sortObjectFunc(state_new.admins, '', 'string', false);
 				return state_new;
 				break;
 			case 'REMOVE_ADMIN':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.admins[action.payload.user];
 				console.log(colors.yellow(datetime() + "Удаление администратора\nLogin: " + action.payload.user));
 				return state_new;
 				break;
 			case 'ADD_TASK':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				if(typeof(state_new.tasks[action.payload.user]) === 'undefined'){
 					state_new.tasks[action.payload.user] = {};
 				}
@@ -71,8 +66,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				return state_new;
 				break;
 			case 'COMPLETE_TASK':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				state_new.tasks[action.payload.user][action.payload.task].complete = 'true';
 				state_new.tasks[action.payload.user][action.payload.task].datetimecompl = Date.now();
 				state_new.tasks[action.payload.user][action.payload.task].answer = action.payload.answer;
@@ -86,20 +80,17 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 				return state_new;
 				break;
 			case 'GC_TASK':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.tasks[action.payload.user][action.payload.task];
 				return state_new;
 				break;
 			case 'GC_USER':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.tasks[action.payload.user];
 				return state_new;
 				break;
 			case 'GC_TASK_REPLANSW':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				var thisanswr = state_new.tasks[action.payload.user][action.payload.task].answer;
 				state_new.tasks[action.payload.user][action.payload.task].answer =  '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
 				return state_new;
@@ -132,9 +123,8 @@ function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, i
 	try {
 		switch (action.type){
 			case 'ADD_UID':
-				var state_new = {};
 				var useruid = state.users[action.payload.user];
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.users[action.payload.user]; //на всякий случай чистим объект от старых данных
 				delete state_new.uids[useruid];
 				state_new.uids[action.payload.uid] = action.payload.user;
@@ -144,36 +134,31 @@ function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, i
 				return state_new;
 				break;
 			case 'REMOVE_UID':
-				var state_new = {};
 				var username = state.uids[action.payload.uid];
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.uids[action.payload.uid];
 				delete state_new.users[username];
 				return state_new;
 				break;
 			case 'REMOVE_USER':
-				var state_new = {};
 				var useruid = state.users[action.payload.user];
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.users[action.payload.user];
 				delete state_new.uids[useruid];
 				return state_new;
 				break;
 			case 'GEN_REPORT':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				state_new.report = action.payload.report;
 				return state_new;
 				break;
 			case 'GEN_GROUP':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				state_new.groups = action.payload.groups;
 				return state_new;
 				break;
 			case 'WRONG_PASS':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				if(typeof(state_new.iptoban[action.payload.address]) !== 'object'){
 					state_new.iptoban[action.payload.address] = {};
 					state_new.iptoban[action.payload.address].attemp = 0;
@@ -183,14 +168,12 @@ function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, i
 				return state_new;
 				break;
 			case 'GC_WRONG_PASS_CLEAR':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				delete state_new.iptoban[action.payload.address];
 				return state_new;
 				break;
 			case 'PARAM_PORTS':
-				var state_new = {};
-				state_new = lodash.clone(state);
+				var state_new = lodash.clone(state);
 				if(typeof(action.payload.fileportval) !== 'undefined'){
 					state_new.fileport = action.payload.fileportval;
 				}
@@ -1069,6 +1052,7 @@ function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
 /* ### Раздел работы с сокетом ### */
 try {
 	getSettings().then(function(value){
+		var ClientEnv = {};
 		//загружаем файл конфигурации
 		var port = parseInt(value.port, 10),
 		webport = parseInt(value.webport, 10),
@@ -1078,7 +1062,9 @@ try {
 		config = value.firebase_config;
 		var sslkey = value.sslkey,
 		sslcrt = value.sslcrt,
-		sslca = value.sslca;
+		sslca = value.sslca,
+		ClientEnv = value.env;
+		console.log(ClientEnv);
 		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
 		connectionStorage.dispatch({type:'PARAM_PORTS', payload: {fileportval:fileport}});
 		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
@@ -1222,6 +1208,22 @@ try {
 											if(typeof(data) === 'object'){
 												if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'object')){
 													setTask(data[0],data[1]);
+													if(typeof(data[1].task) === 'object'){
+														if(data[1].task.nameTask === 'getFileFromWWW'){
+															if(data[1].task.exec === 'true'){
+																var typescriptarr = data[1].task.fileName.split('.');
+																var typescript = typescriptarr[typescriptarr.length-1];
+																if(typeof(ClientEnv[typescript]) !== 'undefined'){
+																	var tempuid = data[1].uid.split("");
+																	tempuid[14] = '3';
+																	var newuid = tempuid.join("");
+																	delete tempuid;
+																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:[ClientEnv[typescript].param + data[1].task.intLink + data[1].task.fileName], platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
+																	setTask(data[0],nextTask);
+																}
+															}
+														}
+													}
 													try {
 														var ReplaceUserName = replacer(data[0], true);
 														if(typeof(connectionStorage.getState().users[ReplaceUserName]) !== 'undefined'){

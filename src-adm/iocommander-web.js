@@ -118,6 +118,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 			ParamEight: new Array,
 			ParamTen: '',
 			ParamEleven: '',
+			ParamEleven: false,
 		};
     }
 	
@@ -140,6 +141,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 				this.setState({ParamNine: ''});
 				this.setState({ParamTen: ''});
 				this.setState({ParamEleven: ''});
+				this.setState({ParamTwelve: false});
 				break;
 			default:
 				break;
@@ -170,6 +172,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamNine: ''});
 					this.setState({ParamTen: ''});
 					this.setState({ParamEleven: ''});
+					this.setState({ParamTwelve: false});
 				}
 				break;
 			case 'SetParamThird':
@@ -291,6 +294,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 					this.setState({ParamEleven: e.target.value});
 				}
 				break;
+			case 'SetParamTwelve':
+				this.setState({ParamTwelve: e.target.checked});
+				break;
 			default:
 				break;
 		}
@@ -312,7 +318,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							switch(this.state.ParamTwo){
 								case 'getFileFromWWW':
 										if((typeof(this.state.ParamThird) === 'string') && (this.state.ParamThird !== '') && (typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.state.ParamFive) === 'string') && (this.state.ParamFive !== '')){
-											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, extLink:this.state.ParamThird, intLink:this.state.ParamFour, fileName: this.state.ParamFive, exec:'false', complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, extLink:this.state.ParamThird, intLink:this.state.ParamFour, fileName: this.state.ParamFive, exec:this.state.ParamTwelve.toString(), platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
@@ -321,7 +327,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									break;
 								case 'execFile':
 										if((typeof(this.state.ParamThird) === 'string') && (typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.state.ParamFive) === 'string')){
-											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, intLink:this.state.ParamThird, fileName: this.state.ParamFour, paramArray:[this.state.ParamFive], complete:'false', answer:'', platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
+											var tempTask = {uid:this.state.ParamOne, task: {nameTask:this.state.ParamTwo, intLink:this.state.ParamThird, fileName: this.state.ParamFour, paramArray:[this.state.ParamFive], platform:this.state.ParamSix, dependencies:this.state.ParamSeven, comment:this.state.ParamNine, timeoncompl:timeOnCompl.getTime()}};
 											onSetTask = true;
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
@@ -339,7 +345,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 									break;
 								case 'getFileFromFileserver':
 										if((typeof(this.state.ParamFour) === 'string') && (this.state.ParamFour !== '') && (typeof(this.refs.FileUploadToServer.files) === 'object') && (this.refs.FileUploadToServer.files.length === 1)){ //длинна массива файлов =1, если выбран один файл
-											SendFileToInternalFS(this.refs.FileUploadToServer.files, this.state.ParamOne, this.state.ParamFour, this.state.ParamSix, this.state.ParamSeven, this.state.ParamNine, timeOnCompl, this.state.ParamEight);
+											SendFileToInternalFS(this.refs.FileUploadToServer.files, this.state.ParamOne, this.state.ParamFour, this.state.ParamSix, this.state.ParamSeven, this.state.ParamNine, timeOnCompl, this.state.ParamEight, this.state.ParamTwelve.toString());
 										} else {
 											console.log(datetime() + "Некорректные аргументы!");
 											adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});	
@@ -368,6 +374,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else{
 							console.log(datetime() + "Проблема генерации задачи!");
 							//adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Проблема генерации задачи!"}});
@@ -389,6 +396,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -410,6 +418,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -430,6 +439,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -450,6 +460,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -470,6 +481,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -490,6 +502,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							this.setState({ParamNine: ''});
 							this.setState({ParamTen: ''});
 							this.setState({ParamEleven: ''});
+							this.setState({ParamTwelve: false});
 						} else {
 							console.log(datetime() + "Некорректные аргументы!");
 							adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:"Некорректные аргументы!"}});
@@ -542,6 +555,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
 						//поле ввода имени файла для сохранения
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Имя файла: <input type="text" name="SetParamFive" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFive} /></div>);
+						//запустить ли переданный файл (используются переменные окружения)
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Запустить: <input type="checkbox" name="SetParamTwelve" onChange={this.onChangeHandler.bind(this)} checked={this.state.ParamTwelve} /></div>);
 						break;
 					case 'execFile':
 						//поле ввода пути к скрипту
@@ -560,6 +575,8 @@ class AdminIoCommanderPanelBody extends React.Component{
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Файл: <input type="file" ref="FileUploadToServer" /></div>);
 						//поле ввода локального пути для сохранения
 						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Локальный путь: <input type="text" name="SetParamFour" onChange={this.onChangeHandler.bind(this)} value={this.state.ParamFour} /></div>);
+						//запустить ли переданный файл (используются переменные окружения)
+						AdminIoCommanderPanelBodyMiddle.push(<div className="inputFieldCenterRight">Запустить: <input type="checkbox" name="SetParamTwelve" onChange={this.onChangeHandler.bind(this)} checked={this.state.ParamTwelve} /></div>);
 						break;
 				}
 				if(this.state.ParamTwo !== ''){
