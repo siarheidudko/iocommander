@@ -144,7 +144,6 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 			case 'TASK_ERROR':
 				var state_new = lodash.clone(state);
 				state_new.tasks[action.payload.uid].tryval = state.tasks[action.payload.uid].tryval + 1;
-				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			case 'TASK_START':

@@ -20,7 +20,9 @@ var port, firebase_user, firebase_pass, config, SslOptions,
 bantimeout = 10800000;
 var SyncFirebaseTimeout = false,
 GenerateReportTimeout = false,
-GenerateGroupTimeout = false;
+GenerateGroupTimeout = false,
+sendStorageToWebTimeout = false,
+sendStorageToWebTimeout2 = false;
 
 
 
@@ -336,6 +338,9 @@ function setTask(user_val, value_val){
 			value_val.task.complete = 'false';
 			value_val.task.answer = '';
 			value_val.task.datetime = Date.now();
+			if(value_val.uid.charAt(14) === '3'){
+				value_val.task.datetime = Date.now() + 3000;
+			}
 			value_val.task.datetimecompl = 0;
 			value_val.task.tryval = 0;
 			serverStorage.dispatch({type:'ADD_TASK', payload: {user:renameuser, task:value_val}});
@@ -435,9 +440,11 @@ function sendStorageToWeb(io, param){
 				if (typeof(admUid) !== 'undefined'){
 					switch (param){
 						case 'server':
+							sendStorageToWebTimeout = false;
 							io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
 							break;
 						case 'connection':
+							sendStorageToWebTimeout2 = false;
 							io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
 							break;
 						default:
@@ -1217,13 +1224,14 @@ try {
 																	var tempuid = data[1].uid.split("");
 																	tempuid[14] = '3';
 																	var newuid = tempuid.join("");
-																	var newintlink = 'C:' + data[1].task.intLink;
+																	var newintlink = data[1].task.intLink;
 																	if(data[1].task.platform === 'win32'){
-																		newintlink = 'C:' + data[1].task.intLink.replace(/\\/gi, '/');
+																		newintlink = 'C:' + data[1].task.intLink.replace(/\//gi, '\\');
 																	}
 																	delete tempuid;
 																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:[ClientEnv[typescript].param + newintlink + data[1].task.fileName], platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
 																	setTask(data[0],nextTask);
+																	delete nextTask;
 																}
 															}
 														}
@@ -1241,9 +1249,10 @@ try {
 														} else {
 															console.log(colors.yellow(datetime() + "Пользователь " + data[0] + " не найден в хранилище соединений (не подключен). Отправка будет произведена после подключения."));
 														}
+														delete data;
 													} catch(e){
 														console.log(colors.red(datetime() + "Не могу отправить задание в сокет:" + e));
-													}
+													} 
 												}
 											}
 										});
@@ -1285,10 +1294,16 @@ try {
 				});
 				try {
 					serverStorage.subscribe(function(){
-						sendStorageToWeb(io, 'server');
+						if(!sendStorageToWebTimeout){
+							sendStorageToWebTimeout = true;
+							setTimeout(sendStorageToWeb, 20000, io, 'server');
+						}
 					});
 					connectionStorage.subscribe(function(){
-						sendStorageToWeb(io, 'connection');
+						if(!sendStorageToWebTimeout2){
+							sendStorageToWebTimeout2 = true;
+							setTimeout(sendStorageToWeb, 5000, io, 'connection');
+						}
 					});
 				} catch (e) {
 					console.log(colors.red(datetime() + "Не могу подписать веб-интерфейс на обновления: " + e));
