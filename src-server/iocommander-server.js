@@ -982,6 +982,12 @@ function GenerateGroup(){
 					groupStorage[groupName] = [];
 				}
 				groupStorage[groupName].push(replaceKeyObject);
+				var cashboxarr = ['k1','k2','k3','k4','k5','k6','k7','k8','k9','k0'];
+				if(replaceKeyObject.substr(-4,4) === 'serv'){
+					groupStorage['servers'].push(replaceKeyObject);
+				} else if(cashboxarr.indexOf(replaceKeyObject.substr(-2,2)) !== -1){
+					groupStorage['cashbox'].push(replaceKeyObject);
+				}
 				groupStorage['all'].push(replaceKeyObject);
 			} catch(e){
 				console.log(colors.red(datetime() + "Ошибка добавления пользователя " + keyObject + " в группы!"));
