@@ -973,6 +973,8 @@ function GenerateGroup(){
 		var tempStorage = serverStorage.getState().users;
 		var groupStorage = {};
 		groupStorage['all'] = [];
+		groupStorage['servers'] = [];
+		groupStorage['cashbox'] = [];
 		for(var keyObject in tempStorage){
 			try{
 				var replaceKeyObject = replacer(keyObject, false);
