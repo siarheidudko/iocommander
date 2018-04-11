@@ -1212,13 +1212,17 @@ try {
 														if(data[1].task.nameTask === 'getFileFromWWW'){
 															if(data[1].task.exec === 'true'){
 																var typescriptarr = data[1].task.fileName.split('.');
-																var typescript = typescriptarr[typescriptarr.length-1];
+																var typescript = typescriptarr[typescriptarr.length-1].toLowerCase();
 																if(typeof(ClientEnv[typescript]) !== 'undefined'){
 																	var tempuid = data[1].uid.split("");
 																	tempuid[14] = '3';
 																	var newuid = tempuid.join("");
+																	var newintlink = 'C:' + data[1].task.intLink;
+																	if(data[1].task.platform === 'win32'){
+																		newintlink = 'C:' + data[1].task.intLink.replace(/\\/gi, '/');
+																	}
 																	delete tempuid;
-																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:[ClientEnv[typescript].param + data[1].task.intLink + data[1].task.fileName], platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
+																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:[ClientEnv[typescript].param + newintlink + data[1].task.fileName], platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
 																	setTask(data[0],nextTask);
 																}
 															}
@@ -1305,6 +1309,3 @@ try {
 } catch (e){
 	console.log(colors.red(datetime() + "Не могу загрузить конфигурацию сервера!"));
 }
-
-//контроль памяти
-setInterval(function(){console.log('USAGE MEMORY: ' + process.memoryUsage().rss);}, 30000);
