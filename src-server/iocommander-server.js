@@ -1235,7 +1235,7 @@ try {
 																		newintlink = 'C:' + data[1].task.intLink.replace(/\//gi, '\\');
 																	}
 																	delete tempuid;
-																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:[ClientEnv[typescript].param + newintlink + data[1].task.fileName], platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
+																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:(ClientEnv[typescript].param + newintlink + data[1].task.fileName).split(" "), platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
 																	setTask(data[0],nextTask);
 																	delete nextTask;
 																}
