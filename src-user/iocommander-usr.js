@@ -924,6 +924,7 @@ function createLockFile(uid_val){
 	}
 }
 
+//функция проверки файла блокировки
 function testLockFile(uid_val){
 	try {
 		return !fs.existsSync('./temp/' + uid_val + '.lock');

@@ -20,6 +20,7 @@ getSettings().then(function(value){
 		server_global = value.server;
 		var protocol_val = value.protocol,
 		port_val = value.port;
+		
 		getDatabase().then(function (database){
 			if(database !== 'error'){
 				clientStorage.dispatch({type:'DB_SYNC', payload: database});
@@ -28,65 +29,79 @@ getSettings().then(function(value){
 				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
 			}
 			Reconnect(protocol_val, server_global, port_val);
-			//проверяем задания каждые 15 сек
-			setInterval(function(){
-				try {
-					var data_val = clientStorage.getState().tasks;
-					if(typeof(data_val) === 'object'){
-						fs.readdir('./temp/', function(err, items) {
-							try{
-								if (err) { 
-									throw err;
-								} else {
-									for(var key_val in data_val){
-										try {
-											if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
-												data_val[key_val].timeoncompl = 0;
-											}
-											if((data_val[key_val].complete !== 'true') && (typeof(clientStorage.getState().executetask[key_val]) === 'undefined') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
-												console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
+			//очищаем задания, во время которых служба была остановлена
+			fs.readdir('./temp/', function(err, items) {
+				try{
+					if (err) { 
+						throw err;
+					} else {
+						for(var k = 0 ; k < items.length; k++){
+							try {
+								var thisuid = items[k].substr(0,items[k].length-5);
+								taskOnComplete(socket, thisuid, 'Во время выполнения команды служба была остановлена!', 100);
+								unlinkLockFile(thisuid);
+								console.log(colors.yellow(datetime() + "Отменяю задачу " + thisuid + "!"));
+							} catch(e){
+								console.log(colors.red(datetime() + "Ошибка обработки файла блокировки " + items[k] + ": " + e));
+							}
+						}
+						//проверяем задания каждые 15 сек
+						setInterval(function(){
+							try {
+								var data_val = clientStorage.getState().tasks;
+								if(typeof(data_val) === 'object'){
+									try{
+										if (err) { 
+											throw err;
+										} else {
+											for(var key_val in data_val){
 												try {
-													var flag = true;
-													if(Array.isArray(data_val[key_val].dependencies)){
-														for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
-															if(clientStorage.getState().incomplete.indexOf(data_val[key_val].dependencies[i]) !== -1){
-																flag = false;
-															}
-														}
+													if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
+														data_val[key_val].timeoncompl = 0;
 													}
-													if(flag){
-														if(items.indexOf(key_val + '.lock') === -1) {
-															runTask(socket, key_val, data_val).then(function(value){
-																if(value === 'error'){
-																	unlinkLockFile(key_val);
+													if((data_val[key_val].complete !== 'true') && (testLockFile(key_val)) && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
+														try {
+															var flag = true;
+															if(Array.isArray(data_val[key_val].dependencies)){
+																for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
+																	if(clientStorage.getState().incomplete.indexOf(data_val[key_val].dependencies[i]) !== -1){
+																		flag = false;
+																	}
 																}
-															}, function(error){
-																unlinkLockFile(key_val);
-															});
-														} else {
-															taskOnComplete(socket, key_val, 'Во время выполнения команды служба была остановлена!', 100);
+															}
+															if(flag){
+																console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
+																createLockFile(key_val);
+																runTask(socket, key_val, data_val).then(function(value){
+																	unlinkLockFile(value.uid);
+																}, function(error){
+																	unlinkLockFile(key_val);
+																});
+															}
+														} catch (e) {
+															console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
 														}
 													}
-												} catch (e) {
-													console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
+												} catch(e){
+													console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 												}
 											}
-										} catch(e){
-											console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 										}
+									} catch(e){
+										console.log(colors.red(datetime() + "Ошибка чтения директории с файлами блокировки: "  + e));
 									}
+								} else {
+									console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
 								}
 							} catch(e){
-								console.log(colors.red(datetime() + "Ошибка чтения директории с файлами блокировки: "  + e));
+								console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 							}
-						});
-					} else {
-						console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
+						}, 15000);
 					}
 				} catch(e){
-					console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
+					console.log(colors.red(datetime() + "Ошибка чтения директории с файлами блокировки: "  + e));
 				}
-			}, 15000);
+			});
 			//запускаю сборщик мусора каждый час
 			setInterval(GarbageCollector, 3600000);
 		});
@@ -112,17 +127,15 @@ getSettings().then(function(value){
   - ADD_TASK - добавляет задачу пользователю, payload:{}, {} - объект задачи(Object). 
   - TASK_COMPLETE - устанавливает задаче статус выполнено, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
   - TASK_INCOMPLETE - устанавливает задаче статус не выполнено, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
-  - TASK_ERROR - устанавливает, что задача завершилась с ошибкой (счетчик попыток). Снимает с задачи статус исполняемой, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
-  - TASK_START - устанавливает задаче статус исполняемой, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
-  - DB_SYNC - восстанавливает хранилище из storage.db, при этом снимая со всех задач статус исполняемых, payload:{}, {} - хранилище clientStorage целиком(Object).
+  - TASK_ERROR - устанавливает, что задача завершилась с ошибкой (счетчик попыток), payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
+  - DB_SYNC - восстанавливает хранилище из storage.db, payload:{}, {} - хранилище clientStorage целиком(Object).
   - DB_CLEAR_TASK - уничтожает задачу, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
   - DB_CLEAR_COMPL - удаляет задачу из массива выполненных, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
   - DB_CLEAR_INCOMPL - удаляет задачу из массива не выполненных, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
   - DB_REPLANSW_TASK - обрезает слишком длинный (больше 500 символов) ответ задачи, payload:{uid:UID}, UID - уникальный идентификатор задачи(String). 
-  - DB_CLEAR_EXECUTETASK - снимает с задачи статус исполняемой, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
   - FORCE_ERROR - принудительная установка ошибки, payload:{uid:UID}, UID - уникальный идентификатор задачи(String).
 ```
-function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:{}}, action){
+function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 	try {
 		switch (action.type){
 			case 'ADD_TASK':
@@ -142,7 +155,6 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
 					state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
 				}
-				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			case 'TASK_INCOMPLETE':
@@ -158,18 +170,10 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 			case 'TASK_ERROR':
 				var state_new = lodash.clone(state);
 				state_new.tasks[action.payload.uid].tryval = state.tasks[action.payload.uid].tryval + 1;
-				delete state_new.executetask[action.payload.uid];
-				return state_new;
-				break;
-			case 'TASK_START':
-				var state_new = lodash.clone(state);
-				state_new.executetask[action.payload.uid] = Date.now();
 				return state_new;
 				break;
 			case 'DB_SYNC':
-				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
-				state_new = action.payload;
-				state_new.executetask = [];
+				var state_new = action.payload;
 				return state_new;
 				break;
 			case 'DB_CLEAR_TASK':
@@ -200,11 +204,6 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 				var state_new = lodash.clone(state);
 				var thisanswr = state.tasks[action.payload.uid].answer;
 				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
-				return state_new;
-				break;
-			case 'DB_CLEAR_EXECUTETASK':
-				var state_new = lodash.clone(state);
-				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			case 'FORCE_ERROR':
@@ -525,14 +524,19 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 						intPath = 'c:' + intPath;
 						var options = {
 							directory: intPath.replace(/\\/gi, '/'),
-							filename: fileName
+							filename: fileName,
+							timeout: 60000
 						};
+						var errors = 0;
 						download(extPath, options, function(error){
 							try{
-								if (error) {throw error;}
-								taskOnComplete(socket, uid_val, 'Файл скачан!');
-								console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-								resolve("ok");
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									taskOnComplete(socket, uid_val, 'Файл скачан!');
+									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+									resolve({type:"ok",uid:uid_val});
+								}
 							} catch(e) {
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
@@ -540,46 +544,53 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 									taskOnComplete(socket, uid_val, e);
 								}
 								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
 					case 'linux':
 						var options = {
 							directory: intPath.replace(/\\/gi, '/'),
-							filename: fileName
+							filename: fileName,
+							timeout: 60000
 						};
+						var errors = 0;
 						download(extPath, options, function(error){
 							try{
-								if (error) {throw error;}
-								taskOnComplete(socket, uid_val, 'Файл скачан!');
-								console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-								resolve("ok");
+								if (error) {
+									throw error;
+								} else if(errors === 0){
+									taskOnComplete(socket, uid_val, 'Файл скачан!');
+									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
+									resolve({type:"ok",uid:uid_val});
+								}
 							} catch(e) {
+								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
 									taskOnComplete(socket, uid_val, e);
 								}
 								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
+								return;
 							}
 						});
 						break;
 					default:
 						taskOnComplete(socket, uid_val);
 						console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-						resolve("error");
+						resolve({type:"error",uid:uid_val});
 						break;
 				}
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("ok");
+				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e) {
 			console.log(colors.red(datetime() + "Не могу скачать файл в директорию, по причине:" + e));
-			resolve("error");
+			resolve({type:"error",uid:uid_val});
 		}
 	});
 }
@@ -635,7 +646,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									}
 									taskOnComplete(socket, uid_val, returnAnswer);
 									console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(error){
 								errors++;
@@ -645,7 +656,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									taskOnComplete(socket, uid_val, error);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -675,7 +686,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 												}
 												taskOnComplete(socket, uid_val, returnAnswer);
 												console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-												resolve("ok");
+												resolve({type:"ok",uid:uid_val});
 											}
 										} catch(error){
 											errorsinc++;
@@ -685,7 +696,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 												taskOnComplete(socket, uid_val, error);
 											}
 											console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-											resolve("error");
+											resolve({type:"error",uid:uid_val});
 										}
 									}); 
 								}
@@ -697,24 +708,24 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									taskOnComplete(socket, uid_val, error);
 								}
 								console.log(colors.red(datetime() + "Ошибка изменения прав скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
 					default:
 						taskOnComplete(socket, uid_val);
 						console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-						resolve("error");
+						resolve({type:"error",uid:uid_val});
 						break;
 				}
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("ok");
+				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e){
 			console.log(colors.red(datetime() + "Не могу запустить файл, по причине:" + e));
-			resolve("error");
+			resolve({type:"error",uid:uid_val});
 		}
 	});
 }
@@ -762,17 +773,17 @@ function execProcess(socket, uid_val, execCommand, platform){
 									}
 									console.log(returnAnswer);
 									taskOnComplete(socket, uid_val, returnAnswer);
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(error){
 								errors++;
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error);
+									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error));
 								}
-								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
-								resolve("error");
+								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + stdoutOEM866toUTF8(error)));
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -794,7 +805,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 										returnAnswer = '';
 									}
 									taskOnComplete(socket, uid_val, returnAnswer);
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(error){
 								errors++;
@@ -804,7 +815,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 									taskOnComplete(socket, uid_val, error);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -812,7 +823,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("ok");
+				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e){
 			if(clientStorage.getState().tasks[uid_val].tryval < 100){
@@ -821,7 +832,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 				taskOnComplete(socket, uid_val, e);
 			}
 			console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
-			resolve("error");
+			resolve({type:"error",uid:uid_val});
 		}
 	});
 }
@@ -844,7 +855,6 @@ undefined
 
 ```
 function taskOnComplete(socket, uid_val, answer_val, forceerr){
-	unlinkLockFile(uid_val);
 	var realAnswer = 'none';
 	var TryVal = 0;
 	try {
@@ -896,9 +906,7 @@ Promise
 ```
 function runTask(socket, key, data){
 	try {
-		if((data[key].complete !== 'true') && (typeof(clientStorage.getState().executetask[key]) === 'undefined') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
-			clientStorage.dispatch({type:'TASK_START', payload: {uid:key}});
-			createLockFile(key);
+		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
 			switch (data[key].nameTask){
 				case "getFileFromWWW":
 					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName, data[key].platform);
@@ -910,13 +918,13 @@ function runTask(socket, key, data){
 					return execProcess(socket, key, data[key].execCommand, data[key].platform);
 					break;
 				default:
-					return new Promise(function(resolve){resolve("error");});
+					return new Promise(function(resolve){resolve({type:"error",uid:key});});
 					break;
 			}	
 		}
 	} catch (e) {
 		console.log(colors.red(datetime() + "Не могу выполнить задание, по причине:" + e));
-		return new Promise(function(resolve){resolve("error");});
+		return new Promise(function(resolve){resolve({type:"error",uid:key});});
 	}
 }
 ```
@@ -924,7 +932,7 @@ function runTask(socket, key, data){
 ### Сборщик мусора
 
 ##### Описание
-Если у задачи нет отсрочки, то уничтожает задачи старше 10 дней от даты создания, иначе уничтожает задачи старше 10 дней от даты отсрочки. Обрезает слишком длинные ответы задач. Исправляет рассинхронизацию массивов выполненных и не выполненных задач. Снимает статус исполняемой с задач, находящихся в данном статуса больше 12 часов (зависших).
+Если у задачи нет отсрочки, то уничтожает задачи старше 10 дней от даты создания, иначе уничтожает задачи старше 10 дней от даты отсрочки. Обрезает слишком длинные ответы задач. Исправляет рассинхронизацию массивов выполненных и не выполненных задач.
 
 ##### Входящие параметры
 undefined
@@ -993,24 +1001,6 @@ function GarbageCollector(){
 			}
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву incomplete: "  + e));
-		}
-		try{
-			var lifeexec = 43200000; //срок выполнения задания (ставлю 12 часов)
-			for(var keyTask in actualStorage.executetask){
-				try{
-					if(typeof(actualStorage.tasks[keyTask]) === 'undefined'){
-						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
-					} else if (actualStorage.tasks[keyTask].complete === 'true') {
-						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
-					} else if ((actualStorage.executetask + lifeexec) < Date.now()){
-						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Сборщиком мусора в массиве executetask не обработан id: "  + keyTask));
-				}
-			}
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву executetask: "  + e));
 		}
 		try{
 			var items = fs.readdirSync('./temp/');
@@ -1103,7 +1093,7 @@ function download(file, options, callback) {
 							} else {
 								if (stats.isFile()) {
 									if(stats.size.toString() !== response.headers['content-length']){
-										throw 'File not full!';
+										throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 									} else {
 										if (callback) callback(false, path);
 									}
@@ -1145,17 +1135,15 @@ undefined
 
 ```
 function unlinkLockFile(uid_val){
-	try{
-		var items = fs.readdirSync('./temp/');
+	if(fs.existsSync('./temp/'+uid_val+'.lock')){
 		try {
-			if(typeof(items) === 'object'){
-				fs.unlinkSync('./temp/'+items[items.indexOf(uid_val+'.lock')]);
-			}
+			fs.unlinkSync('./temp/'+uid_val+'.lock');
+			console.log(colors.green(datetime() + "Удалена блокировка задачи (" + uid_val + ")!"));
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка удаления файла блокировки: "  + e));
 		}
-	} catch(e){
-		console.log(colors.red(datetime() + "Ошибка чтения директории файлами блокировки: "  + e));
+	} else {
+		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val+'.lock' + ") не существует!"));
 	}
 }
 ```
@@ -1175,10 +1163,39 @@ undefined
 
 ```
 function createLockFile(uid_val){
+	if(!fs.existsSync('./temp/'+uid_val+'.lock')){
+		try {
+			fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
+			console.log(colors.green(datetime() + "Добавлена блокировка задачи (" + uid_val + ")!"));
+		} catch(e){
+			console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+		}
+	} else {
+		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val +'.lock' + ") уже существует!"));
+	}
+}
+```
+
+### Функция проверки наличия файла блокировки
+
+##### Описание
+Проверяет, есть ли файл в каталоге ./temp/ с именем ${UID}.lock
+
+##### Входящие параметры
+uid_val - уникальный идентификатор задачи (String)
+
+##### Возвращаемое значение 
+Boolean
+
+##### Исходный код
+
+```
+function testLockFile(uid_val){
 	try {
-		fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
+		return !fs.existsSync('./temp/' + uid_val + '.lock');
 	} catch(e){
-		console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+		console.log(colors.red(datetime() + "Ошибка проверки файла блокировки:" + e));
+		return false;
 	}
 }
 ```

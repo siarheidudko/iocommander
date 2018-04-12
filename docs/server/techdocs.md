@@ -182,13 +182,14 @@ try {
 																	var tempuid = data[1].uid.split("");
 																	tempuid[14] = '3';
 																	var newuid = tempuid.join("");
-																	var newintlink = 'C:' + data[1].task.intLink;
+																	var newintlink = data[1].task.intLink;
 																	if(data[1].task.platform === 'win32'){
-																		newintlink = 'C:' + data[1].task.intLink.replace(/\\/gi, '/');
+																		newintlink = 'C:' + data[1].task.intLink.replace(/\//gi, '\\');
 																	}
 																	delete tempuid;
 																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:[ClientEnv[typescript].param + newintlink + data[1].task.fileName], platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
 																	setTask(data[0],nextTask);
+																	delete nextTask;
 																}
 															}
 														}
@@ -206,9 +207,10 @@ try {
 														} else {
 															console.log(colors.yellow(datetime() + "Пользователь " + data[0] + " не найден в хранилище соединений (не подключен). Отправка будет произведена после подключения."));
 														}
+														delete data;
 													} catch(e){
 														console.log(colors.red(datetime() + "Не могу отправить задание в сокет:" + e));
-													}
+													} 
 												}
 											}
 										});
@@ -250,7 +252,10 @@ try {
 				});
 				try {
 					serverStorage.subscribe(function(){
-						sendStorageToWeb(io, 'server');
+						if(!sendStorageToWebTimeout){
+							sendStorageToWebTimeout = true;
+							setTimeout(sendStorageToWeb, 20000, io, 'server');
+						}
 					});
 					connectionStorage.subscribe(function(){
 						sendStorageToWeb(io, 'connection');
@@ -907,6 +912,7 @@ function sendStorageToWeb(io, param){
 				if (typeof(admUid) !== 'undefined'){
 					switch (param){
 						case 'server':
+							sendStorageToWebTimeout = false;
 							io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
 							break;
 						case 'connection':
@@ -1348,6 +1354,8 @@ function GenerateGroup(){
 		var tempStorage = serverStorage.getState().users;
 		var groupStorage = {};
 		groupStorage['all'] = [];
+		groupStorage['servers'] = [];
+		groupStorage['cashbox'] = [];
 		for(var keyObject in tempStorage){
 			try{
 				var replaceKeyObject = replacer(keyObject, false);
@@ -1357,13 +1365,18 @@ function GenerateGroup(){
 					groupStorage[groupName] = [];
 				}
 				groupStorage[groupName].push(replaceKeyObject);
+				var cashboxarr = ['k1','k2','k3','k4','k5','k6','k7','k8','k9','k0'];
+				if(replaceKeyObject.substr(-4,4) === 'serv'){
+					groupStorage['servers'].push(replaceKeyObject);
+				} else if(cashboxarr.indexOf(replaceKeyObject.substr(-2,2)) !== -1){
+					groupStorage['cashbox'].push(replaceKeyObject);
+				}
 				groupStorage['all'].push(replaceKeyObject);
 			} catch(e){
 				console.log(colors.red(datetime() + "Ошибка добавления пользователя " + keyObject + " в группы!"));
 			}
 		}
 		connectionStorage.dispatch({type:'GEN_GROUP', payload: {groups:sortObjectFunc(groupStorage, '', 'string', false)}});
-		delete tempStorage;
 		GenerateGroupTimeout = false;
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка генерации групп пользователей: " + e));
