@@ -22,7 +22,7 @@ var SyncFirebaseTimeout = false,
 GenerateReportTimeout = false,
 GenerateGroupTimeout = false,
 sendStorageToWebTimeout = false,
-sendStorageToWebTimeout2 = false;
+sendStorageToWebTimeoutConn = false;
 
 
 
@@ -444,7 +444,7 @@ function sendStorageToWeb(io, param){
 							io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
 							break;
 						case 'connection':
-							sendStorageToWebTimeout2 = false;
+							sendStorageToWebTimeoutConn = false;
 							io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
 							break;
 						default:
@@ -1308,8 +1308,8 @@ try {
 						}
 					});
 					connectionStorage.subscribe(function(){
-						if(!sendStorageToWebTimeout2){
-							sendStorageToWebTimeout2 = true;
+						if(!sendStorageToWebTimeoutConn){
+							sendStorageToWebTimeoutConn = true;
 							setTimeout(sendStorageToWeb, 5000, io, 'connection');
 						}
 					});

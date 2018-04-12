@@ -29,6 +29,7 @@ getSettings().then(function(value){
 		server_global = value.server;
 		var protocol_val = value.protocol,
 		port_val = value.port;
+		
 		getDatabase().then(function (database){
 			if(database !== 'error'){
 				clientStorage.dispatch({type:'DB_SYNC', payload: database});
@@ -37,65 +38,79 @@ getSettings().then(function(value){
 				console.log(colors.red(datetime() + "Синхронизация с базой данных не выполнена!"));
 			}
 			Reconnect(protocol_val, server_global, port_val);
-			//проверяем задания каждые 15 сек
-			setInterval(function(){
-				try {
-					var data_val = clientStorage.getState().tasks;
-					if(typeof(data_val) === 'object'){
-						fs.readdir('./temp/', function(err, items) {
-							try{
-								if (err) { 
-									throw err;
-								} else {
-									for(var key_val in data_val){
-										try {
-											if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
-												data_val[key_val].timeoncompl = 0;
-											}
-											if((data_val[key_val].complete !== 'true') && (typeof(clientStorage.getState().executetask[key_val]) === 'undefined') && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
-												console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
+			//очищаем задания, во время которых служба была остановлена
+			fs.readdir('./temp/', function(err, items) {
+				try{
+					if (err) { 
+						throw err;
+					} else {
+						for(var k = 0 ; k < items.length; k++){
+							try {
+								var thisuid = items[k].substr(0,items[k].length-5);
+								taskOnComplete(socket, thisuid, 'Во время выполнения команды служба была остановлена!', 100);
+								unlinkLockFile(thisuid);
+								console.log(colors.yellow(datetime() + "Отменяю задачу " + thisuid + "!"));
+							} catch(e){
+								console.log(colors.red(datetime() + "Ошибка обработки файла блокировки " + items[k] + ": " + e));
+							}
+						}
+						//проверяем задания каждые 15 сек
+						setInterval(function(){
+							try {
+								var data_val = clientStorage.getState().tasks;
+								if(typeof(data_val) === 'object'){
+									try{
+										if (err) { 
+											throw err;
+										} else {
+											for(var key_val in data_val){
 												try {
-													var flag = true;
-													if(Array.isArray(data_val[key_val].dependencies)){
-														for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
-															if(clientStorage.getState().incomplete.indexOf(data_val[key_val].dependencies[i]) !== -1){
-																flag = false;
-															}
-														}
+													if(typeof(data_val[key_val].timeoncompl) === 'undefined'){
+														data_val[key_val].timeoncompl = 0;
 													}
-													if(flag){
-														if(items.indexOf(key_val + '.lock') === -1) {
-															runTask(socket, key_val, data_val).then(function(value){
-																if(value === 'error'){
-																	unlinkLockFile(key_val);
+													if((data_val[key_val].complete !== 'true') && (testLockFile(key_val)) && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
+														console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
+														try {
+															var flag = true;
+															if(Array.isArray(data_val[key_val].dependencies)){
+																for(var i = 0; i < data_val[key_val].dependencies.length; i++ ){
+																	if(clientStorage.getState().incomplete.indexOf(data_val[key_val].dependencies[i]) !== -1){
+																		flag = false;
+																	}
 																}
-															}, function(error){
-																unlinkLockFile(key_val);
-															});
-														} else {
-															taskOnComplete(socket, key_val, 'Во время выполнения команды служба была остановлена!', 100);
+															}
+															if(flag){
+																createLockFile(key_val);
+																runTask(socket, key_val, data_val).then(function(value){
+																	unlinkLockFile(key_val);
+																}, function(error){
+																	unlinkLockFile(key_val);
+																});
+															}
+														} catch (e) {
+															console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
 														}
 													}
-												} catch (e) {
-													console.log(colors.red(datetime() + "Не могу обработать зависимости задания: " + e));
+												} catch(e){
+													console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 												}
 											}
-										} catch(e){
-											console.log(colors.red(datetime() + "Ошибка выполнения задания: " + e));
 										}
+									} catch(e){
+										console.log(colors.red(datetime() + "Ошибка чтения директории с файлами блокировки: "  + e));
 									}
+								} else {
+									console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
 								}
 							} catch(e){
-								console.log(colors.red(datetime() + "Ошибка чтения директории с файлами блокировки: "  + e));
+								console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
 							}
-						});
-					} else {
-						console.log(colors.red(datetime() + "Хранилище заданий не является объектом!"));
+						}, 15000);
 					}
 				} catch(e){
-					console.log(colors.red(datetime() + "Не могу получить список заданий из хранилища!"));
+					console.log(colors.red(datetime() + "Ошибка чтения директории с файлами блокировки: "  + e));
 				}
-			}, 15000);
+			});
 			//запускаю сборщик мусора каждый час
 			setInterval(GarbageCollector, 3600000);
 		});
@@ -108,7 +123,7 @@ getSettings().then(function(value){
 
 /* ### Хранилище состояний ### */
 var clientStorage = redux.createStore(editStore);
-function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:{}}, action){
+function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 	try {
 		switch (action.type){
 			case 'ADD_TASK':
@@ -128,7 +143,6 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 				if(clientStorage.getState().incomplete.indexOf(action.payload.uid) !== -1){
 					state_new.incomplete.splice(clientStorage.getState().incomplete.indexOf(action.payload.uid),1);
 				}
-				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			case 'TASK_INCOMPLETE':
@@ -146,15 +160,8 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 				state_new.tasks[action.payload.uid].tryval = state.tasks[action.payload.uid].tryval + 1;
 				return state_new;
 				break;
-			case 'TASK_START':
-				var state_new = lodash.clone(state);
-				state_new.executetask[action.payload.uid] = Date.now();
-				return state_new;
-				break;
 			case 'DB_SYNC':
-				var state_new = {tasks: {}, complete: [], incomplete:[], executetask:{}};
-				state_new = action.payload;
-				state_new.executetask = [];
+				var state_new = action.payload;
 				return state_new;
 				break;
 			case 'DB_CLEAR_TASK':
@@ -185,11 +192,6 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[], executetask:
 				var state_new = lodash.clone(state);
 				var thisanswr = state.tasks[action.payload.uid].answer;
 				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
-				return state_new;
-				break;
-			case 'DB_CLEAR_EXECUTETASK':
-				var state_new = lodash.clone(state);
-				delete state_new.executetask[action.payload.uid];
 				return state_new;
 				break;
 			case 'FORCE_ERROR':
@@ -676,7 +678,6 @@ function execProcess(socket, uid_val, execCommand, platform){
 
 //функция изменения состояния при выполнении таска
 function taskOnComplete(socket, uid_val, answer_val, forceerr){
-	unlinkLockFile(uid_val);
 	var realAnswer = 'none';
 	var TryVal = 0;
 	try {
@@ -712,9 +713,7 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 //функция запуска выполнения заданий
 function runTask(socket, key, data){
 	try {
-		if((data[key].complete !== 'true') && (typeof(clientStorage.getState().executetask[key]) === 'undefined') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
-			clientStorage.dispatch({type:'TASK_START', payload: {uid:key}});
-			createLockFile(key);
+		if((data[key].complete !== 'true') && (clientStorage.getState().complete.indexOf(key) === -1) && (data[key].timeoncompl < Date.now())) {
 			switch (data[key].nameTask){
 				case "getFileFromWWW":
 					return writeFile(socket, key, data[key].extLink, data[key].intLink, data[key].fileName, data[key].platform);
@@ -795,24 +794,6 @@ function GarbageCollector(){
 			}
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву incomplete: "  + e));
-		}
-		try{
-			var lifeexec = 43200000; //срок выполнения задания (ставлю 12 часов)
-			for(var keyTask in actualStorage.executetask){
-				try{
-					if(typeof(actualStorage.tasks[keyTask]) === 'undefined'){
-						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
-					} else if (actualStorage.tasks[keyTask].complete === 'true') {
-						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
-					} else if ((actualStorage.executetask + lifeexec) < Date.now()){
-						clientStorage.dispatch({type:'DB_CLEAR_EXECUTETASK', payload: {uid:keyTask}});
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Сборщиком мусора в массиве executetask не обработан id: "  + keyTask));
-				}
-			}
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву executetask: "  + e));
 		}
 		try{
 			var items = fs.readdirSync('./temp/');
@@ -937,6 +918,15 @@ function createLockFile(uid_val){
 		fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
 	} catch(e){
 		console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+	}
+}
+
+function testLockFile(uid_val){
+	try {
+		return !fs.existsSync('./temp/'+uid_val+'.lock');
+	} catch(e){
+		console.log(colors.red(datetime() + "Ошибка проверки файла блокировки:" + e));
+		return false;
 	}
 }
 
