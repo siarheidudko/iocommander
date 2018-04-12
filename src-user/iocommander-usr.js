@@ -69,7 +69,6 @@ getSettings().then(function(value){
 														data_val[key_val].timeoncompl = 0;
 													}
 													if((data_val[key_val].complete !== 'true') && (testLockFile(key_val)) && (clientStorage.getState().complete.indexOf(key_val) === -1) &&  (data_val[key_val].timeoncompl < Date.now())){
-														console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
 														try {
 															var flag = true;
 															if(Array.isArray(data_val[key_val].dependencies)){
@@ -80,9 +79,10 @@ getSettings().then(function(value){
 																}
 															}
 															if(flag){
+																console.log(colors.yellow(datetime() + "Найдено новое актуальное задание: " + key_val));
 																createLockFile(key_val);
 																runTask(socket, key_val, data_val).then(function(value){
-																	unlinkLockFile(key_val);
+																	unlinkLockFile(value.uid);
 																}, function(error){
 																	unlinkLockFile(key_val);
 																});
@@ -413,7 +413,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 								} else if(errors === 0){
 									taskOnComplete(socket, uid_val, 'Файл скачан!');
 									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(e) {
 								if(clientStorage.getState().tasks[uid_val].tryval < 100){
@@ -422,7 +422,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 									taskOnComplete(socket, uid_val, e);
 								}
 								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -440,7 +440,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 								} else if(errors === 0){
 									taskOnComplete(socket, uid_val, 'Файл скачан!');
 									console.log(colors.green(datetime() + "Скачан файл " + extPath + " в директорию " + intPath + fileName + "!"));
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(e) {
 								errors++;
@@ -450,7 +450,7 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 									taskOnComplete(socket, uid_val, e);
 								}
 								console.log(colors.red(datetime() + "Ошибка загрузки файла " + extPath + " в директорию " + intPath + fileName + ":" + e));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 								return;
 							}
 						});
@@ -458,17 +458,17 @@ function writeFile(socket, uid_val, extPath, intPath, fileName, platform){
 					default:
 						taskOnComplete(socket, uid_val);
 						console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-						resolve("error");
+						resolve({type:"error",uid:uid_val});
 						break;
 				}
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("ok");
+				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e) {
 			console.log(colors.red(datetime() + "Не могу скачать файл в директорию, по причине:" + e));
-			resolve("error");
+			resolve({type:"error",uid:uid_val});
 		}
 	});
 }
@@ -502,7 +502,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									}
 									taskOnComplete(socket, uid_val, returnAnswer);
 									console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(error){
 								errors++;
@@ -512,7 +512,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									taskOnComplete(socket, uid_val, error);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -542,7 +542,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 												}
 												taskOnComplete(socket, uid_val, returnAnswer);
 												console.log(colors.yellow(datetime() + "Запущен файл " + (intPath.replace(/\\/gi, '/') + fileName) + ' ' + paramArray + "!"));
-												resolve("ok");
+												resolve({type:"ok",uid:uid_val});
 											}
 										} catch(error){
 											errorsinc++;
@@ -552,7 +552,7 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 												taskOnComplete(socket, uid_val, error);
 											}
 											console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-											resolve("error");
+											resolve({type:"error",uid:uid_val});
 										}
 									}); 
 								}
@@ -564,24 +564,24 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 									taskOnComplete(socket, uid_val, error);
 								}
 								console.log(colors.red(datetime() + "Ошибка изменения прав скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
 					default:
 						taskOnComplete(socket, uid_val);
 						console.log(colors.green(datetime() + "Неизвестный тип платформы " + os.platform() + " !"));
-						resolve("error");
+						resolve({type:"error",uid:uid_val});
 						break;
 				}
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("ok");
+				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e){
 			console.log(colors.red(datetime() + "Не могу запустить файл, по причине:" + e));
-			resolve("error");
+			resolve({type:"error",uid:uid_val});
 		}
 	});
 }
@@ -612,7 +612,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 									}
 									console.log(returnAnswer);
 									taskOnComplete(socket, uid_val, returnAnswer);
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(error){
 								errors++;
@@ -622,7 +622,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error));
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + stdoutOEM866toUTF8(error)));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -644,7 +644,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 										returnAnswer = '';
 									}
 									taskOnComplete(socket, uid_val, returnAnswer);
-									resolve("ok");
+									resolve({type:"ok",uid:uid_val});
 								}
 							} catch(error){
 								errors++;
@@ -654,7 +654,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 									taskOnComplete(socket, uid_val, error);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
-								resolve("error");
+								resolve({type:"error",uid:uid_val});
 							}
 						});
 						break;
@@ -662,7 +662,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 			} else {
 				taskOnComplete(socket, uid_val, 'Другая операционная система!');
 				console.log(colors.green(datetime() + "Команда для другой платформы!"));
-				resolve("ok");
+				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e){
 			if(clientStorage.getState().tasks[uid_val].tryval < 100){
@@ -671,7 +671,7 @@ function execProcess(socket, uid_val, execCommand, platform){
 				taskOnComplete(socket, uid_val, e);
 			}
 			console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
-			resolve("error");
+			resolve({type:"error",uid:uid_val});
 		}
 	});
 }
@@ -725,13 +725,13 @@ function runTask(socket, key, data){
 					return execProcess(socket, key, data[key].execCommand, data[key].platform);
 					break;
 				default:
-					return new Promise(function(resolve){resolve("error");});
+					return new Promise(function(resolve){resolve({type:"error",uid:key});});
 					break;
 			}	
 		}
 	} catch (e) {
 		console.log(colors.red(datetime() + "Не могу выполнить задание, по причине:" + e));
-		return new Promise(function(resolve){resolve("error");});
+		return new Promise(function(resolve){resolve({type:"error",uid:key});});
 	}
 }
 
@@ -870,7 +870,7 @@ function download(file, options, callback) {
 							} else {
 								if (stats.isFile()) {
 									if(stats.size.toString() !== response.headers['content-length']){
-										throw 'File not full!';
+										throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 									} else {
 										if (callback) callback(false, path);
 									}
@@ -901,6 +901,7 @@ function unlinkLockFile(uid_val){
 	if(fs.existsSync('./temp/'+uid_val+'.lock')){
 		try {
 			fs.unlinkSync('./temp/'+uid_val+'.lock');
+			console.log(colors.green(datetime() + "Удалена блокировка задачи (" + uid_val + ")!"));
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка удаления файла блокировки: "  + e));
 		}
@@ -914,17 +915,18 @@ function createLockFile(uid_val){
 	if(!fs.existsSync('./temp/'+uid_val+'.lock')){
 		try {
 			fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
+			console.log(colors.green(datetime() + "Добавлена блокировка задачи (" + uid_val + ")!"));
 		} catch(e){
 			console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
 		}
 	} else {
-		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val+'.lock' + ") уже существует!"));
+		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val +'.lock' + ") уже существует!"));
 	}
 }
 
 function testLockFile(uid_val){
 	try {
-		return !fs.existsSync('./temp/'+uid_val+'.lock');
+		return !fs.existsSync('./temp/' + uid_val + '.lock');
 	} catch(e){
 		console.log(colors.red(datetime() + "Ошибка проверки файла блокировки:" + e));
 		return false;
