@@ -898,26 +898,27 @@ function download(file, options, callback) {
 
 //функция удаления файла блокировки
 function unlinkLockFile(uid_val){
-	try{
-		var items = fs.readdirSync('./temp/');
+	if(fs.existsSync('./temp/'+uid_val+'.lock')){
 		try {
-			if(typeof(items) === 'object'){
-				fs.unlinkSync('./temp/'+items[items.indexOf(uid_val+'.lock')]);
-			}
+			fs.unlinkSync('./temp/'+uid_val+'.lock');
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка удаления файла блокировки: "  + e));
 		}
-	} catch(e){
-		console.log(colors.red(datetime() + "Ошибка чтения директории файлами блокировки: "  + e));
+	} else {
+		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val+'.lock' + ") не существует!"));
 	}
 }
 
 //функция создания файла блокировки
 function createLockFile(uid_val){
-	try {
-		fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
-	} catch(e){
-		console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+	if(!fs.existsSync('./temp/'+uid_val+'.lock')){
+		try {
+			fs.writeFileSync('./temp/'+uid_val+'.lock', Date.now());
+		} catch(e){
+			console.log(colors.red(datetime() + "Не могу записать файл блокировки:" + e));
+		}
+	} else {
+		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val+'.lock' + ") уже существует!"));
 	}
 }
 

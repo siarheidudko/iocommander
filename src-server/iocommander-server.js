@@ -21,8 +21,7 @@ bantimeout = 10800000;
 var SyncFirebaseTimeout = false,
 GenerateReportTimeout = false,
 GenerateGroupTimeout = false,
-sendStorageToWebTimeout = false,
-sendStorageToWebTimeoutConn = false;
+sendStorageToWebTimeout = false;
 
 
 
@@ -444,7 +443,6 @@ function sendStorageToWeb(io, param){
 							io.sockets.sockets[admUid].emit('sendServerStorageToAdmin', serverStorage.getState());
 							break;
 						case 'connection':
-							sendStorageToWebTimeoutConn = false;
 							io.sockets.sockets[admUid].emit('sendConnStorageToAdmin', connectionStorage.getState());
 							break;
 						default:
@@ -1308,10 +1306,7 @@ try {
 						}
 					});
 					connectionStorage.subscribe(function(){
-						if(!sendStorageToWebTimeoutConn){
-							sendStorageToWebTimeoutConn = true;
-							setTimeout(sendStorageToWeb, 5000, io, 'connection');
-						}
+						sendStorageToWeb(io, 'connection');
 					});
 				} catch (e) {
 					console.log(colors.red(datetime() + "Не могу подписать веб-интерфейс на обновления: " + e));
