@@ -863,25 +863,20 @@ function download(file, options, callback) {
 			}
 			response.on("end", function(){
 				if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
-					fs.stat(path, function (err, stats) {
-						try {
-							if (err) {
-								throw err;
+					try {
+						var stats = fs.statSync(path);
+						if (stats.isFile()) {
+							if(stats.size.toString() !== response.headers['content-length']){
+								throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 							} else {
-								if (stats.isFile()) {
-									if(stats.size.toString() !== response.headers['content-length']){
-										throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
-									} else {
-										if (callback) callback(false, path);
-									}
-								} else {
-									throw 'Not Found';
-								}
+								if (callback) callback(false, path);
 							}
-						}catch(e){
-							callback(e);
+						} else {
+							throw 'Not Found';
 						}
-					});
+					}catch(e){
+						callback(e);
+					}
 				} else if (callback) callback(false, path);
 			});
 			request.setTimeout(options.timeout, function () {

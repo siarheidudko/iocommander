@@ -1049,6 +1049,96 @@ undefined
 ##### Исходный код
 
 ```
+function GarbageCollector(){
+	var lifetime = 86400000 * 10; //устанавливаю срок хранения локальных данных в 10 дней
+	var actualStorage = clientStorage.getState();
+	try{
+		try{
+			for(var keyTask in actualStorage.tasks){
+				try{
+					if((actualStorage.tasks[keyTask].datetime + lifetime) < Date.now()){ //если у задания нет отсрочки, оно будет уничтожено через 10 дней. если есть отсрочка, то через 10 дней после даты отсрочки.
+						if(typeof(actualStorage.tasks[keyTask].timeoncompl) !== 'undefined'){
+							if((actualStorage.tasks[keyTask].timeoncompl + lifetime) < Date.now()){
+								clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+							}
+						} else {
+							clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+						}
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
+				}
+				try{
+					if(actualStorage.tasks[keyTask].answer.length > 503){
+						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
+						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по таскам: "  + e));
+		}
+		try{
+			for(var i = 0; i < actualStorage.complete.length; i++){
+				try {
+					var actualUidCompl = actualStorage.complete[i];
+					if(typeof(actualStorage.tasks[actualUidCompl]) === 'undefined'){
+						clientStorage.dispatch({type:'DB_CLEAR_COMPL', payload: {uid:actualUidCompl}});
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора в массиве complete не обработан id: "  + i));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву complete: "  + e));
+		}
+		try{
+			for(var j = 0; j < actualStorage.incomplete.length; j++){
+				try{
+					var actualUidIncompl = actualStorage.incomplete[j];
+					if(typeof(actualStorage.tasks[actualUidIncompl]) === 'undefined'){
+						clientStorage.dispatch({type:'DB_CLEAR_INCOMPL', payload: {uid:actualUidIncompl}});
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Сборщиком мусора в массиве incomplete не обработан id: "  + j));
+				}
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву incomplete: "  + e));
+		}
+		try{
+			var items = fs.readdirSync('./temp/');
+			try {
+				if(typeof(items) === 'object'){
+					for (var i=0; i<items.length; i++) {
+						try {
+							var thisuid = items[i].substring(0, items[i].length -5);
+							if(typeof(actualStorage.tasks[thisuid]) === 'undefined'){
+								unlinkLockFile(thisuid);
+							} else {
+								if(actualStorage.tasks[thisuid].complete === 'true'){
+									unlinkLockFile(thisuid);
+								}
+							}
+						} catch(e){
+							console.log(colors.red(datetime() + "Ошибка обработки файла " + items[i] + " сборщиком мусора: "  + e));
+						}
+					}
+				}
+			} catch(e){
+				console.log(colors.red(datetime() + "Ошибка чтения сборщиком мусора директории с файлами блокировки: "  + e));
+			}
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка чтения сборщиком мусора директории с файлами блокировки: "  + e));
+		}
+	} catch(e){
+		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
+	}
+}
+
+//измененная библиотека download-file для работы с собственным file-сервером
 function download(file, options, callback) {
 	if (!callback && typeof options === 'function') {
 		callback = options;
@@ -1086,25 +1176,20 @@ function download(file, options, callback) {
 			}
 			response.on("end", function(){
 				if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
-					fs.stat(path, function (err, stats) {
-						try {
-							if (err) {
-								throw err;
+					try {
+						var stats = fs.statSync(path);
+						if (stats.isFile()) {
+							if(stats.size.toString() !== response.headers['content-length']){
+								throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 							} else {
-								if (stats.isFile()) {
-									if(stats.size.toString() !== response.headers['content-length']){
-										throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
-									} else {
-										if (callback) callback(false, path);
-									}
-								} else {
-									throw 'Not Found';
-								}
+								if (callback) callback(false, path);
 							}
-						}catch(e){
-							callback(e);
+						} else {
+							throw 'Not Found';
 						}
-					});
+					}catch(e){
+						callback(e);
+					}
 				} else if (callback) callback(false, path);
 			});
 			request.setTimeout(options.timeout, function () {
