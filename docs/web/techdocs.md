@@ -623,7 +623,6 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 		return (
 			<div className="AdminIoCommanderPanelBottom">
 				<div className="AdminIoCommanderPanelBottomServerStat">
-				{console.log(this.props.datatwo)}
 					<div>{this.props.datatwo[0]}</div>
 					<div>{this.props.datatwo[1]}</div>
 				</div>

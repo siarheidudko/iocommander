@@ -1643,11 +1643,11 @@ undefined
 ```
 function StatisticProcess(){
 	try {
-		var FreeMem = Math.floor((os.freemem() / 1024) / 1024);
-		var TotalMem = Math.floor((os.totalmem() / 1024) / 1024);
-		var UsedMem = TotalMem - FreeMem;
-		var MBStat = ('Used Memory: ' + UsedMem + '/' + TotalMem + ' MB');
-		var CPUStat = ('Load Averages: ' + os.loadavg().join('|'));
+		let FreeMem = Math.floor((os.freemem() / 1024) / 1024);
+		let TotalMem = Math.floor((os.totalmem() / 1024) / 1024);
+		let UsedMem = TotalMem - FreeMem;
+		let MBStat = ('Used Memory: ' + UsedMem + '/' + TotalMem + ' MB');
+		let CPUStat = ('Load Averages: ' + os.loadavg()[0].toString().substring(0,4) + '/1m |' + os.loadavg()[1].toString().substring(0,4) + '/5m |' + os.loadavg()[2].toString().substring(0,4) + '/15m');
 		connectionStorage.dispatch({type:'SERVER_STAT', payload: {memory:MBStat, cpu:CPUStat}});
 	} catch(e){
 		console.log(colors.red(datetime() + "Проблема с получением ресурсов системы!"));
