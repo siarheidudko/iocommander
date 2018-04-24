@@ -59,6 +59,7 @@
 - lodash
 - firebase
 - multiparty
+- os
 
 ## Настройка проекта
 

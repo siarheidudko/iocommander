@@ -44,6 +44,7 @@
   - lodash
   - firebase
   - multiparty
+  - os
 
 - Представлен двумя файлами
   - src-server\iocommander-server.js - исполняемый скрипт сервера

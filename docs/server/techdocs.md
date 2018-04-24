@@ -29,7 +29,6 @@ try {
 		sslcrt = value.sslcrt,
 		sslca = value.sslca,
 		ClientEnv = value.env;
-		console.log(ClientEnv);
 		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
 		connectionStorage.dispatch({type:'PARAM_PORTS', payload: {fileportval:fileport}});
 		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
@@ -273,6 +272,8 @@ try {
 		startFileServer(fileport);
 		//запускаю сборщик мусора раз в час
 		setInterval(GarbageCollector,3600000);
+		//запускаю статистику использованных ресурсов системы
+		setInterval(StatisticProcess, 10000);
 	}, function(error){
 		console.log(colors.red(datetime() + "Инициализация сервера не выполнена по причине: " + error));
 	});
@@ -1622,6 +1623,34 @@ function startFileServer(port){
 		server.timeout = 120000;
 	} catch (e){
 		console.log(colors.red(datetime() + "Не могу запустить file-сервер!"));
+	}
+}
+```
+
+### Функция отчета по использованию ресурсов системы
+
+##### Описание
+Мониторит использование RAM и среднюю загрузку CPU за 1-5-15 минут
+
+##### Входящие параметры
+undefined
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function StatisticProcess(){
+	try {
+		var FreeMem = Math.floor((os.freemem() / 1024) / 1024);
+		var TotalMem = Math.floor((os.totalmem() / 1024) / 1024);
+		var UsedMem = TotalMem - FreeMem;
+		var MBStat = ('Used Memory: ' + UsedMem + '/' + TotalMem + ' MB');
+		var CPUStat = ('Load Averages: ' + os.loadavg().join('|'));
+		connectionStorage.dispatch({type:'SERVER_STAT', payload: {memory:MBStat, cpu:CPUStat}});
+	} catch(e){
+		console.log(colors.red(datetime() + "Проблема с получением ресурсов системы!"));
 	}
 }
 ```

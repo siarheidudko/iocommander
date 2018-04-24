@@ -60,6 +60,11 @@ select{
 	-moz-user-select: none;
 	-ms-user-select: none;
 }
+.AdminIoCommanderPanelBottomServerStat{
+	float: left;
+	padding: 10px;
+	font-size: 12px;
+}
 .AdminIoCommanderPanelBottomUsersOnline, .AdminIoCommanderPanelBottomUsersOffline {
 	width: 80px;
 	float: right;

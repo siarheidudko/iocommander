@@ -7,7 +7,7 @@
 
 /* ### Раздел переменных ### */
 const https=require("https"), 
-http=require("http")
+http=require("http"),
 colors=require("colors"),
 fs=require("fs"),
 cryptojs=require("cryptojs"),
@@ -15,7 +15,8 @@ redux=require("redux"),
 lodash=require("lodash"),
 firebase=require("firebase"),
 socketio=require("socket.io"),
-multiparty=require("multiparty");
+multiparty=require("multiparty"),
+os=require("os");
 var port, firebase_user, firebase_pass, config, SslOptions, 
 bantimeout = 10800000;
 var SyncFirebaseTimeout = false,
@@ -120,7 +121,7 @@ serverStorage.subscribe(function(){
 	}
 });
 
-function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, iptoban:{}, fileport:''}, action){
+function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
 	try {
 		switch (action.type){
 			case 'ADD_UID':
@@ -177,6 +178,16 @@ function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, i
 				var state_new = lodash.clone(state);
 				if(typeof(action.payload.fileportval) !== 'undefined'){
 					state_new.fileport = action.payload.fileportval;
+				}
+				return state_new;
+				break;
+			case 'SERVER_STAT':
+				var state_new = lodash.clone(state);
+				if(typeof(action.payload.memory) !== 'undefined'){
+					state_new.memory = action.payload.memory;
+				}
+				if(typeof(action.payload.cpu) !== 'undefined'){
+					state_new.cpu = action.payload.cpu;
 				}
 				return state_new;
 				break;
@@ -785,6 +796,10 @@ function GarbageCollector(){
 	var lifetimetwo = 86400000 * 100; //устанавливаю срок хранения задач в 100 дней
 	var actualStorage = serverStorage.getState();
 	var bannedStorage = connectionStorage.getState().iptoban;
+	SyncFirebaseTimeout = false; //сбрасываю переменные таймаута (на всякий случай, т.к. раз столкнулся с их зависанием в отношении отправки в веб)
+	GenerateReportTimeout = false;
+	GenerateGroupTimeout = false;
+	sendStorageToWebTimeout = false;
 	try{
 		try{
 			for(var key_object in actualStorage.tasks){
@@ -1060,6 +1075,20 @@ function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
 	}
 }
 
+//функция вывода статистики использованных ресурсов
+function StatisticProcess(){
+	try {
+		var FreeMem = Math.floor((os.freemem() / 1024) / 1024);
+		var TotalMem = Math.floor((os.totalmem() / 1024) / 1024);
+		var UsedMem = TotalMem - FreeMem;
+		var MBStat = ('Used Memory: ' + UsedMem + '/' + TotalMem + ' MB');
+		var CPUStat = ('Load Averages: ' + os.loadavg().join('|'));
+		connectionStorage.dispatch({type:'SERVER_STAT', payload: {memory:MBStat, cpu:CPUStat}});
+	} catch(e){
+		console.log(colors.red(datetime() + "Проблема с получением ресурсов системы!"));
+	}
+}
+
 
 
 /* ### Раздел работы с сокетом ### */
@@ -1077,7 +1106,6 @@ try {
 		sslcrt = value.sslcrt,
 		sslca = value.sslca,
 		ClientEnv = value.env;
-		console.log(ClientEnv);
 		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
 		connectionStorage.dispatch({type:'PARAM_PORTS', payload: {fileportval:fileport}});
 		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
@@ -1321,6 +1349,8 @@ try {
 		startFileServer(fileport);
 		//запускаю сборщик мусора раз в час
 		setInterval(GarbageCollector,3600000);
+		//запускаю статистику использованных ресурсов системы
+		setInterval(StatisticProcess, 10000);
 	}, function(error){
 		console.log(colors.red(datetime() + "Инициализация сервера не выполнена по причине: " + error));
 	});
