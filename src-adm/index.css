@@ -172,6 +172,7 @@ select{
 	width: 140px;
 	height:18px;
 	float:left;
+	overflow: hidden;
 }
 .adm_OnlineZero {
 	border: 0px;
@@ -279,7 +280,8 @@ select{
 .tooltipTCol0,.tooltipTCol1,.tooltipTCol2,.tooltipTCol3,.tooltipTCol4,.tooltipTCol5{
 	float:left;
 	font-size: 12px;
-	width:90px;
+	width:95px;
+	overflow: hidden;
 }
 .tooltipTCol1,.tooltipTCol2,.tooltipTCol3,.tooltipTCol4,.tooltipTCol5{
 	padding-left:5px;
