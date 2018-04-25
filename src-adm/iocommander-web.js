@@ -6,7 +6,7 @@
 */
 
 "use strict"
-class AdminIoCommanderPanelPopup extends React.Component{
+class AdminIoCommanderPanelPopup extends React.PureComponent{
   
    constructor(props, context) {
       super(props, context);
@@ -686,7 +686,28 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 	MouseOver(e) {
 		var target = e.target;
 		if(target.getAttribute('data-tooltip') !== null){
-			var tooltip = target.getAttribute('data-tooltip').toString().replace(/\,/gi,"<br>");
+			let temp = target.getAttribute('data-tooltip').toString();
+			let temparr = temp.split(',');
+			let temparrnew = new Array;
+			for(let i = 0; i < temparr.length; i = i + 8){
+				let tempstring;
+				for(let j = i; j < i + 8; j++){
+					if(typeof(temparr[j]) !== 'undefined'){
+						if(j === i){ 
+							tempstring = '<div class="tooltipTCol' + (j % 8) + '">' + temparr[j].toString() + '</div>';
+						} else {
+							tempstring = tempstring + '<div class="tooltipTCol' + (j % 8) + '">' + temparr[j].toString() + '</div>';
+						}
+					}
+				}
+				temparrnew.push(tempstring);
+			}
+			let tempstringnew = '';
+			for(let i = 0; i < temparrnew.length; i++){
+				tempstringnew = tempstringnew + '<div class="tooltipTLine">' + temparrnew[i] + '</div>';
+			}
+			//var tooltip = temp.replace(/\,/gi,"<br>"); //старый вариант в виде столбца
+			var tooltip =tempstringnew;
 			if (!tooltip) return;
 
 			var tooltipElem = document.createElement('div');
@@ -715,7 +736,7 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 		if (this.showingTooltip) {
 			document.body.removeChild(this.showingTooltip);
 			this.showingTooltip = null;
-		}
+		} 
 	}
 	
 	render() {

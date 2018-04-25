@@ -266,6 +266,7 @@ select{
 
 /* всплывающее окно online/offline */
 .tooltip {
+	display:table;
 	position: fixed;
 	padding: 10px 20px;
 	border: 1px solid #b3c9ce;
@@ -274,6 +275,16 @@ select{
 	color: #333;
 	background: #fff;
 	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+.tooltipTCol0,.tooltipTCol1,.tooltipTCol2,.tooltipTCol3,.tooltipTCol4,.tooltipTCol5,.tooltipTCol6,.tooltipTCol7{
+	float:left;
+	font-size: 12px;
+	max-width:80px;
+}
+.tooltipTCol1,.tooltipTCol2,.tooltipTCol3,.tooltipTCol4,.tooltipTCol5,.tooltipTCol6,.tooltipTCol7{
+	padding-left:5px;
+}
+.tooltipTLine{
 }
 
 /* всплывающее  окно */
