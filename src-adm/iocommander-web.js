@@ -716,8 +716,7 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 			document.body.appendChild(tooltipElem);
 
 			var coords = target.getBoundingClientRect();
-
-			var left = coords.left + (target.offsetWidth - tooltipElem.offsetWidth) / 2;
+			var left = coords.left - tooltipElem.offsetWidth + target.offsetWidth;
 			if (left < 0) left = 0; // не вылезать за левую границу окна
 
 			var top = coords.top - tooltipElem.offsetHeight - 5;
