@@ -689,14 +689,14 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 			let temp = target.getAttribute('data-tooltip').toString();
 			let temparr = temp.split(',');
 			let temparrnew = new Array;
-			for(let i = 0; i < temparr.length; i = i + 8){
+			for(let i = 0; i < temparr.length; i = i + 6){
 				let tempstring;
-				for(let j = i; j < i + 8; j++){
+				for(let j = i; j < i + 6; j++){
 					if(typeof(temparr[j]) !== 'undefined'){
 						if(j === i){ 
-							tempstring = '<div class="tooltipTCol' + (j % 8) + '">' + temparr[j].toString() + '</div>';
+							tempstring = '<div class="tooltipTCol' + (j % 6) + '">' + temparr[j].toString() + '</div>';
 						} else {
-							tempstring = tempstring + '<div class="tooltipTCol' + (j % 8) + '">' + temparr[j].toString() + '</div>';
+							tempstring = tempstring + '<div class="tooltipTCol' + (j % 6) + '">' + temparr[j].toString() + '</div>';
 						}
 					}
 				}
