@@ -191,7 +191,7 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 			case 'DB_REPLANSW_TASK':
 				var state_new = lodash.clone(state);
 				var thisanswr = state.tasks[action.payload.uid].answer;
-				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
+				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 2001,thisanswr.length - 1);
 				return state_new;
 				break;
 			case 'FORCE_ERROR':
@@ -687,7 +687,7 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 			realAnswer = answer_val;
 		}
 		if(realAnswer.length > 503){
-			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 501 ,realAnswer.length - 1);
+			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 2001 ,realAnswer.length - 1);
 		}
 	} catch (e){}
 	try {

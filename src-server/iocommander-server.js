@@ -94,7 +94,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 			case 'GC_TASK_REPLANSW':
 				var state_new = lodash.clone(state);
 				var thisanswr = state_new.tasks[action.payload.user][action.payload.task].answer;
-				state_new.tasks[action.payload.user][action.payload.task].answer =  '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
+				state_new.tasks[action.payload.user][action.payload.task].answer =  '...' + thisanswr.substring(thisanswr.length - 2001,thisanswr.length - 1);
 				return state_new;
 				break;
 			default:
@@ -971,6 +971,9 @@ function GenerateReport(){
 			} catch(e){
 				console.log(colors.red(datetime() + "Ошибка генерации отчета по таскам для " + keyObject + "!"));
 			}
+		}
+		for(var keyTask in reportStore){
+			reportStore[keyTask].objects = sortObjectFunc(reportStore[keyTask].objects, '', 'string', false)
 		}
 		connectionStorage.dispatch({type:'GEN_REPORT', payload: {report:sortObjectFunc(reportStore, 'datetime', 'integer', true)}});
 		GenerateReportTimeout = false;
