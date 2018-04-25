@@ -203,7 +203,7 @@ function editStore(state = {tasks: {}, complete: [], incomplete:[]}, action){
 			case 'DB_REPLANSW_TASK':
 				var state_new = lodash.clone(state);
 				var thisanswr = state.tasks[action.payload.uid].answer;
-				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 501,thisanswr.length - 1);
+				state_new.tasks[action.payload.uid].answer = '...' + thisanswr.substring(thisanswr.length - 1001,thisanswr.length - 1);
 				return state_new;
 				break;
 			case 'FORCE_ERROR':
@@ -650,10 +650,10 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								}
 							} catch(error){
 								errors++;
-								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+								if(clientStorage.getState().tasks[uid_val].tryval < 10){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error);
+									taskOnComplete(socket, uid_val, error, 100);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
 								resolve({type:"error",uid:uid_val});
@@ -690,10 +690,10 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 											}
 										} catch(error){
 											errorsinc++;
-											if(clientStorage.getState().tasks[uid_val].tryval < 100){
+											if(clientStorage.getState().tasks[uid_val].tryval < 10){
 												clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 											} else {
-												taskOnComplete(socket, uid_val, error);
+												taskOnComplete(socket, uid_val, error, 100);
 											}
 											console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
 											resolve({type:"error",uid:uid_val});
@@ -702,10 +702,10 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								}
 							} catch(error){
 								errors++;
-								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+								if(clientStorage.getState().tasks[uid_val].tryval < 10){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error);
+									taskOnComplete(socket, uid_val, error, 100);
 								}
 								console.log(colors.red(datetime() + "Ошибка изменения прав скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
 								resolve({type:"error",uid:uid_val});
@@ -777,10 +777,10 @@ function execProcess(socket, uid_val, execCommand, platform){
 								}
 							} catch(error){
 								errors++;
-								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+								if(clientStorage.getState().tasks[uid_val].tryval < 10){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error));
+									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error), 100);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + stdoutOEM866toUTF8(error)));
 								resolve({type:"error",uid:uid_val});
@@ -809,10 +809,10 @@ function execProcess(socket, uid_val, execCommand, platform){
 								}
 							} catch(error){
 								errors++;
-								if(clientStorage.getState().tasks[uid_val].tryval < 100){
+								if(clientStorage.getState().tasks[uid_val].tryval < 10){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error);
+									taskOnComplete(socket, uid_val, error, 100);
 								}
 								console.log(colors.red(datetime() + "Ошибка выполнения команды " + execCommand + ":" + error));
 								resolve({type:"error",uid:uid_val});
@@ -826,10 +826,10 @@ function execProcess(socket, uid_val, execCommand, platform){
 				resolve({type:"ok",uid:uid_val});
 			}
 		} catch (e){
-			if(clientStorage.getState().tasks[uid_val].tryval < 100){
+			if(clientStorage.getState().tasks[uid_val].tryval < 10){
 				clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 			} else {
-				taskOnComplete(socket, uid_val, e);
+				taskOnComplete(socket, uid_val, e, 100);
 			}
 			console.log(colors.red(datetime() + "Не могу выполнить команду, по причине:" + e));
 			resolve({type:"error",uid:uid_val});
@@ -863,8 +863,16 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 		} else if (typeof(answer_val) === 'string'){
 			realAnswer = answer_val;
 		}
-		if(realAnswer.length > 503){
-			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 501 ,realAnswer.length - 1);
+		let tempRealAnsw = realAnswer.split(' ');
+		let tempRealAnswNew = new Array;
+		for(let i = 0; i < tempRealAnsw.length; i++){
+			if(tempRealAnsw[i] !== ' '){
+				tempRealAnswNew.push(tempRealAnsw[i]);
+			}
+		}
+		realAnswer = tempRealAnswNew.join(' ');
+		if(realAnswer.length > 1003){
+			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 1001 ,realAnswer.length - 1);
 		}
 	} catch (e){}
 	try {
@@ -963,7 +971,7 @@ function GarbageCollector(){
 					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
 				}
 				try{
-					if(actualStorage.tasks[keyTask].answer.length > 503){
+					if(actualStorage.tasks[keyTask].answer.length > 1003){
 						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
 						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
 					}
@@ -1069,7 +1077,7 @@ function GarbageCollector(){
 					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
 				}
 				try{
-					if(actualStorage.tasks[keyTask].answer.length > 503){
+					if(actualStorage.tasks[keyTask].answer.length > 1003){
 						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
 						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
 					}

@@ -9,8 +9,8 @@
 
 /* ### Хранилища состояний ### */
 var serverStorage = Redux.createStore(editServerStore);
-var connectionStorage = Redux.createStore(editConnStore);
-var adminpanelStorage = Redux.createStore(editAdmpanelStore, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+var connectionStorage = Redux.createStore(editConnStore, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+var adminpanelStorage = Redux.createStore(editAdmpanelStore);
 function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try {
 		switch (action.type){
