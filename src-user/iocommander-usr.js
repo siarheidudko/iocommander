@@ -509,9 +509,9 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								if(clientStorage.getState().tasks[uid_val].tryval < 10){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error, 100);
+									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error), 100);
 								}
-								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
+								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + stdoutOEM866toUTF8(error)));
 								resolve({type:"error",uid:uid_val});
 							}
 						});
@@ -610,7 +610,6 @@ function execProcess(socket, uid_val, execCommand, platform){
 									} else {
 										returnAnswer = '';
 									}
-									console.log(returnAnswer);
 									taskOnComplete(socket, uid_val, returnAnswer);
 									resolve({type:"ok",uid:uid_val});
 								}
@@ -686,14 +685,22 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 		} else if (typeof(answer_val) === 'string'){
 			realAnswer = answer_val;
 		}
-		let tempRealAnsw = realAnswer.split(' ');
-		let tempRealAnswNew = new Array;
-		for(let i = 0; i < tempRealAnsw.length; i++){
-			if(tempRealAnsw[i] !== ' '){
+		var tempRealAnsw = realAnswer.split(' ');
+		var tempRealAnswNew = new Array;
+		for(var i = 0; i < tempRealAnsw.length; i++){
+			if((tempRealAnsw[i] !== ' ') && (tempRealAnsw[i] !== '') && (typeof(tempRealAnsw[i]) === 'string')){
 				tempRealAnswNew.push(tempRealAnsw[i]);
 			}
 		}
 		realAnswer = tempRealAnswNew.join(' ');
+		var tempRealAnsw = realAnswer.split('-');
+		var tempRealAnswNew = new Array;
+		for(var i = 0; i < tempRealAnsw.length; i++){
+			if((tempRealAnsw[i] !== '-') && (tempRealAnsw[i] !== '') && (typeof(tempRealAnsw[i]) === 'string')){
+				tempRealAnswNew.push(tempRealAnsw[i]);
+			}
+		}
+		realAnswer = tempRealAnswNew.join('-');
 		if(realAnswer.length > 1003){
 			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 1001 ,realAnswer.length - 1);
 		}
@@ -861,12 +868,14 @@ function download(file, options, callback) {
 			}
 		}
 		var request = req.get(getoptions, function(response) {
-			let chunklength = 0;
 			if (response.statusCode === 200) {
 				mkdirp(options.directory, function(err) { 
-					if (err) throw err;
-					var file = fs.createWriteStream(path);
-					response.pipe(file);
+					if (err) {
+						throw err;
+					} else {
+						var file = fs.createWriteStream(path);
+						response.pipe(file);
+					}
 				});
 			} else {
 				if (callback) callback(response.statusCode);
@@ -877,8 +886,6 @@ function download(file, options, callback) {
 						var stats = fs.statSync(path);
 						if (stats.isFile()) {
 							if(stats.size.toString() !== response.headers['content-length']){
-								console.log(response.readableLength);
-								console.log(chunklength + '/' + response.headers['content-length']);
 								throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 							} else {
 								if (callback) callback(false, path);
@@ -890,12 +897,6 @@ function download(file, options, callback) {
 						callback(e);
 					}
 				} else if (callback) callback(false, path);
-			});
-			response.on('readable', () => {
-				let chunk;
-				while (null !== (chunk = response.read())) {
-					chunklength = chunklength + chunk.length;
-				}
 			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();
@@ -948,10 +949,18 @@ function testLockFile(uid_val){
 }
 
 //функция декодирования stdout OEM866 в валидный UTF8
-function stdoutOEM866toUTF8(value){
+function stdoutOEM866toUTF8(value){ //может быть Object или String
 	try {
-		return iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8');
+		if(typeof(value) === 'object'){
+			if(typeof(value.message) === 'string') {
+				value = new Buffer(value.toString('cp866'));
+			}
+		} else if(typeof(value) === 'string'){
+			value = new Buffer(value.toString());
+		}
+		var thisval = iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8'); //для IBM866 stdout
+		return thisval;
 	} catch(e){
-		return value;
+		return 'Error Windows COM Decode String';
 	}
 }

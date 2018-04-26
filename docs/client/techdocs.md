@@ -1173,6 +1173,7 @@ function download(file, options, callback) {
 			}
 		}
 		var request = req.get(getoptions, function(response) {
+			let chunklength = 0;
 			if (response.statusCode === 200) {
 				mkdirp(options.directory, function(err) { 
 					if (err) throw err;
@@ -1188,6 +1189,8 @@ function download(file, options, callback) {
 						var stats = fs.statSync(path);
 						if (stats.isFile()) {
 							if(stats.size.toString() !== response.headers['content-length']){
+								console.log(response.readableLength);
+								console.log(chunklength + '/' + response.headers['content-length']);
 								throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 							} else {
 								if (callback) callback(false, path);
@@ -1199,6 +1202,12 @@ function download(file, options, callback) {
 						callback(e);
 					}
 				} else if (callback) callback(false, path);
+			});
+			response.on('readable', () => {
+				let chunk;
+				while (null !== (chunk = response.read())) {
+					chunklength = chunklength + chunk.length;
+				}
 			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();
