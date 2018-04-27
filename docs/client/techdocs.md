@@ -1146,7 +1146,19 @@ function GarbageCollector(){
 	}
 }
 
-//измененная библиотека download-file для работы с собственным file-сервером
+### Функция скачки файла
+##### Описание
+Модифицированная библиотека download-file для работы с собственным file-сервером с авторизацией. Определяет линк сервера, если он соответствует сокет-серверу, то будет использована Basic авторизация. В зависимости от протокола использует http или https юиюлиотеку, скачивает файл в заданную папку (в случае присутствия файла с таким же именем, он будет затерт). Принимает имя файла и каталог для сохранения в качестве входящих аргументов.
+
+##### Входящие параметры
+file - ссылка для скачки (String) options - опции скачки {directory:DIR, filename: FILENAME, timeout: TIMEOUT} (Object), где DIR - директория для скачки (String), FILENAME - имя файла для (может отличаться от оригинального) (String), TIMEOUT - таймаут запроса (Integer) callback - функция обратного вызова (Function)
+
+##### Возвращаемое значение
+undefined
+
+##### Исходный код
+
+```
 function download(file, options, callback) {
 	if (!callback && typeof options === 'function') {
 		callback = options;
@@ -1173,12 +1185,14 @@ function download(file, options, callback) {
 			}
 		}
 		var request = req.get(getoptions, function(response) {
-			let chunklength = 0;
 			if (response.statusCode === 200) {
 				mkdirp(options.directory, function(err) { 
-					if (err) throw err;
-					var file = fs.createWriteStream(path);
-					response.pipe(file);
+					if (err) {
+						throw err;
+					} else {
+						var file = fs.createWriteStream(path);
+						response.pipe(file);
+					}
 				});
 			} else {
 				if (callback) callback(response.statusCode);
@@ -1189,8 +1203,6 @@ function download(file, options, callback) {
 						var stats = fs.statSync(path);
 						if (stats.isFile()) {
 							if(stats.size.toString() !== response.headers['content-length']){
-								console.log(response.readableLength);
-								console.log(chunklength + '/' + response.headers['content-length']);
 								throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
 							} else {
 								if (callback) callback(false, path);
@@ -1202,12 +1214,6 @@ function download(file, options, callback) {
 						callback(e);
 					}
 				} else if (callback) callback(false, path);
-			});
-			response.on('readable', () => {
-				let chunk;
-				while (null !== (chunk = response.read())) {
-					chunklength = chunklength + chunk.length;
-				}
 			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();
