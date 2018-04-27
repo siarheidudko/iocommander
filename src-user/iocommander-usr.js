@@ -873,30 +873,35 @@ function download(file, options, callback) {
 					if (err) {
 						throw err;
 					} else {
-						var file = fs.createWriteStream(path);
-						response.pipe(file);
+						var filestream = fs.createWriteStream(path);
+						response.pipe(filestream);
+						filestream.on("finish", function(){
+							if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
+								try {
+									var stats = fs.statSync(path);
+									if (stats.isFile()) {
+										if(stats.size.toString() !== response.headers['content-length']){
+											throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
+										} else {
+											if (callback) callback(false, path);
+										}
+									} else {
+										throw 'Not Found';
+									}
+								}catch(e){
+									callback(e);
+								}
+							} 
+						});
 					}
 				});
-			} else {
+			} else{
 				if (callback) callback(response.statusCode);
 			}
 			response.on("end", function(){
-				if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
-					try {
-						var stats = fs.statSync(path);
-						if (stats.isFile()) {
-							if(stats.size.toString() !== response.headers['content-length']){
-								throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
-							} else {
-								if (callback) callback(false, path);
-							}
-						} else {
-							throw 'Not Found';
-						}
-					}catch(e){
-						callback(e);
-					}
-				} else if (callback) callback(false, path);
+				if((typeof(response.headers['content-length']) === 'undefined') || (response.headers['content-length'] === '')){
+					if (callback) callback(false, path);
+				}
 			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();
