@@ -634,7 +634,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 							OnlineParam = 0;
 						}
 					} else {
-						adm_OnlineOff.push(<div className={"adm_OnlineOff" + OfflineParam}><div>{replacer(keyOnlineAll, false)}</div><div></div></div>);
+						adm_OnlineOff.push(<div className={"adm_OnlineOff" + OfflineParam}><div>{replacer(keyOnlineAll, false)}</div><div>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 						if(OfflineParam < 4){
 							OfflineParam++;
 						} else {
