@@ -121,7 +121,7 @@ serverStorage.subscribe(function(){
 	}
 });
 
-function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
+function editConnectionStore(state = {uids:{}, users:{}, versions:{}, report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
 	try {
 		switch (action.type){
 			case 'ADD_UID':
@@ -133,6 +133,10 @@ function editConnectionStore(state = {uids:{}, users:{}, report:{}, groups:{}, i
 				state_new.users[action.payload.user] = action.payload.uid;
 				state_new.uids = sortObjectFunc(state_new.uids, '', 'string', false);
 				state_new.users = sortObjectFunc(state_new.users, '', 'string', false);
+				if(typeof(action.payload.version) === 'string'){ 
+					if(typeof(state_new.versions) !== 'object'){ state_new.versions = {}; }
+					state_new.versions[action.payload.user] = action.payload.version;
+				}
 				return state_new;
 				break;
 			case 'REMOVE_UID':
@@ -270,7 +274,7 @@ function testAdmin(user_val, password_val, socketid){
 }
 
 //функция записи в массив пользователей
-function setUser(user_val, param_val, value_val){
+function setUser(user_val, param_val, value_val, clientver){
 	try {
 		var renameuser = replacer(user_val, true);
 		switch (param_val){
@@ -279,7 +283,7 @@ function setUser(user_val, param_val, value_val){
 				console.log(colors.green(datetime() + "Регистрация пользователя\nLogin: " + user_val));
 				break;
 			case 'uid':
-				connectionStorage.dispatch({type:'ADD_UID', payload: {uid:value_val, user:renameuser}});
+				connectionStorage.dispatch({type:'ADD_UID', payload: {uid:value_val, user:renameuser, version: clientver}});
 				console.log(colors.green(datetime() + "Установка идентификатора пользователя\nLogin: " + user_val + "\nUID:" + value_val));
 				break;
 			default:
@@ -298,11 +302,11 @@ function setAdmin(user_val, param_val, value_val){
 		switch (param_val){
 			case 'password':
 				serverStorage.dispatch({type:'ADD_ADMIN', payload: {user:renameuser, password:value_val}});
-				console.log(colors.green(datetime() + "Регистрация пользователя\nLogin: " + user_val));
+				console.log(colors.green(datetime() + "Регистрация администратора\nLogin: " + user_val));
 				break;
 			case 'uid':
-				connectionStorage.dispatch({type:'ADD_UID', payload: {uid:value_val, user:renameuser}});
-				console.log(colors.green(datetime() + "Установка идентификатора пользователя\nLogin: " + user_val + "\nUID:" + value_val));
+				connectionStorage.dispatch({type:'ADD_UID', payload: {uid:value_val, user:renameuser, version: 'web-interface'}});
+				console.log(colors.green(datetime() + "Установка идентификатора администратора\nLogin: " + user_val + "\nUID:" + value_val));
 				break;
 			default:
 				console.log(colors.green(datetime() + "Неизвестная команда: " + param_val));
@@ -1212,7 +1216,7 @@ try {
 											console.log(colors.red(datetime() + "Ошибка закрытия сокета: " + e));
 										}
 										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
-										setUser(data.user, 'uid', socket.id);
+										setUser(data.user, 'uid', socket.id, data.version);
 										console.log(colors.green(datetime() + "Подключение пользователя\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
 										io.sockets.sockets[socket.id].emit('sendtask', serverStorage.getState().tasks[replacer(data.user, true)]);
 										io.sockets.sockets[socket.id].on('completetask', function (data) {
@@ -1231,7 +1235,7 @@ try {
 											console.log(colors.red(datetime() + "Ошибка закрытия сокета: " + e));
 										}
 										io.sockets.sockets[socket.id].emit('authorisation', { value: 'true' });
-										setUser(data.user, 'uid', socket.id);
+										setAdmin(data.user, 'uid', socket.id);
 										console.log(colors.green(datetime() + "Подключение администратора\nLogin: " + data.user + "\nUID: " + socket.id + "\nADDRESS:" + thisSocketAddress));
 										sendStorageToWeb(io, 'all');
 										io.sockets.sockets[socket.id].on('adm_setUser', function (data) {

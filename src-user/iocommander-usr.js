@@ -5,6 +5,7 @@
 	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
+var CommanderVersion = '1.0.0';
 /* ### Раздел инициализации ### */
 const fs=require("fs"),
 colors=require("colors"),
@@ -329,7 +330,7 @@ function setDatabase(){
 function login(socket) {
 	try {
 		if(typeof(socket) === 'object'){
-			socket.emit('login', { user: user_global, password: password_global });
+			socket.emit('login', { user: user_global, password: password_global, version: CommanderVersion });
 		} else {
 			console.log(colors.red(datetime() + "Аргумент сокет не является объектом!"));
 		}
@@ -685,22 +686,17 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 		} else if (typeof(answer_val) === 'string'){
 			realAnswer = answer_val;
 		}
-		var tempRealAnsw = realAnswer.split(' ');
-		var tempRealAnswNew = new Array;
-		for(var i = 0; i < tempRealAnsw.length; i++){
-			if((tempRealAnsw[i] !== ' ') && (tempRealAnsw[i] !== '') && (typeof(tempRealAnsw[i]) === 'string')){
-				tempRealAnswNew.push(tempRealAnsw[i]);
+		var replSymbol = [' ', '-', '.', '#']; //символы из псевдографики в консоли (иногда в выводе их может быть пару сотен)
+		for(var k = 0; k< replSymbol.length; k++){
+			var tempRealAnsw = realAnswer.split(replSymbol[k]);
+			var tempRealAnswNew = new Array;
+			for(var i = 0; i < tempRealAnsw.length; i++){
+				if((tempRealAnsw[i] !== replSymbol[k]) && (tempRealAnsw[i] !== '') && (typeof(tempRealAnsw[i]) === 'string')){
+					tempRealAnswNew.push(tempRealAnsw[i]);
+				}
 			}
+			realAnswer = tempRealAnswNew.join(replSymbol[k]);
 		}
-		realAnswer = tempRealAnswNew.join(' ');
-		var tempRealAnsw = realAnswer.split('-');
-		var tempRealAnswNew = new Array;
-		for(var i = 0; i < tempRealAnsw.length; i++){
-			if((tempRealAnsw[i] !== '-') && (tempRealAnsw[i] !== '') && (typeof(tempRealAnsw[i]) === 'string')){
-				tempRealAnswNew.push(tempRealAnsw[i]);
-			}
-		}
-		realAnswer = tempRealAnswNew.join('-');
 		if(realAnswer.length > 1003){
 			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 1001 ,realAnswer.length - 1);
 		}
@@ -869,49 +865,54 @@ function download(file, options, callback) {
 		}
 		var request = req.get(getoptions, function(response) {
 			if (response.statusCode === 200) {
-				mkdirp(options.directory, function(err) { 
-					if (err) {
-						throw err;
-					} else {
-						var filestream = fs.createWriteStream(path);
-						response.pipe(filestream);
-						filestream.on("finish", function(){
-							if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
-								try {
-									var stats = fs.statSync(path);
-									if (stats.isFile()) {
-										if(stats.size.toString() !== response.headers['content-length']){
-											throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
+				mkdirp(options.directory, function(err) {
+					try {
+						if (err) {
+							throw err;
+						} else {
+							var filestream = fs.createWriteStream(path);
+							response.pipe(filestream);
+							filestream.on("finish", function(){
+								if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
+									try {
+										var stats = fs.statSync(path);
+										if (stats.isFile()) {
+											if(stats.size.toString() !== response.headers['content-length']){
+												throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
+											} else {
+												if (callback) callback(false, path);
+											}
 										} else {
-											if (callback) callback(false, path);
+											throw 'Not Found';
 										}
-									} else {
-										throw 'Not Found';
+									}catch(e){
+										if (callback) callback(e.toString());
 									}
-								}catch(e){
-									callback(e);
-								}
-							} 
-						});
+								} else {
+									if (callback) callback(false, path);
+								} 
+							});
+							filestream.on("error", function(err){
+								request.abort();
+								if (callback) callback(err.toString());
+							});
+						}
+					} catch(e){
+						if (callback) callback(e.toString());
 					}
 				});
 			} else{
 				if (callback) callback(response.statusCode);
 			}
-			response.on("end", function(){
-				if((typeof(response.headers['content-length']) === 'undefined') || (response.headers['content-length'] === '')){
-					if (callback) callback(false, path);
-				}
-			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();
-				callback("Timeout");
+				if (callback) callback("Timeout");
 			});
 		}).on('error', function(e) {
-			if (callback) callback(e);
+			if (callback) callback(e.toString());
 		});
 	}catch(e) {
-		callback(e);
+		if (callback) callback(e.toString());
 	}
 }
 
