@@ -96,6 +96,7 @@ class AdminIoCommanderPanelHeader extends React.Component{
 		return (
 			<div className="AdminIoCommanderPanelHeader">
 				<h2> Администрирование IoCommander v{connectionStorage.getState().version} </h2>
+				<head><title>Администрирование IoCommander {connectionStorage.getState().version}</title></head>
 			</div>
 		);
 	}

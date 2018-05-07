@@ -1,11 +1,10 @@
 /*
-		IoCommander v1.0.0
+		IoCommander */ const CommanderVersion = '1.1.3'; /*
 	https://github.com/siarheidudko/iocommander
 	(c) 2018 by Siarhei Dudko.
 	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
-var CommanderVersion = '1.1.2';
 /* ### Раздел инициализации ### */
 const fs=require("fs"),
 colors=require("colors"),
@@ -1002,7 +1001,7 @@ function stdoutOEM866toUTF8(value){ //может быть Object или String
 	}
 }
 
-//функция декодирования stdout OEM866 в валидный UTF8
+//функция декодирования вывода powershell (ANSI по умолчанию)
 function fixPowerShellWIN1251(value){ //может быть Buffer
 	try {
 		var thisval = iconv.decode(value, 'cp866');

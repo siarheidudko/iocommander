@@ -1,12 +1,11 @@
 /*
-		IoCommander v1.0.0
+		IoCommander */ const CommanderVersion = '1.1.3'; /*
 	https://github.com/siarheidudko/iocommander
 	(c) 2018 by Siarhei Dudko.
 	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
 /* ### Раздел переменных ### */
-var CommanderVersion = '1.1.2';
 const https=require("https"), 
 http=require("http"),
 colors=require("colors"),
