@@ -627,9 +627,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_OnlineOff = new Array; 
 				for(var keyOnlineAll in serverStorage.getState().users){
 					if(typeof(connectionStorage.getState().users[keyOnlineAll]) !== 'undefined'){
-						adm_OnlineOn.push(<div className={"adm_OnlineOn0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textLightRED':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
+						adm_OnlineOn.push(<div className={"adm_OnlineOn0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					} else {
-						adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textLightRED':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
+						adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					}
 				}
 		AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> {(adm_OnlineOn.length !== 0)?<div className="adm_OnlineOn">{adm_OnlineOn}</div>:''} {(adm_OnlineOff.length !== 0)?<div className="adm_OnlineOff">{adm_OnlineOff}</div>:''}</div>);

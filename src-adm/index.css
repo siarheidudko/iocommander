@@ -174,8 +174,8 @@ select{
 	float:left;
 	overflow: hidden;
 }
-.textLightRED{
-	color: #ef8383;
+.textYELLOW{
+	color: #bfc150;
 }
 
 /* Мигающие уведомления в отчетах */
