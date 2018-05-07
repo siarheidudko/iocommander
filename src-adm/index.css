@@ -175,7 +175,7 @@ select{
 	overflow: hidden;
 }
 .textLightRED{
-	font-color: #ef8383;
+	color: #ef8383;
 }
 
 /* Мигающие уведомления в отчетах */
