@@ -5,7 +5,7 @@
 	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
-var CommanderVersion = '1.1.0';
+var CommanderVersion = '1.1.1';
 /* ### Раздел инициализации ### */
 const fs=require("fs"),
 colors=require("colors"),
@@ -776,6 +776,14 @@ function GarbageCollector(){
 		try{
 			for(var keyTask in actualStorage.tasks){
 				try{
+					if(actualStorage.tasks[keyTask].answer.length > 1003){
+						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
+						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
+					}
+				} catch(e){
+					console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
+				}
+				try{
 					if((actualStorage.tasks[keyTask].datetime + lifetime) < Date.now()){ //если у задания нет отсрочки, оно будет уничтожено через 10 дней. если есть отсрочка, то через 10 дней после даты отсрочки.
 						if(typeof(actualStorage.tasks[keyTask].timeoncompl) !== 'undefined'){
 							if((actualStorage.tasks[keyTask].timeoncompl + lifetime) < Date.now()){
@@ -787,14 +795,6 @@ function GarbageCollector(){
 					}
 				} catch(e){
 					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
-				}
-				try{
-					if(actualStorage.tasks[keyTask].answer.length > 1003){
-						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
-						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
 				}
 			}
 		} catch(e){

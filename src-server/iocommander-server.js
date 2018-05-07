@@ -6,7 +6,7 @@
 */
 
 /* ### Раздел переменных ### */
-var CommanderVersion = '1.1.0';
+var CommanderVersion = '1.1.1';
 const https=require("https"), 
 http=require("http"),
 colors=require("colors"),
@@ -827,7 +827,7 @@ function GarbageCollector(){
 								console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
 							}
 							try {
-								if(actualStorage.tasks[key_object][key_task].answer.length > 503){
+								if(actualStorage.tasks[key_object][key_task].answer.length > 1003){
 									serverStorage.dispatch({type:'GC_TASK_REPLANSW', payload: {user:key_object, task:key_task}});
 									console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + key_task + "(" + replacer(key_object, false) + "), обрезаю!"));
 								}
