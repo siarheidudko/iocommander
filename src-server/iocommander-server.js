@@ -6,6 +6,7 @@
 */
 
 /* ### Раздел переменных ### */
+var CommanderVersion = '1.1.0';
 const https=require("https"), 
 http=require("http"),
 colors=require("colors"),
@@ -121,7 +122,7 @@ serverStorage.subscribe(function(){
 	}
 });
 
-function editConnectionStore(state = {uids:{}, users:{}, versions:{}, report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
+function editConnectionStore(state = {uids:{}, users:{}, versions:{}, version:'', report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
 	try {
 		switch (action.type){
 			case 'ADD_UID':
@@ -178,10 +179,11 @@ function editConnectionStore(state = {uids:{}, users:{}, versions:{}, report:{},
 				delete state_new.iptoban[action.payload.address];
 				return state_new;
 				break;
-			case 'PARAM_PORTS':
+			case 'PARAMS':
 				var state_new = lodash.clone(state);
 				if(typeof(action.payload.fileportval) !== 'undefined'){
 					state_new.fileport = action.payload.fileportval;
+					state_new.version = action.payload.version;
 				}
 				return state_new;
 				break;
@@ -1114,7 +1116,7 @@ try {
 		sslca = value.sslca,
 		ClientEnv = value.env;
 		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
-		connectionStorage.dispatch({type:'PARAM_PORTS', payload: {fileportval:fileport}});
+		connectionStorage.dispatch({type:'PARAMS', payload: {fileportval:fileport, version:CommanderVersion}});
 		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
 			bantimeout = parseInt(value.bantimeout, 10);
 		}

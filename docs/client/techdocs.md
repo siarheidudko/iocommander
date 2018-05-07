@@ -342,7 +342,7 @@ undefined
 function login(socket) {
 	try {
 		if(typeof(socket) === 'object'){
-			socket.emit('login', { user: user_global, password: password_global });
+			socket.emit('login', { user: user_global, password: password_global, version: CommanderVersion });
 		} else {
 			console.log(colors.red(datetime() + "Аргумент сокет не является объектом!"));
 		}

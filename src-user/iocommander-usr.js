@@ -5,7 +5,7 @@
 	https://github.com/siarheidudko/iocommander/LICENSE
 */
 
-var CommanderVersion = '1.0.0';
+var CommanderVersion = '1.1.0';
 /* ### Раздел инициализации ### */
 const fs=require("fs"),
 colors=require("colors"),
@@ -492,12 +492,33 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								} else if(errors === 0){
 									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
 										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-											returnAnswer = 'Результат: ' + (stdout) + ' \n ' + 'Ошибок: ' + (stderr);
+											switch(fileName.toLowerCase()){
+												case 'powershell':
+													returnAnswer = 'Результат: ' + fixPowerShellWIN1251(stdout) + ' \n ' + 'Ошибок: ' + fixPowerShellWIN1251(stderr);
+													break;
+												default:
+													returnAnswer = 'Результат: ' + (stdout) + ' \n ' + 'Ошибок: ' + (stderr);
+													break;
+											}
 										} else {
-											returnAnswer = 'Ошибки: ' + (stderr);
+											switch(fileName.toLowerCase()){
+												case 'powershell':
+													returnAnswer = 'Ошибки: ' + fixPowerShellWIN1251(stderr);
+													break;
+												default:
+													returnAnswer = 'Ошибки: ' + (stderr);
+													break;
+											}
 										}					
 									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-										returnAnswer = 'Результат: ' + (stdout);
+										switch(fileName.toLowerCase()){
+											case 'powershell':
+												returnAnswer = 'Результат: ' + fixPowerShellWIN1251(stdout);
+												break;
+											default:
+												returnAnswer = 'Результат: ' + (stdout);
+												break;
+										}
 									} else {
 										returnAnswer = '';
 									}
@@ -969,4 +990,39 @@ function stdoutOEM866toUTF8(value){ //может быть Object или String
 	} catch(e){
 		return 'Error Windows COM Decode String';
 	}
+}
+
+//функция декодирования stdout OEM866 в валидный UTF8
+function fixPowerShellWIN1251(value){ //может быть Buffer
+	try {
+		var thisval = iconv.decode(value, 'cp866');
+		return thisval;
+	} catch(e){
+		return 'Error Windows COM Decode String';
+	}
+}
+
+//функция перезапуска клиента
+function Restarter(){
+	var items = fs.readdirSync('./temp/');
+	if(items.length === 0) {
+		try {
+			const subprocess = child_process.spawn(process.argv[0], [__dirname + '/iocom-client-restarter.js'], {
+				cwd: process.cwd(),
+				env: process.env,
+				detached: false
+			});
+			subprocess.stdout.on('data', (data) => {
+				console.log(colors.green(datetime() + data));
+				process.exit(1);
+			});
+			subprocess.stderr.on('data', (data) => {
+				console.log(colors.red(datetime() + data));
+			});
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка перезапуска процесса:" + e));
+		}
+	} else {
+		setTimeout(Restarter, 1000);
+	};
 }

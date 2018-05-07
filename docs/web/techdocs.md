@@ -1275,32 +1275,16 @@ class AdminIoCommanderPanelBody extends React.Component{
 				break;
 			case 'adm_TaskOnline':
 				//отчет по онлайну
-				var adm_OnlineOn = new Array; var OnlineParam = 0;
-				var adm_OnlineOff = new Array; var OfflineParam = 0;
+				var adm_OnlineOn = new Array; 
+				var adm_OnlineOff = new Array; 
 				for(var keyOnlineAll in serverStorage.getState().users){
 					if(typeof(connectionStorage.getState().users[keyOnlineAll]) !== 'undefined'){
-						adm_OnlineOn.push(<div className={"adm_OnlineOn" + OnlineParam}>{replacer(keyOnlineAll, false)}</div>);
-						if(OnlineParam < 4){
-							OnlineParam++;
-						} else {
-							OnlineParam = 0;
-						}
+						adm_OnlineOn.push(<div className={"adm_OnlineOn0"}><div>{replacer(keyOnlineAll, false)}</div><div>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					} else {
-						adm_OnlineOff.push(<div className={"adm_OnlineOff" + OfflineParam}>{replacer(keyOnlineAll, false)}</div>);
-						if(OfflineParam < 4){
-							OfflineParam++;
-						} else {
-							OfflineParam = 0;
-						}
+						adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{replacer(keyOnlineAll, false)}</div><div>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					}
 				}
-				if(adm_OnlineOn.length === 0){
-					adm_OnlineOn.push(<div className="adm_OnlineZero"></div>);
-				}
-				if(adm_OnlineOff.length === 0){
-					adm_OnlineOff.push(<div className="adm_OnlineZero"></div>);
-				}
-				AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> <div className="adm_OnlineOn">{adm_OnlineOn}</div><div className="adm_OnlineOff">{adm_OnlineOff}</div> </div>);
+		AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> {(adm_OnlineOn.length !== 0)?<div className="adm_OnlineOn">{adm_OnlineOn}</div>:''} {(adm_OnlineOff.length !== 0)?<div className="adm_OnlineOff">{adm_OnlineOff}</div>:''}</div>);
 				break;
 			default:
 				AdminIoCommanderPanelBodyMiddle.push(<div> Неизвестный тип команды! </div>);

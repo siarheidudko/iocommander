@@ -31,7 +31,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	}
 	return state;
 }
-function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}, fileport:''}, action){
+function editConnStore(state = {uids:{}, users:{}, versions:{}, version:'', report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
 	try {
 		switch (action.type){
 			case 'SYNC_OBJECT':
