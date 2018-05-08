@@ -1011,7 +1011,8 @@ function fixPowerShellWIN1251(value){ //может быть Buffer
 	}
 }
 
-//функция перезапуска клиента
+//функция перезапуска клиента (запустит дочерний процесс, который перезапустит данный скрипт независимым процессом. в случае удачного запуска текущий процесс будет завершен, а соответственно и дочерний/зависимый процесс)
+//нужно с целью экономии памяти (чтобы не вешать еще один контроллирующий процесс на постоянной основе)
 function Restarter(){
 	var items = fs.readdirSync('./temp/');
 	if(items.length === 0) {
@@ -1027,6 +1028,7 @@ function Restarter(){
 			});
 			subprocess.stderr.on('data', (data) => {
 				console.log(colors.red(datetime() + data));
+				subprocess.exit(1); //в случае ошибки убиваем дочерний процесс
 			});
 		} catch(e){
 			console.log(colors.red(datetime() + "Ошибка перезапуска процесса:" + e));
@@ -1035,3 +1037,4 @@ function Restarter(){
 		setTimeout(Restarter, 1000);
 	};
 }
+

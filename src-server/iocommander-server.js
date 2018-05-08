@@ -563,49 +563,52 @@ function startWebServer(port){
 										var creds = plain_auth.split(':'); 
 										var username = replacer(creds[0], true);
 										var password = creds[1];
-										if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
-											if (req.url === '/upload') {									
-												var form = new multiparty.Form();
-												form.parse(req, function(err, fields, files) {
-													try{
-														if(err){
-															throw err;
-														} else {
-															var FilesNull = true;
-															for(var keyFile in files){
-																FilesNull = false;
-																fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
-																	try{
-																		if (err) throw err;
-																		res.writeHead(200, {'content-type': 'text/plain'});
-																		res.end('upload');
-																		console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
-																	} catch(e){
-																		res.writeHead(500, {'Content-Type': 'text/plain'});
-																		res.end('Internal Server Error');
-																		console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
-																	}
-																}); 
+										if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
+											switch(req.url){
+												case '/upload':
+													var form = new multiparty.Form();
+													form.parse(req, function(err, fields, files) {
+														try{
+															if(err){
+																throw err;
+															} else {
+																var FilesNull = true;
+																for(var keyFile in files){
+																	FilesNull = false;
+																	fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
+																		try{
+																			if (err) throw err;
+																			res.writeHead(200, {'content-type': 'text/plain'});
+																			res.end('upload');
+																			console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																		} catch(e){
+																			res.writeHead(500, {'Content-Type': 'text/plain'});
+																			res.end('Internal Server Error');
+																			console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
+																		}
+																	}); 
+																}
+																if(FilesNull){
+																	res.writeHead(500, {'Content-Type': 'text/plain'});
+																	res.end('Internal Server Error');
+																	console.log(colors.red(datetime() + "Файлы не получены!"));
+																}
 															}
-															if(FilesNull){
-																res.writeHead(500, {'Content-Type': 'text/plain'});
-																res.end('Internal Server Error');
-																console.log(colors.red(datetime() + "Файлы не получены!"));
-															}
+														} catch(e) {
+															res.writeHead(500, {'Content-Type': 'text/plain'});
+															res.end('Internal Server Error');
+															console.log(e);
+															console.log(colors.red(datetime() + "Ошибка обработки formdata на web(POST)-сервере!"));
 														}
-													} catch(e) {
-														res.writeHead(500, {'Content-Type': 'text/plain'});
-														res.end('Internal Server Error');
-														console.log(e);
-														console.log(colors.red(datetime() + "Ошибка обработки formdata на web(POST)-сервере!"));
-													}
-												}); 
-												return;
-											} else {
-												res.writeHead(500, {'Content-Type': 'text/plain'});
-												res.end('Internal Server Error');
-												console.log(colors.red(datetime() + "Некорректный запрос на web(POST)-сервер!"));
-											}							
+													}); 
+													return;
+													break;
+												default:
+													res.writeHead(403, {'Content-Type': 'text/plain'});
+													res.end('Forbidden');
+													console.log(colors.red(datetime() + "Некорректный запрос на web(POST)-сервер!"));
+													break;
+											}
 										}else {
 											res.statusCode = 401;
 											res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -688,29 +691,49 @@ function startFileServer(port){
 								var username = replacer(creds[0], true);
 								var password = creds[1];
 								if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
-									try {
-										fs.stat(pathFile, function (err, stats) {
+									switch(req.method){
+										case 'GET':
 											try {
-												if (err) {
-													throw err;
-												} else {
-													if (stats.isFile()) {
-														res.writeHead(200, {'Content-Type': 'application/octet-stream', 'Content-Length':stats.size});
-														fs.createReadStream(pathFile).pipe(res);
-													} else {
-														throw 'Not Found';
+												fs.stat(pathFile, function (err, stats) {
+													try {
+														if (err) {
+															throw err;
+														} else {
+															if (stats.isFile()) {
+																res.writeHead(200, {'Content-Type': 'application/octet-stream', 'Content-Length':stats.size});
+																fs.createReadStream(pathFile).pipe(res);
+															} else {
+																throw 'Not Found';
+															}
+														}
+													} catch(e){
+														res.writeHead(404, {'Content-Type': 'text/plain'});
+														res.end('Not Found');
+														console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
 													}
-												}
+												});
 											} catch(e){
-												res.writeHead(404, {'Content-Type': 'text/plain'});
-												res.end('Not Found');
+												res.writeHead(500, {'Content-Type': 'text/plain'});
+												res.end('Internal Server Error');
 												console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
 											}
-										});
-									} catch(e){
-										res.writeHead(500, {'Content-Type': 'text/plain'});
-										res.end('Internal Server Error');
-										console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
+											break;
+										case 'POST':
+											switch(req.url){
+												case '/version':
+													res.writeHead(200, {'content-type': 'text/plain'});
+													res.end(CommanderVersion);
+													break;
+												default:
+													res.writeHead(404, {'content-type': 'text/plain'});
+													res.end('Not Found');
+													break;
+											}
+											break;
+										default:
+											res.writeHead(405, {'content-type': 'text/plain'});
+											res.end('Method Not Allowed');
+											break;
 									}
 								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
 									if (req.url === '/upload' && req.method === 'POST') {									
@@ -753,8 +776,8 @@ function startFileServer(port){
 										}); 
 										return;
 									} else {
-										res.writeHead(500, {'Content-Type': 'text/plain'});
-										res.end('Internal Server Error');
+										res.writeHead(405, {'Content-Type': 'text/plain'});
+										res.end('Method Not Allowed');
 										console.log(colors.red(datetime() + "Некорректный запрос на file-сервер!"));
 									}							
 								}else {
