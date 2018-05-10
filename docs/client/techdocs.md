@@ -274,8 +274,11 @@ function getDatabase(){
 		try {
 			fs.readFile("./src-user/storage.db", "utf8", function(error,data){
 				try {	
-					if(error) throw error; 
-					resolve(JSON.parse(data));
+					if(error) {
+						throw error;
+					} else {
+						resolve(JSON.parse(data));
+					}
 				} catch(e){
 					console.log(colors.red(datetime() + "База данных испорчена!"));
 					resolve('error');
@@ -376,7 +379,7 @@ function datetime() {
 }
 ```
 
-### Функция работы соединения с сокетом
+### Функция соединения с сокетом
 
 ##### Описание
 Соединяется с сокетом, запускает функцию авторизации в сокете, функцию прослушки сокета.
@@ -635,12 +638,33 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								} else if(errors === 0){
 									if((typeof(stderr) !== 'undefined') && (stderr !== '')){
 										if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-											returnAnswer = 'Результат: ' + (stdout) + ' \n ' + 'Ошибок: ' + (stderr);
+											switch(fileName.toLowerCase()){
+												case 'powershell':
+													returnAnswer = 'Результат: ' + fixPowerShellWIN1251(stdout) + ' \n ' + 'Ошибок: ' + fixPowerShellWIN1251(stderr);
+													break;
+												default:
+													returnAnswer = 'Результат: ' + (stdout) + ' \n ' + 'Ошибок: ' + (stderr);
+													break;
+											}
 										} else {
-											returnAnswer = 'Ошибки: ' + (stderr);
+											switch(fileName.toLowerCase()){
+												case 'powershell':
+													returnAnswer = 'Ошибки: ' + fixPowerShellWIN1251(stderr);
+													break;
+												default:
+													returnAnswer = 'Ошибки: ' + (stderr);
+													break;
+											}
 										}					
 									} else if((typeof(stdout) !== 'undefined') && (stdout !== '')){
-										returnAnswer = 'Результат: ' + (stdout);
+										switch(fileName.toLowerCase()){
+											case 'powershell':
+												returnAnswer = 'Результат: ' + fixPowerShellWIN1251(stdout);
+												break;
+											default:
+												returnAnswer = 'Результат: ' + (stdout);
+												break;
+										}
 									} else {
 										returnAnswer = '';
 									}
@@ -653,9 +677,9 @@ function execFile(socket, uid_val, intPath, fileName, paramArray, platform){
 								if(clientStorage.getState().tasks[uid_val].tryval < 10){
 									clientStorage.dispatch({type:'TASK_ERROR', payload: {uid:uid_val}});
 								} else {
-									taskOnComplete(socket, uid_val, error, 100);
+									taskOnComplete(socket, uid_val, stdoutOEM866toUTF8(error), 100);
 								}
-								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + error));
+								console.log(colors.red(datetime() + "Ошибка выполнения скрипта " + intPath + '/' + fileName + ' ' + paramArray[0] + ":" + stdoutOEM866toUTF8(error)));
 								resolve({type:"error",uid:uid_val});
 							}
 						});
@@ -771,7 +795,6 @@ function execProcess(socket, uid_val, execCommand, platform){
 									} else {
 										returnAnswer = '';
 									}
-									console.log(returnAnswer);
 									taskOnComplete(socket, uid_val, returnAnswer);
 									resolve({type:"ok",uid:uid_val});
 								}
@@ -863,14 +886,17 @@ function taskOnComplete(socket, uid_val, answer_val, forceerr){
 		} else if (typeof(answer_val) === 'string'){
 			realAnswer = answer_val;
 		}
-		let tempRealAnsw = realAnswer.split(' ');
-		let tempRealAnswNew = new Array;
-		for(let i = 0; i < tempRealAnsw.length; i++){
-			if(tempRealAnsw[i] !== ' '){
-				tempRealAnswNew.push(tempRealAnsw[i]);
+		var replSymbol = [' ', '-', '.', '#']; //символы из псевдографики в консоли (иногда в выводе их может быть пару сотен)
+		for(var k = 0; k< replSymbol.length; k++){
+			var tempRealAnsw = realAnswer.split(replSymbol[k]);
+			var tempRealAnswNew = new Array;
+			for(var i = 0; i < tempRealAnsw.length; i++){
+				if((tempRealAnsw[i] !== replSymbol[k]) && (tempRealAnsw[i] !== '') && (typeof(tempRealAnsw[i]) === 'string')){
+					tempRealAnswNew.push(tempRealAnsw[i]);
+				}
 			}
+			realAnswer = tempRealAnswNew.join(replSymbol[k]);
 		}
-		realAnswer = tempRealAnswNew.join(' ');
 		if(realAnswer.length > 1003){
 			realAnswer =  '...' + realAnswer.substring(realAnswer.length - 1001 ,realAnswer.length - 1);
 		}
@@ -954,6 +980,7 @@ undefined
 function GarbageCollector(){
 	var lifetime = 86400000 * 10; //устанавливаю срок хранения локальных данных в 10 дней
 	var actualStorage = clientStorage.getState();
+	SyncDatabaseTimeout = false; //сбрасываю флаг синхронизации на всякий случай
 	try{
 		try{
 			for(var keyTask in actualStorage.tasks){
@@ -962,21 +989,31 @@ function GarbageCollector(){
 						if(typeof(actualStorage.tasks[keyTask].timeoncompl) !== 'undefined'){
 							if((actualStorage.tasks[keyTask].timeoncompl + lifetime) < Date.now()){
 								clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
+							} else {
+								try{
+									if(actualStorage.tasks[keyTask].answer.length > 1003){
+										clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
+										console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
+									}
+								} catch(e){
+									console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
+								}
 							}
 						} else {
 							clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
 						}
+					} else {
+						try{
+							if(actualStorage.tasks[keyTask].answer.length > 1003){
+								clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
+								console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
+							}
+						} catch(e){
+							console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
+						}
 					}
 				} catch(e){
 					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
-				}
-				try{
-					if(actualStorage.tasks[keyTask].answer.length > 1003){
-						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
-						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
 				}
 			}
 		} catch(e){
@@ -1043,110 +1080,6 @@ function GarbageCollector(){
 
 ### Функция скачки файла
 
-##### Описание
-Модифицированная библиотека download-file для работы с собственным file-сервером с авторизацией. Определяет линк сервера, если он соответствует сокет-серверу, то будет использована Basic авторизация. В зависимости от протокола использует http или https юиюлиотеку, скачивает файл в заданную папку (в случае присутствия файла с таким же именем, он будет затерт). Принимает имя файла и каталог для сохранения в качестве входящих аргументов. Принимает Content-length в качестве количества байт входящего потока для контроля размера файла.
-
-##### Входящие параметры
-file - ссылка для скачки (String)
-options - опции скачки {directory:DIR, filename: FILENAME, timeout: TIMEOUT} (Object), где DIR - директория для скачки (String), FILENAME - имя файла для (может отличаться от оригинального) (String), TIMEOUT - таймаут запроса (Integer)
-callback - функция обратного вызова (Function)
-
-##### Возвращаемое значение 
-undefined
-
-##### Исходный код
-
-```
-function GarbageCollector(){
-	var lifetime = 86400000 * 10; //устанавливаю срок хранения локальных данных в 10 дней
-	var actualStorage = clientStorage.getState();
-	try{
-		try{
-			for(var keyTask in actualStorage.tasks){
-				try{
-					if((actualStorage.tasks[keyTask].datetime + lifetime) < Date.now()){ //если у задания нет отсрочки, оно будет уничтожено через 10 дней. если есть отсрочка, то через 10 дней после даты отсрочки.
-						if(typeof(actualStorage.tasks[keyTask].timeoncompl) !== 'undefined'){
-							if((actualStorage.tasks[keyTask].timeoncompl + lifetime) < Date.now()){
-								clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
-							}
-						} else {
-							clientStorage.dispatch({type:'DB_CLEAR_TASK', payload: {uid:keyTask}});
-						}
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Сборщиком мусора не обработана задача с uid: "  + keyTask));
-				}
-				try{
-					if(actualStorage.tasks[keyTask].answer.length > 1003){
-						clientStorage.dispatch({type:'DB_REPLANSW_TASK', payload: {uid:keyTask}});
-						console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + keyTask + ", обрезаю!"));
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + keyTask + " сборщиком мусора!"));
-				}
-			}
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по таскам: "  + e));
-		}
-		try{
-			for(var i = 0; i < actualStorage.complete.length; i++){
-				try {
-					var actualUidCompl = actualStorage.complete[i];
-					if(typeof(actualStorage.tasks[actualUidCompl]) === 'undefined'){
-						clientStorage.dispatch({type:'DB_CLEAR_COMPL', payload: {uid:actualUidCompl}});
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Сборщиком мусора в массиве complete не обработан id: "  + i));
-				}
-			}
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву complete: "  + e));
-		}
-		try{
-			for(var j = 0; j < actualStorage.incomplete.length; j++){
-				try{
-					var actualUidIncompl = actualStorage.incomplete[j];
-					if(typeof(actualStorage.tasks[actualUidIncompl]) === 'undefined'){
-						clientStorage.dispatch({type:'DB_CLEAR_INCOMPL', payload: {uid:actualUidIncompl}});
-					}
-				} catch(e){
-					console.log(colors.red(datetime() + "Сборщиком мусора в массиве incomplete не обработан id: "  + j));
-				}
-			}
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка прохода сборщиком мусора по массиву incomplete: "  + e));
-		}
-		try{
-			var items = fs.readdirSync('./temp/');
-			try {
-				if(typeof(items) === 'object'){
-					for (var i=0; i<items.length; i++) {
-						try {
-							var thisuid = items[i].substring(0, items[i].length -5);
-							if(typeof(actualStorage.tasks[thisuid]) === 'undefined'){
-								unlinkLockFile(thisuid);
-							} else {
-								if(actualStorage.tasks[thisuid].complete === 'true'){
-									unlinkLockFile(thisuid);
-								}
-							}
-						} catch(e){
-							console.log(colors.red(datetime() + "Ошибка обработки файла " + items[i] + " сборщиком мусора: "  + e));
-						}
-					}
-				}
-			} catch(e){
-				console.log(colors.red(datetime() + "Ошибка чтения сборщиком мусора директории с файлами блокировки: "  + e));
-			}
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка чтения сборщиком мусора директории с файлами блокировки: "  + e));
-		}
-	} catch(e){
-		console.log(colors.red(datetime() + "Неустранимая ошибка в работе сборщика мусора: "  + e));
-	}
-}
-
-### Функция скачки файла
 ##### Описание
 Модифицированная библиотека download-file для работы с собственным file-сервером с авторизацией. Определяет линк сервера, если он соответствует сокет-серверу, то будет использована Basic авторизация. В зависимости от протокола использует http или https юиюлиотеку, скачивает файл в заданную папку (в случае присутствия файла с таким же именем, он будет затерт). Принимает имя файла и каталог для сохранения в качестве входящих аргументов.
 
@@ -1186,49 +1119,54 @@ function download(file, options, callback) {
 		}
 		var request = req.get(getoptions, function(response) {
 			if (response.statusCode === 200) {
-				mkdirp(options.directory, function(err) { 
-					if (err) {
-						throw err;
-					} else {
-						var filestream = fs.createWriteStream(path);
-						response.pipe(filestream);
-						filestream.on("finish", function(){
-							if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
-								try {
-									var stats = fs.statSync(path);
-									if (stats.isFile()) {
-										if(stats.size.toString() !== response.headers['content-length']){
-											throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
+				mkdirp(options.directory, function(err) {
+					try {
+						if (err) {
+							throw err;
+						} else {
+							var filestream = fs.createWriteStream(path);
+							response.pipe(filestream);
+							filestream.on("finish", function(){
+								if((typeof(response.headers['content-length']) !== 'undefined') && (response.headers['content-length'] !== '')){
+									try {
+										var stats = fs.statSync(path);
+										if (stats.isFile()) {
+											if(stats.size.toString() !== response.headers['content-length']){
+												throw 'File not full(down:' + stats.size.toString() + '/' + response.headers['content-length'] + ')!';
+											} else {
+												if (callback) callback(false, path);
+											}
 										} else {
-											if (callback) callback(false, path);
+											throw 'Not Found';
 										}
-									} else {
-										throw 'Not Found';
+									}catch(e){
+										if (callback) callback(e.toString());
 									}
-								}catch(e){
-									callback(e);
-								}
-							} 
-						});
+								} else {
+									if (callback) callback(false, path);
+								} 
+							});
+							filestream.on("error", function(err){
+								request.abort();
+								if (callback) callback(err.toString());
+							});
+						}
+					} catch(e){
+						if (callback) callback(e.toString());
 					}
 				});
 			} else{
 				if (callback) callback(response.statusCode);
 			}
-			response.on("end", function(){
-				if((typeof(response.headers['content-length']) === 'undefined') || (response.headers['content-length'] === '')){
-					if (callback) callback(false, path);
-				}
-			});
 			request.setTimeout(options.timeout, function () {
 				request.abort();
-				callback("Timeout");
+				if (callback) callback("Timeout");
 			});
 		}).on('error', function(e) {
-			if (callback) callback(e);
+			if (callback) callback(e.toString());
 		});
 	}catch(e) {
-		callback(e);
+		if (callback) callback(e.toString());
 	}
 }
 ```
@@ -1237,34 +1175,6 @@ function download(file, options, callback) {
 
 ##### Описание
 При запуске задачи создает файл в папке ./temp/ с именем ${UID}.lock (необходимо для отслеждивания задач на которых сервис упал)
-
-##### Входящие параметры
-uid_val - уникальный идентификатор задачи (String)
-
-##### Возвращаемое значение 
-undefined
-
-##### Исходный код
-
-```
-function unlinkLockFile(uid_val){
-	if(fs.existsSync('./temp/'+uid_val+'.lock')){
-		try {
-			fs.unlinkSync('./temp/'+uid_val+'.lock');
-			console.log(colors.green(datetime() + "Удалена блокировка задачи (" + uid_val + ")!"));
-		} catch(e){
-			console.log(colors.red(datetime() + "Ошибка удаления файла блокировки: "  + e));
-		}
-	} else {
-		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val+'.lock' + ") не существует!"));
-	}
-}
-```
-
-### Функция создания файла блокировки
-
-##### Описание
-При ошибке или успешном выполнении задачи удаляет файл в папке ./temp/ с именем ${UID}.lock
 
 ##### Входящие параметры
 uid_val - уникальный идентификатор задачи (String)
@@ -1285,6 +1195,34 @@ function createLockFile(uid_val){
 		}
 	} else {
 		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val +'.lock' + ") уже существует!"));
+	}
+}
+```
+
+### Функция удаления файла блокировки
+
+##### Описание
+При ошибке или успешном выполнении задачи удаляет файл в папке ./temp/ с именем ${UID}.lock
+
+##### Входящие параметры
+uid_val - уникальный идентификатор задачи (String)
+
+##### Возвращаемое значение 
+undefined
+
+##### Исходный код
+
+```
+function unlinkLockFile(uid_val){
+	if(fs.existsSync('./temp/'+uid_val+'.lock')){
+		try {
+			fs.unlinkSync('./temp/'+uid_val+'.lock');
+			console.log(colors.green(datetime() + "Удалена блокировка задачи (" + uid_val + ")!"));
+		} catch(e){
+			console.log(colors.red(datetime() + "Ошибка удаления файла блокировки: "  + e));
+		}
+	} else {
+		console.log(colors.red(datetime() + "Файл блокировки (" + uid_val+'.lock' + ") не существует!"));
 	}
 }
 ```
@@ -1327,11 +1265,43 @@ String
 ##### Исходный код
 
 ```
-function stdoutOEM866toUTF8(value){
+function stdoutOEM866toUTF8(value){ //может быть Object или String
 	try {
-		return iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8');
+		if(typeof(value) === 'object'){
+			if(typeof(value.message) === 'string') {
+				value = new Buffer(value.toString('cp866'));
+			}
+		} else if(typeof(value) === 'string'){
+			value = new Buffer(value.toString());
+		}
+		var thisval = iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8'); //для IBM866 stdout
+		return thisval;
 	} catch(e){
-		return value;
+		return 'Error Windows COM Decode String';
+	}
+}
+```
+
+### Функция преобразования кодировки ANSI (powershell) в UTF-8
+
+##### Описание
+Необходима для корректного отображения результатов из powershell (ANSI).
+
+##### Входящие параметры
+value - строка в OEM866 (String)
+
+##### Возвращаемое значение 
+String
+
+##### Исходный код
+
+```
+function fixPowerShellWIN1251(value){ //может быть Buffer
+	try {
+		var thisval = iconv.decode(value, 'cp866');
+		return thisval;
+	} catch(e){
+		return 'Error Windows COM Decode String';
 	}
 }
 ```

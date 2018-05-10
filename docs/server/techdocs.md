@@ -30,7 +30,7 @@ try {
 		sslca = value.sslca,
 		ClientEnv = value.env;
 		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
-		connectionStorage.dispatch({type:'PARAM_PORTS', payload: {fileportval:fileport}});
+		connectionStorage.dispatch({type:'PARAMS', payload: {fileportval:fileport, version:CommanderVersion}});
 		if((typeof(value.bantimeout) !== 'undefined') && (value.bantimeout !== '')){
 			bantimeout = parseInt(value.bantimeout, 10);
 		}
@@ -391,10 +391,10 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
   - GEN_GROUP - записывает группы пользователей в хранилище, payload:{groups:{}}, {} - объект групп пользователей (Object).
   - WRONG_PASS - устанавливает дату введения неверного пароля для IP-адреса, а также считает число не пройденных авторизаций клиента, payload:{address:IP}, IP - ip-адрес клиента сокета с замененным "." на "_" (String)
   - GC_WRONG_PASS_CLEAR - сбрасывает дату введения неверного пароля для IP-адреса, а также считает число не пройденных авторизаций клиента, payload:{address:IP}, IP - ip-адрес клиента сокета с замененным "." на "_" (String)
-  - PARAM_PORTS - устанавливает порт файл-сервера (нужно для проброса информации в web), payload:{fileportval:PORT}, PORT - номер порта файл-сервера (Integer)
-  
+  - PARAM - устанавливает параметры сервера (нужно для проброса информации в web), payload:{fileportval:PORT, version:VER}, PORT - номер порта файл-сервера (Integer), VER - версия ПО (String)
+  - SERVER_STAT - устанавливает статистические данные о загрузке сервера payload:{cpu:CPU, memory:MEMORY}, CPU и MEMORY - информация о использовании ЦП (Averages) и Памяти ((Всего - Свободно)/Всего)(String)
 ```
-function editConnectionStore(state = {uids:{}, users:{}, versions = {}, report:{}, groups:{}, iptoban:{}, fileport:''}, action){
+function editConnectionStore(state = {uids:{}, users:{}, versions:{}, version:'', report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
 	try {
 		switch (action.type){
 			case 'ADD_UID':
@@ -451,10 +451,21 @@ function editConnectionStore(state = {uids:{}, users:{}, versions = {}, report:{
 				delete state_new.iptoban[action.payload.address];
 				return state_new;
 				break;
-			case 'PARAM_PORTS':
+			case 'PARAMS':
 				var state_new = lodash.clone(state);
 				if(typeof(action.payload.fileportval) !== 'undefined'){
 					state_new.fileport = action.payload.fileportval;
+					state_new.version = action.payload.version;
+				}
+				return state_new;
+				break;
+			case 'SERVER_STAT':
+				var state_new = lodash.clone(state);
+				if(typeof(action.payload.memory) !== 'undefined'){
+					state_new.memory = action.payload.memory;
+				}
+				if(typeof(action.payload.cpu) !== 'undefined'){
+					state_new.cpu = action.payload.cpu;
 				}
 				return state_new;
 				break;
@@ -488,8 +499,11 @@ function getSettings(){
 		try {
 			fs.readFile("./src-server/iocommander-server.conf", "utf8", function(error,data){
 				try {	
-					if(error) throw error; 
-					resolve(JSON.parse(data));
+					if(error) {
+						throw error; 
+					} else {
+						resolve(JSON.parse(data));
+					}
 				} catch(e){
 					console.log(colors.red(datetime() + "Конфигурационный файл испорчен!"));
 					resolve('error');
@@ -732,6 +746,9 @@ function setTask(user_val, value_val){
 			value_val.task.complete = 'false';
 			value_val.task.answer = '';
 			value_val.task.datetime = Date.now();
+			if(value_val.uid.charAt(14) === '3'){
+				value_val.task.datetime = Date.now() + 3000;
+			}
 			value_val.task.datetimecompl = 0;
 			value_val.task.tryval = 0;
 			serverStorage.dispatch({type:'ADD_TASK', payload: {user:renameuser, task:value_val}});
@@ -1040,49 +1057,52 @@ function startWebServer(port){
 										var creds = plain_auth.split(':'); 
 										var username = replacer(creds[0], true);
 										var password = creds[1];
-										if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
-											if (req.url === '/upload') {									
-												var form = new multiparty.Form();
-												form.parse(req, function(err, fields, files) {
-													try{
-														if(err){
-															throw err;
-														} else {
-															var FilesNull = true;
-															for(var keyFile in files){
-																FilesNull = false;
-																fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
-																	try{
-																		if (err) throw err;
-																		res.writeHead(200, {'content-type': 'text/plain'});
-																		res.end('upload');
-																		console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
-																	} catch(e){
-																		res.writeHead(500, {'Content-Type': 'text/plain'});
-																		res.end('Internal Server Error');
-																		console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
-																	}
-																}); 
+										if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) {
+											switch(req.url){
+												case '/upload':
+													var form = new multiparty.Form();
+													form.parse(req, function(err, fields, files) {
+														try{
+															if(err){
+																throw err;
+															} else {
+																var FilesNull = true;
+																for(var keyFile in files){
+																	FilesNull = false;
+																	fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
+																		try{
+																			if (err) throw err;
+																			res.writeHead(200, {'content-type': 'text/plain'});
+																			res.end('upload');
+																			console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																		} catch(e){
+																			res.writeHead(500, {'Content-Type': 'text/plain'});
+																			res.end('Internal Server Error');
+																			console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
+																		}
+																	}); 
+																}
+																if(FilesNull){
+																	res.writeHead(500, {'Content-Type': 'text/plain'});
+																	res.end('Internal Server Error');
+																	console.log(colors.red(datetime() + "Файлы не получены!"));
+																}
 															}
-															if(FilesNull){
-																res.writeHead(500, {'Content-Type': 'text/plain'});
-																res.end('Internal Server Error');
-																console.log(colors.red(datetime() + "Файлы не получены!"));
-															}
+														} catch(e) {
+															res.writeHead(500, {'Content-Type': 'text/plain'});
+															res.end('Internal Server Error');
+															console.log(e);
+															console.log(colors.red(datetime() + "Ошибка обработки formdata на web(POST)-сервере!"));
 														}
-													} catch(e) {
-														res.writeHead(500, {'Content-Type': 'text/plain'});
-														res.end('Internal Server Error');
-														console.log(e);
-														console.log(colors.red(datetime() + "Ошибка обработки formdata на web(POST)-сервере!"));
-													}
-												}); 
-												return;
-											} else {
-												res.writeHead(500, {'Content-Type': 'text/plain'});
-												res.end('Internal Server Error');
-												console.log(colors.red(datetime() + "Некорректный запрос на web(POST)-сервер!"));
-											}							
+													}); 
+													return;
+													break;
+												default:
+													res.writeHead(403, {'Content-Type': 'text/plain'});
+													res.end('Forbidden');
+													console.log(colors.red(datetime() + "Некорректный запрос на web(POST)-сервер!"));
+													break;
+											}
 										}else {
 											res.statusCode = 401;
 											res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -1145,6 +1165,10 @@ function GarbageCollector(){
 	var lifetimetwo = 86400000 * 100; //устанавливаю срок хранения задач в 100 дней
 	var actualStorage = serverStorage.getState();
 	var bannedStorage = connectionStorage.getState().iptoban;
+	SyncFirebaseTimeout = false; //сбрасываю переменные таймаута (на всякий случай, т.к. раз столкнулся с их зависанием в отношении отправки в веб)
+	GenerateReportTimeout = false;
+	GenerateGroupTimeout = false;
+	sendStorageToWebTimeout = false;
 	try{
 		try{
 			for(var key_object in actualStorage.tasks){
@@ -1161,17 +1185,18 @@ function GarbageCollector(){
 								} else if(actualStorage.tasks[key_object][key_task].datetime < (Date.now()-lifetimetwo)){
 									serverStorage.dispatch({type:'GC_TASK', payload: {user:key_object, task:key_task}});
 									console.log(colors.yellow(datetime() + "Найдены задания старше 100 дней (" + key_task + "), удаляю!"));
+								} else {
+									try {
+										if(actualStorage.tasks[key_object][key_task].answer.length > 1003){
+											serverStorage.dispatch({type:'GC_TASK_REPLANSW', payload: {user:key_object, task:key_task}});
+											console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + key_task + "(" + replacer(key_object, false) + "), обрезаю!"));
+										}
+									} catch(e){
+										console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
+									}
 								}
 							} catch (e){
 								console.log(colors.red(datetime() + "Ошибка обработки задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
-							}
-							try {
-								if(actualStorage.tasks[key_object][key_task].answer.length > 503){
-									serverStorage.dispatch({type:'GC_TASK_REPLANSW', payload: {user:key_object, task:key_task}});
-									console.log(colors.yellow(datetime() + "Найден слишком длинный ответ в задании " + key_task + "(" + replacer(key_object, false) + "), обрезаю!"));
-								}
-							} catch(e){
-								console.log(colors.red(datetime() + "Ошибка обрезки ответа для задания " + key_task + " в объекте "  + replacer(key_object, false) + " сборщиком мусора!"));
 							}
 						}
 					}
@@ -1202,25 +1227,28 @@ function GarbageCollector(){
 		try{
 			fs.readdir('./files/', function(err, items) {
 				try{
-					if (err) throw err;
-					for (var i=0; i<items.length; i++) {
-						try {
-							var unlink = true;
-							for(var key_object in actualStorage.tasks){
-								if(typeof(actualStorage.tasks[key_object][items[i]]) !== 'undefined'){
-									unlink = false;
+					if (err) {
+						throw err;
+					} else {
+						for (var i=0; i<items.length; i++) {
+							try {
+								var unlink = true;
+								for(var key_object in actualStorage.tasks){
+									if(typeof(actualStorage.tasks[key_object][items[i]]) !== 'undefined'){
+										unlink = false;
+									}
 								}
-							}
-							if(unlink){
-								try{
-									fs.unlinkSync('./files/'+items[i]);
-									console.log(colors.yellow(datetime() + "Cборщиком мусора удален файл "  + items[i] + ' !'));
-								} catch(e){
-									console.log(colors.red(datetime() + "Ошибка удаления сборщиком мусора файла "  + items[i] + ' !'));
+								if(unlink){
+									try{
+										fs.unlinkSync('./files/'+items[i]);
+										console.log(colors.yellow(datetime() + "Cборщиком мусора удален файл "  + items[i] + ' !'));
+									} catch(e){
+										console.log(colors.red(datetime() + "Ошибка удаления сборщиком мусора файла "  + items[i] + ' !'));
+									}
 								}
+							}catch(e){
+								console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора файла "  + items[i] + ' !'));
 							}
-						}catch(e){
-							console.log(colors.red(datetime() + "Ошибка обработки сборщиком мусора файла "  + items[i] + ' !'));
 						}
 					}
 				} catch(e){
@@ -1447,19 +1475,16 @@ function sortObjectFunc(ObjectForSort, KeyForSort, TypeKey, reverse){
 				SortObject[tempArray[i]] = ObjectForSort[tempArray[i]];
 			}
 		}
-		delete tempObject;
-		delete tempArray;
 		
 		if(KeyForSort !== ''){ //учитываем, что для первого уровня валидация не нужна, т.к. не используется объект связка, где могли быть затерты одинаковые ключи
 			for(var keyobject in SortObject){
 				validatertwo++; //считаем число ключей нового объекта
 			}
 		}
+		
 		if((validaterone === validatertwo) || (KeyForSort === '')){ //если количество ключей не изменилось - выводим новый объект.
-			delete ObjectForSort;
 			return SortObject;
 		} else {
-			delete SortObject;
 			return ObjectForSort;
 		}
 	} catch(e){
@@ -1523,29 +1548,49 @@ function startFileServer(port){
 								var username = replacer(creds[0], true);
 								var password = creds[1];
 								if((serverStorage.getState().users[username] === password) && (typeof(serverStorage.getState().users[username]) !== 'undefined')){
-									try {
-										fs.stat(pathFile, function (err, stats) {
+									switch(req.method){
+										case 'GET':
 											try {
-												if (err) {
-													throw err;
-												} else {
-													if (stats.isFile()) {
-														res.writeHead(200, {'Content-Type': 'application/octet-stream', 'Content-Length':stats.size});
-														fs.createReadStream(pathFile).pipe(res);
-													} else {
-														throw 'Not Found';
+												fs.stat(pathFile, function (err, stats) {
+													try {
+														if (err) {
+															throw err;
+														} else {
+															if (stats.isFile()) {
+																res.writeHead(200, {'Content-Type': 'application/octet-stream', 'Content-Length':stats.size});
+																fs.createReadStream(pathFile).pipe(res);
+															} else {
+																throw 'Not Found';
+															}
+														}
+													} catch(e){
+														res.writeHead(404, {'Content-Type': 'text/plain'});
+														res.end('Not Found');
+														console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
 													}
-												}
+												});
 											} catch(e){
-												res.writeHead(404, {'Content-Type': 'text/plain'});
-												res.end('Not Found');
+												res.writeHead(500, {'Content-Type': 'text/plain'});
+												res.end('Internal Server Error');
 												console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
 											}
-										});
-									} catch(e){
-										res.writeHead(500, {'Content-Type': 'text/plain'});
-										res.end('Internal Server Error');
-										console.log(colors.yellow(datetime() + "Неудачный запрос файла " + req.url + " с адреса " + req.connection.remoteAddress));
+											break;
+										case 'POST':
+											switch(req.url){
+												case '/version':
+													res.writeHead(200, {'content-type': 'text/plain'});
+													res.end(CommanderVersion);
+													break;
+												default:
+													res.writeHead(404, {'content-type': 'text/plain'});
+													res.end('Not Found');
+													break;
+											}
+											break;
+										default:
+											res.writeHead(405, {'content-type': 'text/plain'});
+											res.end('Method Not Allowed');
+											break;
 									}
 								} else if ((serverStorage.getState().admins[username] === password) && (typeof(serverStorage.getState().admins[username]) !== 'undefined')) { 
 									if (req.url === '/upload' && req.method === 'POST') {									
@@ -1588,8 +1633,8 @@ function startFileServer(port){
 										}); 
 										return;
 									} else {
-										res.writeHead(500, {'Content-Type': 'text/plain'});
-										res.end('Internal Server Error');
+										res.writeHead(405, {'Content-Type': 'text/plain'});
+										res.end('Method Not Allowed');
 										console.log(colors.red(datetime() + "Некорректный запрос на file-сервер!"));
 									}							
 								}else {

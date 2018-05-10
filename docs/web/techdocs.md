@@ -79,7 +79,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
   - SYNC_OBJECT - загружает хранилище целиком, payload:{}, {} - хранилище serverStorage полученное из socket.oi (Object). 
   - CLEAR_STORAGE - очищает хранилище полностью payload:undefined, т.е. отсутствует.
 ```
-function editConnStore(state = {uids:{}, users:{}, report:{}, groups:{}, fileport:''}, action){
+function editConnStore(state = {uids:{}, users:{}, versions:{}, version:'', report:{}, groups:{}, iptoban:{}, fileport:'', memory:'', cpu:''}, action){
 	try {
 		switch (action.type){
 			case 'SYNC_OBJECT':
@@ -534,7 +534,7 @@ class AdminIoCommanderPanel extends React.PureComponent{
 ```
 
 ### Шапка программы
-Выводит статический текст.
+Выводит шапку с версией программы.
 
 ```
 class AdminIoCommanderPanelHeader extends React.Component{
@@ -546,7 +546,8 @@ class AdminIoCommanderPanelHeader extends React.Component{
 	render() {
 		return (
 			<div className="AdminIoCommanderPanelHeader">
-				<h2> Администрирование IoCommander v1.0.0 </h2>
+				<h2> Администрирование IoCommander v{connectionStorage.getState().version} </h2>
+				<head><title>Администрирование IoCommander {connectionStorage.getState().version}</title></head>
 			</div>
 		);
 	}
@@ -575,14 +576,14 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 			let temp = target.getAttribute('data-tooltip').toString();
 			let temparr = temp.split(',');
 			let temparrnew = new Array;
-			for(let i = 0; i < temparr.length; i = i + 8){
+			for(let i = 0; i < temparr.length; i = i + 6){
 				let tempstring;
-				for(let j = i; j < i + 8; j++){
+				for(let j = i; j < i + 6; j++){
 					if(typeof(temparr[j]) !== 'undefined'){
 						if(j === i){ 
-							tempstring = '<div class="tooltipTCol' + (j % 8) + '">' + temparr[j].toString() + '</div>';
+							tempstring = '<div class="tooltipTCol' + (j % 6) + '">' + temparr[j].toString() + '</div>';
 						} else {
-							tempstring = tempstring + '<div class="tooltipTCol' + (j % 8) + '">' + temparr[j].toString() + '</div>';
+							tempstring = tempstring + '<div class="tooltipTCol' + (j % 6) + '">' + temparr[j].toString() + '</div>';
 						}
 					}
 				}
@@ -602,8 +603,7 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 			document.body.appendChild(tooltipElem);
 
 			var coords = target.getBoundingClientRect();
-
-			var left = coords.left + (target.offsetWidth - tooltipElem.offsetWidth) / 2;
+			var left = coords.left - tooltipElem.offsetWidth + target.offsetWidth;
 			if (left < 0) left = 0; // не вылезать за левую границу окна
 
 			var top = coords.top - tooltipElem.offsetHeight - 5;
@@ -664,7 +664,7 @@ class AdminIoCommanderPanelBottom extends React.PureComponent{
 Выводит текст во всплывающем окне.
 
 ```
-class AdminIoCommanderPanelPopup extends React.Component{
+class AdminIoCommanderPanelPopup extends React.PureComponent{
   
    constructor(props, context) {
       super(props, context);
@@ -1279,9 +1279,9 @@ class AdminIoCommanderPanelBody extends React.Component{
 				var adm_OnlineOff = new Array; 
 				for(var keyOnlineAll in serverStorage.getState().users){
 					if(typeof(connectionStorage.getState().users[keyOnlineAll]) !== 'undefined'){
-						adm_OnlineOn.push(<div className={"adm_OnlineOn0"}><div>{replacer(keyOnlineAll, false)}</div><div>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
+						adm_OnlineOn.push(<div className={"adm_OnlineOn0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					} else {
-						adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{replacer(keyOnlineAll, false)}</div><div>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
+						adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					}
 				}
 		AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> {(adm_OnlineOn.length !== 0)?<div className="adm_OnlineOn">{adm_OnlineOn}</div>:''} {(adm_OnlineOff.length !== 0)?<div className="adm_OnlineOff">{adm_OnlineOff}</div>:''}</div>);
