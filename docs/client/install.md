@@ -1,4 +1,4 @@
-﻿# IoCommander v1.0.0 - Установка клиента
+﻿# IoCommander v1.1.3 - Установка клиента
 ###### пример собранной установки (с скриптами установки и удаления по windows и linux) есть в папке [/production](https://github.com/siarheidudko/iocommander/tree/master/production) репозитория
 
 ## Зависимости проекта
