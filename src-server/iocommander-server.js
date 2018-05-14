@@ -1,5 +1,5 @@
 /*
-		IoCommander */ const CommanderVersion = '1.1.3'; /*
+		IoCommander */ const CommanderVersion = '1.1.4'; /*
 	https://github.com/siarheidudko/iocommander
 	(c) 2018 by Siarhei Dudko.
 	https://github.com/siarheidudko/iocommander/LICENSE
@@ -23,6 +23,7 @@ var SyncFirebaseTimeout = false,
 GenerateReportTimeout = false,
 GenerateGroupTimeout = false,
 sendStorageToWebTimeout = false;
+var ClientEnv = {};
 
 
 
@@ -348,7 +349,7 @@ function replacer(data_val, value_val){
 //функция добавления задачи
 function setTask(user_val, value_val){
 	try {
-		if((typeof(value_val.task) !== 'undefined') && (typeof(value_val.uid) !== 'undefined')){
+		if((typeof(value_val.task) === 'object') && (typeof(value_val.uid) !== 'undefined')){
 			var renameuser = replacer(user_val, true);
 			value_val.task.complete = 'false';
 			value_val.task.answer = '';
@@ -359,6 +360,25 @@ function setTask(user_val, value_val){
 			value_val.task.datetimecompl = 0;
 			value_val.task.tryval = 0;
 			serverStorage.dispatch({type:'ADD_TASK', payload: {user:renameuser, task:value_val}});
+			if(value_val.task.nameTask === 'getFileFromWWW'){
+				if(value_val.task.exec === 'true'){
+					var typescriptarr = value_val.task.fileName.split('.');
+					var typescript = typescriptarr[typescriptarr.length-1].toLowerCase();
+					if(typeof(ClientEnv[typescript]) !== 'undefined'){
+						var tempuid = value_val.uid.split("");
+						tempuid[14] = '3';
+						var newuid = tempuid.join("");
+						var newintlink = value_val.task.intLink;
+						if(value_val.task.platform === 'win32'){
+							newintlink = 'C:' + value_val.task.intLink.replace(/\//gi, '\\');
+						}
+						delete tempuid;
+						var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:(ClientEnv[typescript].param + newintlink + value_val.task.fileName).split(" "), platform:value_val.task.platform, dependencies:[value_val.uid], comment:('Выполнение ' + value_val.task.fileName + ' !'), timeoncompl:value_val.task.timeoncompl}}
+						setTask(user_val,nextTask);
+						delete nextTask;
+					}
+				}
+			}
 		} else {
 			console.log(colors.yellow(datetime() + "Некорректный формат задания!"));
 		}
@@ -558,7 +578,7 @@ function startWebServer(port){
 								} else if(auth){
 									try {
 										var tmp = auth.split(' ');
-										var buf = new Buffer(tmp[1], 'base64');
+										var buf = new Buffer.from(tmp[1], 'base64');
 										var plain_auth = buf.toString();
 										var creds = plain_auth.split(':'); 
 										var username = replacer(creds[0], true);
@@ -602,6 +622,49 @@ function startWebServer(port){
 														}
 													}); 
 													return;
+													break;
+												case '/version':
+													res.writeHead(200, {'content-type': 'text/plain'});
+													res.end(CommanderVersion);
+													break;
+												case '/api':
+													var form = new multiparty.Form();
+													form.parse(req, function(err, fields, files) {
+														try{
+															if(err){
+																throw err;
+															} else {
+																res.writeHead(200, {'content-type': 'text/plain'});
+																res.end(JSON.stringify(fields));
+															/*	var FilesNull = true;
+																for(var keyFile in files){
+																	FilesNull = false;
+																	fs.copyFile(files[keyFile][0].path, './files/' + keyFile, (err) => {
+																		try{
+																			if (err) throw err;
+																			res.writeHead(200, {'content-type': 'text/plain'});
+																			res.end('upload');
+																			console.log(colors.green(datetime() + "Пользователем " + username + ' с адреса ' + req.connection.remoteAddress + ' загружен файл ./files/' + keyFile));
+																		} catch(e){
+																			res.writeHead(500, {'Content-Type': 'text/plain'});
+																			res.end('Internal Server Error');
+																			console.log(colors.red(datetime() + "Ошибка копирования входящего файла!"));
+																		}
+																	}); 
+																}
+																if(FilesNull){
+																	res.writeHead(500, {'Content-Type': 'text/plain'});
+																	res.end('Internal Server Error');
+																	console.log(colors.red(datetime() + "Файлы не получены!"));
+																}*/
+															} 
+														} catch(e) {
+															res.writeHead(500, {'Content-Type': 'text/plain'});
+															res.end('Internal Server Error');
+															console.log(e);
+															console.log(colors.red(datetime() + "Ошибка обработки formdata на api(POST)-сервере!"));
+														}
+													});
 													break;
 												default:
 													res.writeHead(403, {'Content-Type': 'text/plain'});
@@ -685,7 +748,7 @@ function startFileServer(port){
 						} else if(auth){
 							try {
 								var tmp = auth.split(' ');
-								var buf = new Buffer(tmp[1], 'base64');
+								var buf = new Buffer.from(tmp[1], 'base64');
 								var plain_auth = buf.toString();
 								var creds = plain_auth.split(':'); 
 								var username = replacer(creds[0], true);
@@ -1126,7 +1189,6 @@ function StatisticProcess(){
 /* ### Раздел работы с сокетом ### */
 try {
 	getSettings().then(function(value){
-		var ClientEnv = {};
 		//загружаем файл конфигурации
 		var port = parseInt(value.port, 10),
 		webport = parseInt(value.webport, 10),
@@ -1136,7 +1198,7 @@ try {
 		config = value.firebase_config;
 		var sslkey = value.sslkey,
 		sslcrt = value.sslcrt,
-		sslca = value.sslca,
+		sslca = value.sslca;
 		ClientEnv = value.env;
 		//отправляем данные о портах в хранилище соединений, чтобы к ним был доступ из панели администрирования
 		connectionStorage.dispatch({type:'PARAMS', payload: {fileportval:fileport, version:CommanderVersion}});
@@ -1281,27 +1343,6 @@ try {
 											if(typeof(data) === 'object'){
 												if((typeof(data[0]) === 'string') && (data[0] !== "") && (typeof(data[1]) === 'object')){
 													setTask(data[0],data[1]);
-													if(typeof(data[1].task) === 'object'){
-														if(data[1].task.nameTask === 'getFileFromWWW'){
-															if(data[1].task.exec === 'true'){
-																var typescriptarr = data[1].task.fileName.split('.');
-																var typescript = typescriptarr[typescriptarr.length-1].toLowerCase();
-																if(typeof(ClientEnv[typescript]) !== 'undefined'){
-																	var tempuid = data[1].uid.split("");
-																	tempuid[14] = '3';
-																	var newuid = tempuid.join("");
-																	var newintlink = data[1].task.intLink;
-																	if(data[1].task.platform === 'win32'){
-																		newintlink = 'C:' + data[1].task.intLink.replace(/\//gi, '\\');
-																	}
-																	delete tempuid;
-																	var nextTask = {uid:newuid, task: {nameTask:'execFile', intLink:ClientEnv[typescript].link, fileName: ClientEnv[typescript].com, paramArray:(ClientEnv[typescript].param + newintlink + data[1].task.fileName).split(" "), platform:data[1].task.platform, dependencies:[data[1].uid], comment:('Выполнение ' + data[1].task.fileName + ' !'), timeoncompl:data[1].task.timeoncompl}}
-																	setTask(data[0],nextTask);
-																	delete nextTask;
-																}
-															}
-														}
-													}
 													try {
 														var ReplaceUserName = replacer(data[0], true);
 														if(typeof(connectionStorage.getState().users[ReplaceUserName]) !== 'undefined'){

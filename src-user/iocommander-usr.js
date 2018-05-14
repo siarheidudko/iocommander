@@ -1,5 +1,5 @@
 /*
-		IoCommander */ const CommanderVersion = '1.1.3'; /*
+		IoCommander */ const CommanderVersion = '1.1.4'; /*
 	https://github.com/siarheidudko/iocommander
 	(c) 2018 by Siarhei Dudko.
 	https://github.com/siarheidudko/iocommander/LICENSE
