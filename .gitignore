@@ -8,3 +8,4 @@ test.js
 test.txt
 start-server.cmd
 start-user.cmd
+interface-source/node_modules

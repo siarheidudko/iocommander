@@ -1,9 +1,9 @@
-/*
-		IoCommander v1.0.0
-	https://github.com/siarheidudko/iocommander
-	(c) 2018 by Siarhei Dudko.
-	https://github.com/siarheidudko/iocommander/LICENSE
-*/
+/**
+ *		IoCommander v1.0.0
+ *	https://github.com/siarheidudko/iocommander
+ *	(c) 2018 by Siarhei Dudko.
+ *	https://github.com/siarheidudko/iocommander/LICENSE
+ */
 
 "use strict"
 class AdminIoCommanderPanelPopup extends React.PureComponent{
@@ -643,7 +643,7 @@ class AdminIoCommanderPanelBody extends React.Component{
 						adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{replacer(keyOnlineAll, false)}</div><div className={(connectionStorage.getState().versions[keyOnlineAll] !== connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(connectionStorage.getState().versions[keyOnlineAll]) === 'string')?connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 					}
 				}
-		AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> {(adm_OnlineOn.length !== 0)?<div className="adm_OnlineOn">{adm_OnlineOn}</div>:''} {(adm_OnlineOff.length !== 0)?<div className="adm_OnlineOff">{adm_OnlineOff}</div>:''}</div>);
+				AdminIoCommanderPanelBodyMiddle.push(<div className="reportOnline"> {(adm_OnlineOn.length !== 0)?<div className="adm_OnlineOn">{adm_OnlineOn}</div>:''} {(adm_OnlineOff.length !== 0)?<div className="adm_OnlineOff">{adm_OnlineOff}</div>:''}</div>);
 				break;
 			default:
 				AdminIoCommanderPanelBodyMiddle.push(<div> Неизвестный тип команды! </div>);

@@ -1,0 +1,322 @@
+/* компоненты */
+input[type="text"], input[type="password"], select {
+	padding:2px;
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+	text-align: left;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+input[type="checkbox"] {
+	cursor: pointer;
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+}
+button{
+	cursor: pointer;
+	padding:2px;
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+	text-align: left;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+select{
+	cursor: pointer;
+}
+
+/* Скелет админки */
+.AdminIoCommander{
+	width: 90%;
+}
+.AdminIoCommanderPanel{
+	width: 1400px;
+	background: #e2e1df;
+	border-radius: 10px;
+	margin: auto;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+.AdminIoCommanderPanelHeader {
+	border-radius: 10px 10px 0 0;
+	background: #ffa500;
+	text-align: center;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+.AdminIoCommanderPanelHeader h2 {
+	text-align: center;
+	padding-top: 14px;
+}
+.AdminIoCommanderPanelHeader, .AdminIoCommanderPanelBottom, .AdminIoCommanderPanelBottomUsersOnline, .AdminIoCommanderPanelBottomUsersOffline {
+	height: 50px;
+}
+.AdminIoCommanderPanelBottom {
+	clear:right;
+	border-radius: 0 0 10px 10px;
+	background: #ffa500;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+.AdminIoCommanderPanelBottomServerStat{
+	float: left;
+	padding: 10px;
+	font-size: 12px;
+}
+.AdminIoCommanderPanelBottomUsersOnline, .AdminIoCommanderPanelBottomUsersOffline {
+	width: 80px;
+	float: right;
+}
+.AdminIoCommanderPanelBottomUsersOnline div, .AdminIoCommanderPanelBottomUsersOffline div {
+	text-align: center;
+	margin-top: 20%;
+}
+.AdminIoCommanderPanelBottomUsersOnline {
+	background: #3cb371;
+	border-radius: 0 0 10px 0;
+}
+.AdminIoCommanderPanelBottomUsersOffline {
+	background: #ff0000;
+}
+.AdminIoCommanderPanelBody{
+	padding: 0 20px 20px 20px;
+}
+.PanelBodyMargin {
+	display:table;
+	margin:auto;
+	width: 90%;
+	text-align: right;
+}
+.clientObject0, .clientObject1, .clientObject2, .clientObject3, .clientObject4, .clientObject5{
+	float: left;
+	width: 160px;
+	margin:auto;
+	text-align:right;
+}
+.clientObject0, .AdminIoCommanderPanelBodyBottom{
+	clear:left;
+}
+.AdminIoCommanderPanelBodyBottom{
+	float:center;
+	margin:auto;
+}
+.inputFieldCenterRightBotton{
+	padding-top:20px;
+}
+.AdminIoCommanderPanelAuth {
+	padding: 20px 0;
+}
+.inputFieldCenter {
+	margin:auto;
+	width: 25%;
+	text-align: right;
+}
+.inputFieldCenterRight {
+	margin:auto;
+	width: 40%;
+	text-align: right;
+}
+.inputFieldCenterReal{
+	margin:auto;
+	width: 10%;
+	text-align: right;
+}
+.objectTable{
+	margin:auto;
+	width: 80%;
+}
+
+/* Кнопки управления */
+.imgCommandType{
+	border-color: #ffa500;
+	border-radius: 4px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+/* Онлайн/Оффлайн */
+.reportOnline {
+	display:table;
+	min-width:1000px;
+}
+.adm_OnlineOff, .adm_OnlineOn {
+	background: #ffa500;
+	border-radius: 10px;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+	width:100%;
+	display:table;
+	padding:5px;
+}
+.adm_OnlineOff {
+	border-left: 1px solid #b3c9ce;
+	float:left;
+}
+.adm_OnlineOn {
+	border-right: 1px solid #b3c9ce;
+	float:left;
+}
+.adm_OnlineOn0 {
+	background: #3cb371;
+}
+.adm_OnlineOff0 {
+	background: #ff0000;
+}
+.adm_OnlineOn0, .adm_OnlineOff0{
+	border: 1px solid #b3c9ce;
+	border-radius: 5px;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+	width: 150px;
+	height:36px;
+	float:left;
+	overflow: hidden;
+}
+.textYELLOW{
+	color: #bfc150;
+}
+
+/* Мигающие уведомления в отчетах */
+.textRED{
+	color: #ff0000;
+}
+.textGREEN{
+	color: #3cb371;
+}
+#blink1 {
+  -webkit-animation: blink1 1s linear infinite;
+  animation: blink1 1s linear infinite;
+}
+@-webkit-keyframes blink1 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+@keyframes blink1 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+#blink2 {
+  -webkit-animation: blink2 1s linear infinite;
+  animation: blink2 1s linear infinite;
+}
+@-webkit-keyframes blink2 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+@keyframes blink2 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+#blink3 {
+  -webkit-animation: blink3 1s linear infinite;
+  animation: blink3 1s linear infinite;
+}
+@-webkit-keyframes blink3 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+@keyframes blink3 {
+  100% { color: rgba(34, 34, 34, 0); }
+}
+/* Отчеты по таскам */
+.reportTableRow{
+	display:table;
+	min-width: 1000px;
+}
+.reportTableRowtrue {
+	background: #3cb371;
+}
+.reportTableRowfalse {
+	background: #ff0000;
+}
+.reportTableRowtrue, .reportTableRowfalse, .reportTableRowHeader{
+	border-top: 1px solid #b3c9ce;
+	border-bottom: 1px solid #b3c9ce;
+	height: 40px;
+	border-radius: 10px;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+.reportTableRowHeader{
+	background: #ffa500;
+}
+.reportTableColumnName, .reportTableColumnStatus, .reportTableColumnAnswer, .reportTableColumnDate, .reportTableColumnDateCompl, .reportTableColumnDateTimeout{
+	float: left;
+	height:100%;
+	overflow: hidden;
+	text-overflow: clip;
+	border-right: 1px solid #b3c9ce;
+	padding-top: 5px;
+}
+.reportTableColumnName{
+	width: 150px;
+}
+.reportTableColumnStatus{
+	width: 110px;
+}
+.reportTableColumnAnswer{
+	width: 440px;
+}
+.reportTableColumnDate{
+	width: 100px;
+}
+.reportTableColumnDateTimeout{
+	width: 100px;
+}
+.reportTableColumnDateCompl{
+	width: 100px;
+	border-right: 0px;
+}
+
+/* всплывающее окно online/offline */
+.tooltip {
+	display:table;
+	position: fixed;
+	padding: 10px 20px;
+	border: 1px solid #b3c9ce;
+	border-radius: 4px;
+	text-align: left;
+	color: #333;
+	background: #fff;
+	box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+}
+.tooltipTCol0,.tooltipTCol1,.tooltipTCol2,.tooltipTCol3,.tooltipTCol4,.tooltipTCol5{
+	float:left;
+	font-size: 12px;
+	width:95px;
+	overflow: hidden;
+}
+.tooltipTCol1,.tooltipTCol2,.tooltipTCol3,.tooltipTCol4,.tooltipTCol5{
+	padding-left:5px;
+}
+.tooltipTLine{
+}
+
+/* всплывающее  окно */
+.popup {
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.popup .popuptext {
+    width: 150px;
+    background-color: #f1ba59;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 0;
+    position: absolute;
+    z-index: 1;
+	margin-top: 150px;
+    left: 50%;
+    margin-left: -75px;
+}
+.show {
+    visibility: visible;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s;
+}
+.unshow {
+    visibility: hidden;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s;
+}

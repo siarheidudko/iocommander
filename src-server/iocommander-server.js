@@ -1,9 +1,9 @@
-/*
-		IoCommander */ const CommanderVersion = '1.1.4'; /*
-	https://github.com/siarheidudko/iocommander
-	(c) 2018 by Siarhei Dudko.
-	https://github.com/siarheidudko/iocommander/LICENSE
-*/
+/**
+		IoCommander */ const CommanderVersion = '1.1.4'; /**
+ *	https://github.com/siarheidudko/iocommander
+ *	(c) 2018 by Siarhei Dudko.
+ *	https://github.com/siarheidudko/iocommander/LICENSE
+ **/
 
 /* ### Раздел переменных ### */
 const https=require("https"), 
