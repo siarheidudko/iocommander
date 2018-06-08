@@ -1,5 +1,5 @@
 /**
-		IoCommander */ const CommanderVersion = '1.1.4'; /**
+		IoCommander */ const CommanderVersion = '1.1.5'; /**
  *	https://github.com/siarheidudko/iocommander
  *	(c) 2018 by Siarhei Dudko.
  *	https://github.com/siarheidudko/iocommander/LICENSE
@@ -520,46 +520,61 @@ function startWebServer(port){
 				} else {
 					if(req.method === 'GET'){
 						var pathFile;
-						if(req.url === '/'){
-							pathFile = './src-adm/index.html';
-						} else {
-							pathFile = './src-adm'+req.url;
+						switch(req.url){
+							case '/':
+								pathFile = './src-adm/index.html';
+								break;
+							case '/new/':
+								pathFile = './src-adm/new/index.html';
+								break;
+							default:
+								pathFile = './src-adm'+req.url;
+								break;
 						}
 						try {
-							fs.readFile(pathFile, (err, file) => {
-								if(err) {
-									res.writeHead(404, {'Content-Type': 'text/plain'});
-									res.end('Not Found');
-								} else {
-									try{
-										var ContentType = req.url.split('.');
-										ContentType = ContentType[ContentType.length -1];
-										switch(ContentType){
-											case '/':
+							fs.stat(pathFile, function (err, stats) {
+								try {
+									if (err) {
+										throw err;
+									} else {
+										if (stats.isFile()) {
+											try{
+												var ContentType = req.url.split('.');
+												ContentType = ContentType[ContentType.length -1];
+												switch(ContentType){
+													case '/':
+														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+														break;
+													case 'html':
+														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+														break;
+													case 'js':
+														res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8'});
+														break;
+													case 'css':
+														res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8'});
+														break;
+													case 'ico':
+														res.writeHead(200, {'Content-Type': 'image/x-icon'});
+														break;
+													default:
+														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+														break;
+												}
+											} catch(e){
 												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-												break;
-											case 'html':
-												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-												break;
-											case 'js':
-												res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8'});
-												break;
-											case 'css':
-												res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8'});
-												break;
-											case 'ico':
-												res.writeHead(200, {'Content-Type': 'image/x-icon'});
-												break;
-											default:
-												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
-												break;
+											}
+											fs.createReadStream(pathFile).pipe(res);
+										} else {
+											res.writeHead(404, {'Content-Type': 'text/plain'});
+											res.end('Not Found');
 										}
-									} catch(e){
-										res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
 									}
-									res.end(file);
+								} catch(e){
+									res.writeHead(500, {'Content-Type': 'text/plain'});
+									res.end('Internal Server Error');
 								}
-							});	
+							});							
 						} catch (e){
 							res.writeHead(500, {'Content-Type': 'text/plain'});
 							res.end('Internal Server Error');
@@ -1270,7 +1285,7 @@ try {
 						console.log(colors.gray(datetime() + 'ws socket-server listening on *:' + port));
 					}); 
 				}
-				io=socketio.listen(server, { log: true ,pingTimeout: 3600000, pingInterval: 25000, transports:["websocket"]});
+				io=socketio.listen(server, { log: true ,pingTimeout: 7200000, pingInterval: 25000, transports:["websocket"]});
 				io.sockets.on('connection', function (socket) {
 					try {
 						var thisSocketAddressArr = io.sockets.sockets[socket.id].handshake.address.split(':');

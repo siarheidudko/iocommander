@@ -18,7 +18,7 @@ module.exports = {
 	filename: path.resolve(__dirname, './src/') + '/iocom.js'
   },
   output: {
-    path: path.resolve(__dirname, '../src-adm/'),
+    path: path.resolve(__dirname, '../src-adm/new/'),
     filename: 'iocommander-bundle.js',
 	libraryTarget: "umd"
   }
