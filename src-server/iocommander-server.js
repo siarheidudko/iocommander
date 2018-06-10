@@ -1,5 +1,5 @@
 /**
-		IoCommander */ const CommanderVersion = '1.1.5'; /**
+		IoCommander */ const CommanderVersion = '1.1.6'; /**
  *	https://github.com/siarheidudko/iocommander
  *	(c) 2018 by Siarhei Dudko.
  *	https://github.com/siarheidudko/iocommander/LICENSE
@@ -564,15 +564,20 @@ function startWebServer(port){
 											} catch(e){
 												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
 											}
-											fs.createReadStream(pathFile).pipe(res);
+											let ReadStream = fs.createReadStream(pathFile);
+											ReadStream.on('error', function(e){
+												res.writeHead(500, {'Content-Type': 'text/plain'});
+												res.end('Internal Server Error');
+											});
+											ReadStream.pipe(res);
 										} else {
 											res.writeHead(404, {'Content-Type': 'text/plain'});
 											res.end('Not Found');
 										}
 									}
 								} catch(e){
-									res.writeHead(500, {'Content-Type': 'text/plain'});
-									res.end('Internal Server Error');
+									res.writeHead(404, {'Content-Type': 'text/plain'});
+									res.end('Not Found');
 								}
 							});							
 						} catch (e){
@@ -779,7 +784,12 @@ function startFileServer(port){
 														} else {
 															if (stats.isFile()) {
 																res.writeHead(200, {'Content-Type': 'application/octet-stream', 'Content-Length':stats.size});
-																fs.createReadStream(pathFile).pipe(res);
+																let ReadStream = fs.createReadStream(pathFile);
+																ReadStream.on('error', function(e){
+																	res.writeHead(500, {'Content-Type': 'text/plain'});
+																	res.end('Internal Server Error');
+																});
+																ReadStream.pipe(res);
 															} else {
 																throw 'Not Found';
 															}

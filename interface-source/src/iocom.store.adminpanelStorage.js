@@ -11,7 +11,7 @@ import core from './iocom.core.js';
 
 var adminpanelStorage = require('redux').createStore(editAdmpanelStore);
 
-function editAdmpanelStore(state = {auth: false, popuptext:'', session:{}}, action){
+function editAdmpanelStore(state = {auth: false, popuptext:'', session:{}, page:'adm_setTask'}, action){
 	try {
 		switch (action.type){
 			case 'AUTH':
@@ -31,6 +31,11 @@ function editAdmpanelStore(state = {auth: false, popuptext:'', session:{}}, acti
 			case 'MSG_POPUP':
 				var state_new = _.clone(state);
 				state_new.popuptext = action.payload.popuptext;
+				return state_new;
+				break;
+			case 'GET_PAGE':
+				var state_new = _.clone(state);
+				state_new.page = action.payload.page;
 				return state_new;
 				break;
 			default:
