@@ -82,6 +82,7 @@ select{
 }
 .AdminIoCommanderPanelBody{
 	padding: 0 20px 20px 20px;
+	min-height:200px;
 }
 .PanelBodyMargin {
 	display:table;

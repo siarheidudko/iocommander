@@ -1,5 +1,5 @@
 /**
-		IoCommander */ const CommanderVersion = '1.1.4'; /**
+		IoCommander */ const CommanderVersion = '1.1.11'; /**
  *	https://github.com/siarheidudko/iocommander
  *	(c) 2018 by Siarhei Dudko.
  *	https://github.com/siarheidudko/iocommander/LICENSE
@@ -265,6 +265,7 @@ function getSettings(){
 			fs.readFile("./src-user/iocommander-usr.conf", "utf8", function(error,data){
 				if(error) throw error; 
 				try {
+					console.log(colors.green(datetime() + "Произвожу запуск клиента websocket!"));
 					resolve(JSON.parse(data));
 				} catch(e){
 					console.log(colors.red(datetime() + "Конфигурационный файл испорчен!"));
