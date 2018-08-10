@@ -1,5 +1,5 @@
 /**
-		IoCommander */ const CommanderVersion = '1.1.11'; /**
+		IoCommander */ const CommanderVersion = '1.1.12'; /**
  *	https://github.com/siarheidudko/iocommander
  *	(c) 2018 by Siarhei Dudko.
  *	https://github.com/siarheidudko/iocommander/LICENSE
@@ -990,12 +990,12 @@ function stdoutOEM866toUTF8(value){ //может быть Object или String
 	try {
 		if(typeof(value) === 'object'){
 			if(typeof(value.message) === 'string') {
-				value = new Buffer(value.toString('cp866'));
+				value = Buffer.from(value.toString('cp866'));
 			}
 		} else if(typeof(value) === 'string'){
-			value = new Buffer(value.toString());
+			value = Buffer.from(value.toString());
 		}
-		var thisval = iconv.decode(new Buffer(new Buffer(iconv.decode(value, 'cp866')), 'utf8'), 'utf8'); //для IBM866 stdout
+		var thisval = iconv.decode(Buffer.from(Buffer.from(iconv.decode(value, 'cp866')), 'utf8'), 'utf8'); //для IBM866 stdout
 		return thisval;
 	} catch(e){
 		return 'Error Windows COM Decode String';
