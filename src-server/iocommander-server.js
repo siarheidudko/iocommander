@@ -527,6 +527,9 @@ function startWebServer(port){
 							case '/new/':
 								pathFile = './src-adm/new/index.html';
 								break;
+							case '/alt/':
+								pathFile = './src-adm/alt/index.html';
+								break;
 							default:
 								pathFile = './src-adm'+req.url;
 								break;
