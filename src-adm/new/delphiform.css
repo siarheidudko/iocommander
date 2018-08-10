@@ -16,7 +16,7 @@
 	
 }
 .DelphiForm1SearchString, .DelphiForm1Search, .DelphiForm1Filtr{
-	border: 1px ridge black;
+	border: 2px dotted black;
 	width: 300px;
 	margin: 10px;
 }
