@@ -47,6 +47,7 @@ class AdminIoCommanderPanelBodyPage_adm_delUser extends React.Component{
 		if((typeof(user_name) === 'string') && (user_name !== '')){
 			window.socket.emit('adm_delUser', [user_name]);
 			self.setState({SelectUser: ''});
+			core.popup("Задача отправлена на сервер!");
 		} else {
 			window.console.log("Некорректные аргументы!");
 			core.popup("Некорректные аргументы!");

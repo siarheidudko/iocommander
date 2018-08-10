@@ -225,6 +225,8 @@ function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, 
 					var EmitMessage = new Array(ParamEight[i], tempTask);
 					window.socket.emit('adm_setTask', EmitMessage);
 				}
+				store.adminpanelStorage.dispatch({type:'CLEAR_TASK'});
+				popup("Задача отправлена на сервер!");
 			} else {
 				window.console.log("Проблема загрузки файла на внутренний сервер!");
 				popup(value);

@@ -1,0 +1,74 @@
+﻿.DelphiForm1{
+	display:table;
+	align:center;
+	text-align:center;
+	width:660px;
+	font-family: 'Times New Roman', Times, serif;
+	margin: 10px;
+}
+.DelphiForm1Name{
+	font-family: 'Times New Roman', Times, serif;
+	font-size: 18px;
+	font-weight: bold;
+    -webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	
+}
+.DelphiForm1SearchString, .DelphiForm1Search, .DelphiForm1Filtr{
+	border: 1px ridge black;
+	width: 300px;
+	margin: 10px;
+}
+.DelphiForm1Search, .DelphiForm1Filtr{
+    -webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+.DelphiForm1SearchDiv, .DelphiForm1FiltrDiv{
+	height: 200px;
+    word-wrap: break-word;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    -webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+.DelphiForm1SearchString{
+	float: center;
+}
+.DelphiForm1Search{
+	float: left;
+}
+.DelphiForm1Filtr{
+	float: right;
+}
+.DelphiForm1SearchInp{
+	width: 300px;
+	font-style: italic;
+}
+.DelphiForm1Button{
+	text-align: left;
+	width: 300px;
+	margin-bottom:1px;
+	border: none;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-transition-duration: 0.25s;
+    -moz-transition-duration: 0.25s;
+    -o-transition-duration: 0.25s;
+    transition-duration: 0.25s;
+    -webkit-transition-property: -webkit-transform;
+    -moz-transition-property: -moz-transform;
+    -o-transition-property: -o-transform;
+    transition: all 0.2s ease-out;
+}
+.DelphiForm1Button:hover{
+    background: rgba(0, 255, 0, 1);
+    cursor: pointer;
+}
+.DelphiForm1Button:active {
+	background: rgba(0, 255, 0, 0.1);
+} 

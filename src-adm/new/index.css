@@ -321,3 +321,13 @@ select{
     -webkit-animation: fadeIn 1s;
     animation: fadeIn 1s;
 }
+
+.DelphiForm1SearchInp{
+	padding:none;
+	border: none;
+	border-radius: none;
+	box-shadow: none;
+}
+.DelphiForm1Button{
+	margin-left: 1px;
+}

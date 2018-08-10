@@ -20,7 +20,8 @@ class AdminIoCommanderPanelBodyPage_adm_setAdmin extends React.Component{
 		super(props, context);
 		this.state = {
 			AdminLogin: "",
-			AdminPass: ""
+			AdminPass: "",
+			AdminPassRepeat: ""
 		};
     }
 	
@@ -37,6 +38,9 @@ class AdminIoCommanderPanelBodyPage_adm_setAdmin extends React.Component{
 			case 'SetAdminPass':
 				this.setState({AdminPass: e.target.value});
 				break;
+			case 'SetAdminPassRepeat':
+				this.setState({AdminPassRepeat: e.target.value});
+				break;
 		}
 	}
 	
@@ -44,12 +48,19 @@ class AdminIoCommanderPanelBodyPage_adm_setAdmin extends React.Component{
 		var self = this;
 		var user_name = self.state.AdminLogin;
 		var user_pass = self.state.AdminPass;
-		if((typeof(user_name) === 'string') && (user_name !== '') && (typeof(user_pass) === 'string') && (user_pass !== '')){
-			window.socket.emit('adm_setAdmin', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
-			self.setState({AdminLogin: '',AdminPass: ''});
+		var user_pass_repeat = self.state.AdminPassRepeat;
+		if(user_pass !== user_pass_repeat){
+			window.console.log("Пароли не совпадают!");
+			core.popup("Пароли не совпадают!");
 		} else {
-			window.console.log("Некорректные аргументы!");
-			core.popup("Некорректные аргументы!");
+			if((typeof(user_name) === 'string') && (user_name !== '') && (typeof(user_pass) === 'string') && (user_pass !== '')){
+				window.socket.emit('adm_setAdmin', [user_name, CryptoJS.SHA256(user_name + user_pass + 'icommander').toString()]);
+				self.setState({AdminLogin: '',AdminPass: '',AdminPassRepeat: ''});
+				core.popup("Задача отправлена на сервер!");
+			} else {
+				window.console.log("Некорректные аргументы!");
+				core.popup("Некорректные аргументы!");
+			}
 		}
 	}
 	
@@ -57,8 +68,11 @@ class AdminIoCommanderPanelBodyPage_adm_setAdmin extends React.Component{
 		return ( 
 			<div>
 				<div>
-					<div className="inputFieldCenter">Логин: <input type="text" name="SetAdminLogin" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminLogin} /></div>
-					<div className="inputFieldCenter">Пароль: <input type="text" name="SetAdminPass" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPass} /></div>
+					<form>
+						<div className="inputFieldCenter">Логин: <input type="text" name="SetAdminLogin" autocomplete="new-username" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminLogin} /></div>
+						<div className="inputFieldCenter">Пароль: <input type="password" name="SetAdminPass" autocomplete="new-password" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPass} /></div>
+						<div className="inputFieldCenter">Повторите: <input type="password" name="SetAdminPassRepeat" autocomplete="new-password" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPassRepeat} /></div>
+					</form>
 				</div>
 				<div className="inputFieldCenter">
 					<br /><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Добавить администратора</button>

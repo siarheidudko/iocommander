@@ -20,7 +20,6 @@ import AdminIoCommanderPanelBodyPages from './iocom.component.AdminIoCommanderPa
 class AdminIoCommanderPanelBody extends React.Component{
  
 	render() {
-		window.console.log('Обновлен компонент AdminIoCommanderPanelBody');
 		return (
 			<div className="AdminIoCommanderPanelBody">
 				<AdminIoCommanderPanelBodyHeader />

@@ -1,4 +1,5 @@
 $ cat .gitignore
+.tmp.drivedownload
 src-user/*.conf
 src-user/*.db
 src-server/*.conf

@@ -102,19 +102,15 @@ class AdminIoCommanderPanelBottomRight extends React.Component{
 		var AdminIoCommanderPanelBottomUsersOnline = new Array,
 		AdminIoCommanderPanelBottomUsersOffline = new Array;
 		for(var OnlineUser in this.state.OnlineUsers) {
-			AdminIoCommanderPanelBottomUsersOnline.push(core.replacer(OnlineUser, false));
+			if(typeof(store.serverStorage.getState().admins[OnlineUser]) === 'undefined'){
+				AdminIoCommanderPanelBottomUsersOnline.push(core.replacer(OnlineUser, false));
+			}
 		}
 		for(var OfflineUser in _.clone(store.serverStorage.getState().users)) {
 			if(AdminIoCommanderPanelBottomUsersOnline.indexOf(core.replacer(OfflineUser, false)) === -1){
 				AdminIoCommanderPanelBottomUsersOffline.push(core.replacer(OfflineUser, false));
 			}
 		}
-	/*	админов вывожу только в онлайн. так удобнее мониторить пользователей.
-		for(var OfflineUser in _.clone(store.serverStorage.getState().admins)) {
-			if(AdminIoCommanderPanelBottomUsersOnline.indexOf(core.replacer(OfflineUser, false)) === -1){
-				AdminIoCommanderPanelBottomUsersOffline.push(core.replacer(OfflineUser, false));
-			}
-		} */
 		return (
 			<div>
 				<div className="AdminIoCommanderPanelBottomUsersOnline" data-tooltip={AdminIoCommanderPanelBottomUsersOnline} onMouseOver={this.MouseOver.bind(this)} onMouseOut={this.MouseOut.bind(this)}>

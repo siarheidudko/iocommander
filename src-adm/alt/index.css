@@ -82,7 +82,6 @@ select{
 }
 .AdminIoCommanderPanelBody{
 	padding: 0 20px 20px 20px;
-	min-height:200px;
 }
 .PanelBodyMargin {
 	display:table;
@@ -320,14 +319,4 @@ select{
     visibility: hidden;
     -webkit-animation: fadeIn 1s;
     animation: fadeIn 1s;
-}
-
-.DelphiForm1SearchInp{
-	padding:none;
-	border: none;
-	border-radius: none;
-	box-shadow: none;
-}
-.DelphiForm1Button{
-	margin-left: 1px;
 }
