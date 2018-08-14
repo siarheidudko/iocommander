@@ -44,7 +44,7 @@ class tradeobj extends React.Component{
 		store.adminpanelStorage.dispatch({type:'SET_TASK_TRADEOBJ', payload: {tradeobj: _arr}});
 	}
 	
-	render() { console.log('tradeobj');
+	render() { 
 		var self = this;
 		var _temp = {};
 		for(const key in self.state.objects){

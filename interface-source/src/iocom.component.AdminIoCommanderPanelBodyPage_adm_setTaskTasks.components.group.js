@@ -48,7 +48,7 @@ class group extends React.Component{
 		store.adminpanelStorage.dispatch({type:'SET_TASK_GROUP', payload: {group: _.clone(e.target.value), tradeobj: _tradeobj}});
 	}
 	
-	render() { console.log('group');
+	render() {
 		var self = this;
 		var AdminIoCommanderPanelBodyMiddleGroupsSet = new Array;
 		AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value="">Выберите группу (не обязательно)</option>);

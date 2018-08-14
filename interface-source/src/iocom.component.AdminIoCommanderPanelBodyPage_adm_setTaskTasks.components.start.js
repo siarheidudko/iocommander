@@ -36,7 +36,7 @@ class start extends React.Component{
 		store.adminpanelStorage.dispatch({type:'SET_TASK_START', payload: {start: _.clone(e.target.checked)}});
 	}
 	
-	render() { console.log('start');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Запустить: <input type="checkbox" onChange={this.onChangeHandler.bind(this)} checked={this.state.start} /></div>
 		);

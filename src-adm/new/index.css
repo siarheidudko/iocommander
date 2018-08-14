@@ -299,6 +299,7 @@ select{
     user-select: none;
 }
 .popup .popuptext {
+	z-index: 99;
     width: 150px;
     background-color: #f1ba59;
     color: #fff;
@@ -306,7 +307,7 @@ select{
     border-radius: 6px;
     padding: 8px 0;
     position: absolute;
-    z-index: 1;
+	top: 50%;
 	margin-top: 150px;
     left: 50%;
     margin-left: -75px;
@@ -330,4 +331,23 @@ select{
 }
 .DelphiForm1Button{
 	margin-left: 1px;
+}
+
+/* DateTimePicker */
+.DateTimePickerTable{
+	display:table;
+}
+.DateTimePickerLeft{
+	float:right;
+	width:auto;
+}
+.rw-datetime-picker{
+	width:276px;
+	float:right;
+}
+.DateTimePickerRight{
+	height: 18px;
+}
+.rw-input{
+	color:#000;
 }

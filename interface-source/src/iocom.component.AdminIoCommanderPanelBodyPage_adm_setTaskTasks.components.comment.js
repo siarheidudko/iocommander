@@ -42,7 +42,7 @@ class comment extends React.Component{
 		}
 	}
 	
-	render() { console.log('comment');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Комментарий (для поиска): <input type="text" onChange={this.onChangeHandler.bind(this)} value={this.state.comment} /></div>
 		);

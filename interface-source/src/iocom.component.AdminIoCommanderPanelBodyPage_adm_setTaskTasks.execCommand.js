@@ -31,10 +31,9 @@ class execCommand extends React.Component{
 				&& (typeof(store.adminpanelStorage.getState().task.comment) === 'string')
 				&& (typeof(store.adminpanelStorage.getState().task.dependencies) === 'object') && (typeof(store.adminpanelStorage.getState().task.tradeobj) === 'object')){
 					var timeOnCompl;
-					try {
-						timeOnCompl = new Date(store.adminpanelStorage.getState().task.time);
-					} catch(e){
-						timeOnCompl = new Date(0);
+					timeOnCompl = store.adminpanelStorage.getState().task.time;
+					if((typeof(timeOnCompl) !== 'number') || isNaN(timeOnCompl)){
+						timeOnCompl = 0;
 					}
 					var tempTask = {
 						uid:store.adminpanelStorage.getState().task.uid, 
@@ -44,7 +43,7 @@ class execCommand extends React.Component{
 							platform:store.adminpanelStorage.getState().task.platform, 
 							dependencies:store.adminpanelStorage.getState().task.dependencies, 
 							comment:store.adminpanelStorage.getState().task.comment, 
-							timeoncompl:timeOnCompl.getTime()
+							timeoncompl:timeOnCompl
 						}
 					};
 					if(store.adminpanelStorage.getState().task.tradeobj.length > 0){

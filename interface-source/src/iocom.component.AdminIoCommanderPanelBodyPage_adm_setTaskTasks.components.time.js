@@ -12,10 +12,17 @@ import React from 'react';
 var store = require('./iocom.store.js');
 import core from './iocom.core.js';
 
+import Moment from 'moment'
+import momentLocalizer from 'react-widgets-moment';
+import DateTimePicker from 'react-widgets/lib/DateTimePicker';
+
 "use strict"
 
+Moment.locale('ru');
+momentLocalizer();
+
 class time extends React.Component{
-  
+   
 	constructor(props, context){
 		super(props, context);
 		this.state = {
@@ -33,40 +40,15 @@ class time extends React.Component{
 	}
 	
 	onChangeHandler(e){
-		var self = this;
-		var regexp = new RegExp("^.*[^0-9T:-].*$");
-		if(!regexp.test(e.target.value)){
-			//2018-03-19T18:37:00
-			switch(e.target.value.length){
-				case 4:
-					store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.target.value)+'-'}});
-					break;
-				case 7:
-					store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.target.value)+'-'}});
-					break;
-				case 10:
-					store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.target.value)+'T'}});
-					break;
-				case 13:
-					store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.target.value)+':'}});
-					break;
-				case 16:
-					store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.target.value)+':'}});
-					break;
-				default:
-					if(e.target.value.length < 20){
-						store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.target.value)}});
-					}
-					break;
-			}
-		} else {
-			core.popup('Некорректный символ!');
-		}
+		store.adminpanelStorage.dispatch({type:'SET_TASK_TIME', payload: {time: _.clone(e.getTime())}});
 	}
 	
-	render() { console.log('time');
+	render() {
 		return (
-			<div className="inputFieldCenterRight">Выполнить после (2018-03-19T18:37:00): <input type="text" onChange={this.onChangeHandler.bind(this)} value={this.state.time} /></div>
+			<div className="inputFieldCenterRight DateTimePickerTable">
+				<DateTimePicker containerClassName="DateTimePickerRight" defaultValue={new Date(this.state.time)} onChange={value => this.onChangeHandler(value)} />
+				<div className="DateTimePickerLeft">Выполнить после: </div> 
+			</div>
 		);
 	}
 	

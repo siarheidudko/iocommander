@@ -42,7 +42,7 @@ class command extends React.Component{
 		}
 	}
 	
-	render() { console.log('command');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Команда: <input type="text" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.command) === 'string')?this.state.command:null} /></div>
 		);

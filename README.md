@@ -25,8 +25,6 @@
 
 - [Инструкция по работе с панелью администрирования](https://github.com/siarheidudko/iocommander/blob/master/docs/web/manual.md)
 
-- [Техническая документация работы панели администрирования](https://github.com/siarheidudko/iocommander/blob/master/docs/web/techdocs.md)
-
 - Умеет авторизовавыться в сокете
   
 - Автоматически получает измененные данные из сокета (два аналогичных серверу хранилища)
@@ -63,8 +61,6 @@
 
 - [Установка сервера](https://github.com/siarheidudko/iocommander/blob/master/docs/server/install.md)
 
-- [Техническая документация работы сервера](https://github.com/siarheidudko/iocommander/blob/master/docs/server/techdocs.md)
-
 - Зависимости
   - socket.io
   - http
@@ -77,6 +73,7 @@
   - firebase
   - multiparty
   - os
+  - zlib
 
 - Представлен двумя файлами
   - src-server\iocommander-server.js - исполняемый скрипт сервера
@@ -103,8 +100,6 @@
 ```
 
 - [Установка клиента](https://github.com/siarheidudko/iocommander/blob/master/docs/client/install.md)
-
-- [Техническая документация работы клиента](https://github.com/siarheidudko/iocommander/blob/master/docs/client/techdocs.md)
 
 - Зависимости
   - socket.io-client
@@ -211,4 +206,14 @@
 - начата реализация веб-интерфейса компонентами, т.е. он будет разнесен на несколько скриптов, которые будут упаковываться вебпаком. Новая версия интерфейса:
   - исходники в папке /interface-source/src
   - упакованая версия доступна по ссылке /new/ и лежит в соответствующей папке веб-сервера
+  
+#### v1.1.12
+- фикс мелких багов
+- корректировка верстки
+- веб-интерфейс переделан на компоненты (исходники в interface-source, сборка webpack)
+- старая версия интерфейса по ссылке /alt/
+- добавлен компонент "delphiform"
+- добавлен компонент календарь
+- изменен Buffer на клиенте (смена интерпретатора на node v10)
+- для веб-интерфейса реализовано gzip сжатие
  

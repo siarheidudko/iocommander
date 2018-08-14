@@ -42,7 +42,7 @@ class url extends React.Component{
 		}
 	}
 	
-	render() { console.log('url');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Ссылка для скачки: <input type="text" onChange={this.onChangeHandler.bind(this)} value={(typeof(this.state.url) === 'string')?this.state.url:null} /></div>
 		);

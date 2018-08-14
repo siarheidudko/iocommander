@@ -44,7 +44,7 @@ class dependencies extends React.Component{
 		store.adminpanelStorage.dispatch({type:'SET_TASK_DEPENDENCIES', payload: {dependencies: _arr}});
 	}
 	
-	render() { console.log('dependencies');
+	render() { 
 		var self = this;
 		var _temp = {};
 		for(const key in self.state.reportkeys){

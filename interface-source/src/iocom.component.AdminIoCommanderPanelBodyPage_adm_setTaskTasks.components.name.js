@@ -42,7 +42,7 @@ class name extends React.Component{
 		}
 	}
 	
-	render() { console.log('name');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Имя файла: <input type="text" onChange={this.onChangeHandler.bind(this)} value={this.state.name} /></div>
 		);

@@ -24,7 +24,7 @@ class file extends React.Component{
 		window.files = this.refs.FileUploadToServer.files;
 	}
 	
-	render() { console.log('file');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Файл: <input type="file" ref="FileUploadToServer" onChange={this.onChangeHandler.bind(this)} /></div>
 		);

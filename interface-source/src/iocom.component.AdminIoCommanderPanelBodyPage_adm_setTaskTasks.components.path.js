@@ -42,7 +42,7 @@ class path extends React.Component{
 		}
 	}
 	
-	render() { console.log('path');
+	render() { 
 		return (
 			<div className="inputFieldCenterRight">Локальный путь: <input type="text" onChange={this.onChangeHandler.bind(this)} value={this.state.path} /></div>
 		);

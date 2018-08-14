@@ -16,6 +16,7 @@ lodash=require("lodash"),
 firebase=require("firebase"),
 socketio=require("socket.io"),
 multiparty=require("multiparty"),
+zlib = require('zlib'),
 os=require("os");
 var port, firebase_user, firebase_pass, config, SslOptions, 
 bantimeout = 10800000;
@@ -520,7 +521,8 @@ function startWebServer(port){
 				} else {
 					if(req.method === 'GET'){
 						var pathFile;
-						switch(req.url){
+						var tempUrl = req.url.split('?')[0];
+						switch(tempUrl){
 							case '/':
 								pathFile = './src-adm/index.html';
 								break;
@@ -531,7 +533,7 @@ function startWebServer(port){
 								pathFile = './src-adm/alt/index.html';
 								break;
 							default:
-								pathFile = './src-adm'+req.url;
+								pathFile = './src-adm'+tempUrl;
 								break;
 						}
 						try {
@@ -542,37 +544,38 @@ function startWebServer(port){
 									} else {
 										if (stats.isFile()) {
 											try{
-												var ContentType = req.url.split('.');
+												var ContentType = tempUrl.split('.');
 												ContentType = ContentType[ContentType.length -1];
 												switch(ContentType){
 													case '/':
-														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8', 'Content-Encoding': 'gzip'});
 														break;
 													case 'html':
-														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8', 'Content-Encoding': 'gzip'});
 														break;
 													case 'js':
-														res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8'});
+														res.writeHead(200, {'Content-Type': 'text/javascript; charset=UTF-8', 'Content-Encoding': 'gzip'});
 														break;
 													case 'css':
-														res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8'});
+														res.writeHead(200, {'Content-Type': 'text/css; charset=UTF-8', 'Content-Encoding': 'gzip'});
 														break;
 													case 'ico':
-														res.writeHead(200, {'Content-Type': 'image/x-icon'});
+														res.writeHead(200, {'Content-Type': 'image/x-icon', 'Content-Encoding': 'gzip'});
 														break;
 													default:
-														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+														res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8', 'Content-Encoding': 'gzip'});
 														break;
 												}
 											} catch(e){
-												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8'});
+												res.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8', 'Content-Encoding': 'gzip'});
 											}
+											const gzipper = zlib.createGzip();	//поток сжатия
 											let ReadStream = fs.createReadStream(pathFile);
 											ReadStream.on('error', function(e){
 												res.writeHead(500, {'Content-Type': 'text/plain'});
 												res.end('Internal Server Error');
 											});
-											ReadStream.pipe(res);
+											ReadStream.pipe(gzipper).pipe(res);
 										} else {
 											res.writeHead(404, {'Content-Type': 'text/plain'});
 											res.end('Not Found');

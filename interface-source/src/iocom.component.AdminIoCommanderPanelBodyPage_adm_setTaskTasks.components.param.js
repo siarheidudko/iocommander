@@ -42,7 +42,7 @@ class param extends React.Component{
 		}
 	}
 	
-	render() { console.log('param');
+	render() {
 		return (
 			<div className="inputFieldCenterRight">Параметры запуска: <input type="text" onChange={this.onChangeHandler.bind(this)} value={this.state.param} /></div>
 		);

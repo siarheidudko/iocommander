@@ -42,7 +42,7 @@ class platform extends React.Component{
 		}
 	}
 	
-	render() { console.log('platform');
+	render() { 
 		var adm_setTaskOptionPlatform = new Array;
 	//	adm_setTaskOptionPlatform.push(<option value="">Выберите платформу</option>);
 		adm_setTaskOptionPlatform.push(<option value="all" selected={(this.state.platform === 'all')?true:false}>Любая</option>);
