@@ -10,6 +10,7 @@ import CryptoJS from 'crypto-js';
 import io from 'socket.io-client';
 
 var store = require('./iocom.store.js');
+var FileSaver = require('file-saver');
 
 "use strict"
 
@@ -242,6 +243,33 @@ function popup(data){
 	store.adminpanelStorage.dispatch({type:'MSG_POPUP', payload: {popuptext:data}});
 }
 
+//функция приведения отчетов к csv
+function jsonReportToCSV(_uid){
+	try{
+		const data = _.clone(connectionStorage.getState().report[_uid].objects);
+		var csv = 'Учетная запись;Статус выполнения;Результат;Дата создания;Запуск отложен до;Дата выполнения;\n';
+		for(const key in data){
+			var user_r = '', status_r = '', result_r = '', datetime_r = '', datetimeout_r ='', datetimecompl_r = '';
+			if(typeof(key) === 'string'){user_r = replacer(key, false);}
+			if(data[key].complete == 'true'){
+				status_r = 'Выполнено';
+			} else {
+				status_r = 'Не выполнено';
+			}
+			if(typeof(data[key].answer) === 'string'){result_r = data[key].answer;}
+			if(typeof(data[key].datetime) === 'number'){datetime_r = timeStamp(new Date(data[key].datetime));}
+			if(typeof(data[key].datetimeout) === 'number'){datetimeout_r = timeStamp(new Date(data[key].datetimeout));}
+			if(typeof(data[key].datetimecompl) === 'number'){datetimecompl_r = timeStamp(new Date(data[key].datetimecompl));}
+			csv = csv + user_r + ';' + status_r + ';' + result_r + ';' + datetime_r + ';' + datetimeout_r + ';' + datetimecompl_r + ';\n';
+		}
+		var file = new File([csv], _uid+".csv", {type: "text/plain;charset=utf-8"});
+		return file;
+	} catch(e){
+		console.log('Ошибка преобразования json в csv: '+e);
+		return 'error';
+	}
+}
+
 module.exports.SendFileToInternalFS = SendFileToInternalFS;
 module.exports.replacer = replacer;
 module.exports.initialiseSocket = initialiseSocket;
@@ -251,3 +279,5 @@ module.exports.timeStamp = timeStamp;
 module.exports.datetime = datetime;
 module.exports.login = login;
 module.exports.popup = popup;
+module.exports.FileSaver = FileSaver;
+module.exports.jsonReportToCSV = jsonReportToCSV;

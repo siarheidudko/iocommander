@@ -37,6 +37,21 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
 		this.setState({SelectReport: e.target.value});
 	}
 	
+	onBtnClickHandler(e){
+		var file = core.jsonReportToCSV(this.state.SelectReport);
+		if(file !== 'error'){
+			try{
+				core.FileSaver.saveAs(file);
+				core.popup('Выполнено!');
+			} catch(err){
+				console.log(err);
+				core.popup('Не могу сохранить файл!');
+			}
+		} else {
+			core.popup('Ошибка преобразования!');
+		}
+	}
+	
 	render() {
 
 		var adm_TaskReportOption = new Array;
@@ -61,7 +76,7 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
 			if(tempStorage[this.state.SelectReport].errors > 0) {
 				reportTaskERRORS = <div className="textRED" id="blink2"> Есть ошибки выполнения! </div>;
 			}
-			var reportTaskUID = <div> UID: {this.state.SelectReport} </div>;
+			var reportTaskUID = <div> UID: {this.state.SelectReport} <button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Скачать</button></div>;
 			if((typeof(tempStorage[this.state.SelectReport].text) === 'string') && (tempStorage[this.state.SelectReport].text !== '')){
 				reportTaskTEXT = <div> {tempStorage[this.state.SelectReport].text} </div>;
 			}
