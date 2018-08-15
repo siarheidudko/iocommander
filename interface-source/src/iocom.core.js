@@ -256,7 +256,7 @@ function jsonReportToCSV(_uid){
 			} else {
 				status_r = 'Не выполнено';
 			}
-			if(typeof(data[key].answer) === 'string'){result_r = data[key].answer;}
+			if(typeof(data[key].answer) === 'string'){result_r = data[key].answer.replace(/\\n/gi, ' | ');}
 			if(typeof(data[key].datetime) === 'number'){datetime_r = timeStamp(new Date(data[key].datetime));}
 			if(typeof(data[key].datetimeout) === 'number'){datetimeout_r = timeStamp(new Date(data[key].datetimeout));}
 			if(typeof(data[key].datetimecompl) === 'number'){datetimecompl_r = timeStamp(new Date(data[key].datetimecompl));}
