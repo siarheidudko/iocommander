@@ -76,7 +76,7 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
 			if(tempStorage[this.state.SelectReport].errors > 0) {
 				reportTaskERRORS = <div className="textRED" id="blink2"> Есть ошибки выполнения! </div>;
 			}
-			var reportTaskUID = <div> UID: {this.state.SelectReport}&#8195;&#8195;<button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Скачать</button></div>;
+			var reportTaskUID = <div> UID: {this.state.SelectReport}&#8195;<button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Скачать</button></div>;
 			if((typeof(tempStorage[this.state.SelectReport].text) === 'string') && (tempStorage[this.state.SelectReport].text !== '')){
 				reportTaskTEXT = <div> {tempStorage[this.state.SelectReport].text} </div>;
 			}

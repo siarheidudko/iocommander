@@ -252,7 +252,11 @@ function jsonReportToCSV(_uid){
 			var user_r = '', status_r = '', result_r = '', datetime_r = '', datetimeout_r ='', datetimecompl_r = '';
 			if(typeof(key) === 'string'){user_r = replacer(key, false);}
 			if(data[key].complete == 'true'){
-				status_r = 'Выполнено';
+				if(data[key].tryval < 100){
+					status_r = 'Выполнено';
+				} else {
+					status_r = 'Ошибка';
+				}
 			} else {
 				status_r = 'Не выполнено';
 			}
