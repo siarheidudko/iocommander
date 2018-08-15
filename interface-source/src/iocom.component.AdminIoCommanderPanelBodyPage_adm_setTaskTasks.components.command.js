@@ -34,12 +34,12 @@ class command extends React.Component{
 	
 	onChangeHandler(e){
 		var self = this;
-		var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!<>@-].*$");
-		if(!regexp.test(e.target.value)){
+	//	var regexp = new RegExp("^.*[^A-z0-9\. \"\|\(\)\[\^\$\*\+\?\/&_:!<>@-].*$");
+	//	if(!regexp.test(e.target.value)){
 			store.adminpanelStorage.dispatch({type:'SET_TASK_COMMAND', payload: {command: _.clone(e.target.value)}});
-		} else {
-			core.popup('Некорректный символ!');
-		}
+	//	} else {
+	//		core.popup('Некорректный символ!');
+	//	}
 	}
 	
 	render() { 
