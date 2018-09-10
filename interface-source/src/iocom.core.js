@@ -211,6 +211,7 @@ function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, 
 					resolve('unidentified error');
 				}
 			}
+			xmlhttp = null;
 		}
 		var serverlink = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + window.location.port + '/upload';
 		xmlhttp.open("POST",serverlink,true);
