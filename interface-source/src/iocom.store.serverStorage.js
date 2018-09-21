@@ -15,7 +15,7 @@ function editServerStore(state = {users:{}, admins:{}, tasks: {}}, action){
 	try {
 		switch (action.type){
 			case 'SYNC_OBJECT':
-				var state_new = action.payload;
+				var state_new = _.clone(action.payload);
 				return state_new;
 				break;
 			case 'CLEAR_STORAGE':
