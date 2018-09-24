@@ -32,11 +32,12 @@ class time extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.time !== store.adminpanelStorage.getState().task.time){
 				self.setState({time: _.clone(store.adminpanelStorage.getState().task.time)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

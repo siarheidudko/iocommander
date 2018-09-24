@@ -25,11 +25,12 @@ class name extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel =store.adminpanelStorage.subscribe(function(){
 			if(self.state.name !== store.adminpanelStorage.getState().task.name){
 				self.setState({name: _.clone(store.adminpanelStorage.getState().task.name)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

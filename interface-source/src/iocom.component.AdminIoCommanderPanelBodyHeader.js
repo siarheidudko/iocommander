@@ -35,11 +35,12 @@ class AdminIoCommanderPanelBodyHeader extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.page !== store.adminpanelStorage.getState().page){
 				self.setState({page: _.clone(store.adminpanelStorage.getState().page)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	render() {

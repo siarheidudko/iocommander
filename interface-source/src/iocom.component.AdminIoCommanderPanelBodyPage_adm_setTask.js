@@ -27,11 +27,12 @@ class AdminIoCommanderPanelBodyPage_adm_setTask extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if((self.state.task_uid !== store.adminpanelStorage.getState().task.uid) || (self.state.task_type !== store.adminpanelStorage.getState().task.type)){
 				self.setState({task_uid: _.clone(store.adminpanelStorage.getState().task.uid), task_type: _.clone(store.adminpanelStorage.getState().task.type)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){
@@ -46,11 +47,11 @@ class AdminIoCommanderPanelBodyPage_adm_setTask extends React.Component{
 	render() {
 		//выпадающий список типов заданий
 		var adm_setTaskOption = new Array;
-		adm_setTaskOption.push(<option value="getFileFromWWW" selected={(this.state.task_type === 'getFileFromWWW')?true:false}>Скачать файл по ссылке</option>);
-		adm_setTaskOption.push(<option value="getFileFromFileserver" selected={(this.state.task_type === 'getFileFromFileserver')?true:false}>Передать файл</option>);
-		adm_setTaskOption.push(<option value="execFile" selected={(this.state.task_type === 'execFile')?true:false}>Запустить локальный скрипт</option>);
-		adm_setTaskOption.push(<option value="execCommand" selected={(this.state.task_type === 'execCommand')?true:false}>Выполнить команду</option>);
-		var adm_setTask = <p><select size="1" name="SetTaskType" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOption} </select></p>;
+		adm_setTaskOption.push(<option key={core.generateUID()} value="getFileFromWWW">Скачать файл по ссылке</option>);
+		adm_setTaskOption.push(<option key={core.generateUID()} value="getFileFromFileserver">Передать файл</option>);
+		adm_setTaskOption.push(<option key={core.generateUID()} value="execFile">Запустить локальный скрипт</option>);
+		adm_setTaskOption.push(<option key={core.generateUID()} value="execCommand">Выполнить команду</option>);
+		var adm_setTask = <p><select size="1" name="SetTaskType" onChange={this.onChangeHandler.bind(this)} value={this.state.task_type}> {adm_setTaskOption} </select></p>;
 		switch(this.state.task_type){
 			case 'getFileFromWWW':
 				var task = <tasks.getFileFromWWW />;

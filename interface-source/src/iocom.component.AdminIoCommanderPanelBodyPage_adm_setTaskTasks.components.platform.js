@@ -25,11 +25,12 @@ class platform extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.platform !== store.adminpanelStorage.getState().task.platform){
 				self.setState({platform: _.clone(store.adminpanelStorage.getState().task.platform)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){
@@ -44,11 +45,11 @@ class platform extends React.Component{
 	
 	render() { 
 		var adm_setTaskOptionPlatform = new Array;
-	//	adm_setTaskOptionPlatform.push(<option value="">Выберите платформу</option>);
-		adm_setTaskOptionPlatform.push(<option value="all" selected={(this.state.platform === 'all')?true:false}>Любая</option>);
-		adm_setTaskOptionPlatform.push(<option value="win32" selected={(this.state.platform === 'win32')?true:false}>Windows</option>);
-		adm_setTaskOptionPlatform.push(<option value="linux" selected={(this.state.platform === 'linux')?true:false}>Linux</option>);
-		var adm_setTaskOptionPlatformSet = <p><select size="1" onChange={this.onChangeHandler.bind(this)}> {adm_setTaskOptionPlatform} </select></p>;
+	//	adm_setTaskOptionPlatform.push(<option key={core.generateUID()} value="">Выберите платформу</option>);
+		adm_setTaskOptionPlatform.push(<option key={core.generateUID()} value="all">Любая</option>);
+		adm_setTaskOptionPlatform.push(<option key={core.generateUID()} value="win32">Windows</option>);
+		adm_setTaskOptionPlatform.push(<option key={core.generateUID()} value="linux">Linux</option>);
+		var adm_setTaskOptionPlatformSet = <p><select size="1" onChange={this.onChangeHandler.bind(this)} value={this.state.platform}> {adm_setTaskOptionPlatform} </select></p>;
 		return (
 			<div> {adm_setTaskOptionPlatformSet} </div>
 		);

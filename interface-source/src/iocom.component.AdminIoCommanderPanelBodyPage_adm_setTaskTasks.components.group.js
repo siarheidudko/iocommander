@@ -26,16 +26,17 @@ class group extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.connectionStorage.subscribe(function(){
+		var cancel1 = store.connectionStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.groups, _.keys(store.connectionStorage.getState().groups)))){
 				self.setState({groups: _.clone(_.keys(store.connectionStorage.getState().groups))});
 			}
 		});
-		store.adminpanelStorage.subscribe(function(){
+		var cancel2 = store.adminpanelStorage.subscribe(function(){
 			if(self.state.group !== store.adminpanelStorage.getState().task.group){
 				self.setState({group: _.clone(store.adminpanelStorage.getState().task.group)});
 			}
 		});
+		this.componentWillUnmount = function(){cancel1(); cancel2();};
 	}
 	
 	onChangeHandler(e){
@@ -51,11 +52,11 @@ class group extends React.Component{
 	render() {
 		var self = this;
 		var AdminIoCommanderPanelBodyMiddleGroupsSet = new Array;
-		AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value="">Выберите группу (не обязательно)</option>);
+		AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option key={core.generateUID()} value="">Выберите группу (не обязательно)</option>);
 		for(var keyGroup in store.connectionStorage.getState().groups){
-			AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option value={keyGroup} selected={(self.state.group === keyGroup)?true:false}>{keyGroup}</option>);
+			AdminIoCommanderPanelBodyMiddleGroupsSet.push(<option key={core.generateUID()} value={keyGroup}>{keyGroup}</option>);
 		}
-		var AdminIoCommanderPanelBodyMiddleGroups = <p><select size="1" onChange={self.onChangeHandler.bind(this)}> {AdminIoCommanderPanelBodyMiddleGroupsSet} </select></p>;
+		var AdminIoCommanderPanelBodyMiddleGroups = <p><select size="1" onChange={self.onChangeHandler.bind(this)} value={self.state.group}> {AdminIoCommanderPanelBodyMiddleGroupsSet} </select></p>;
 		return (
 			<div><div className="DelphiForm1Name"> Объекты:</div> {AdminIoCommanderPanelBodyMiddleGroups}<br /></div>
 		);

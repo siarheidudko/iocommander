@@ -26,7 +26,7 @@ class AdminIoCommanderPanelPopup extends React.Component{
       
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.PopupText !== store.adminpanelStorage.getState().popuptext){
 				self.setState({PopupText: _.clone(store.adminpanelStorage.getState().popuptext)});
 				if(store.adminpanelStorage.getState().popuptext !== ''){
@@ -34,6 +34,7 @@ class AdminIoCommanderPanelPopup extends React.Component{
 				}
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
       
   	onDivClickHandler(e) {

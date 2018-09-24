@@ -25,11 +25,12 @@ class param extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.param !== store.adminpanelStorage.getState().task.param){
 				self.setState({param: _.clone(store.adminpanelStorage.getState().task.param)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

@@ -25,11 +25,12 @@ class command extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.command !== store.adminpanelStorage.getState().task.command){
 				self.setState({command: _.clone(store.adminpanelStorage.getState().task.command)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

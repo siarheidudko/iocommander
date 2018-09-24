@@ -29,16 +29,17 @@ class AdminIoCommanderPanelBottomRight extends React.Component{
 		var self = this;
 		var showingTooltip;
 		self.showingTooltip = showingTooltip;
-		store.serverStorage.subscribe(function(){
+		var cancel1 = store.serverStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.clientUsers, store.adminpanelStorage.getState().users)) || !(_.isEqual(self.state.adminUsers, store.adminpanelStorage.getState().admins))){
 				self.setState({clientUsers: _.clone(store.serverStorage.getState().users), adminUsers: _.clone(store.serverStorage.getState().admins)});
 			}
 		});
-		store.connectionStorage.subscribe(function(){
+		var cancel2 = store.connectionStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.OnlineUsers, store.connectionStorage.getState().users))){
 				self.setState({OnlineUsers: _.clone(store.connectionStorage.getState().users)});
 			}
 		});
+		this.componentWillUnmount = function(){cancel1(); cancel2();};
 	}
 	
 	MouseOver(e) {

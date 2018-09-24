@@ -69,9 +69,9 @@ class AdminIoCommanderPanelBodyPage_adm_setAdmin extends React.Component{
 			<div>
 				<div>
 					<form>
-						<div className="inputFieldCenter">Логин: <input type="text" name="SetAdminLogin" autocomplete="new-username" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminLogin} /></div>
-						<div className="inputFieldCenter">Пароль: <input type="password" name="SetAdminPass" autocomplete="new-password" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPass} /></div>
-						<div className="inputFieldCenter">Повторите: <input type="password" name="SetAdminPassRepeat" autocomplete="new-password" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPassRepeat} /></div>
+						<div className="inputFieldCenter">Логин: <input type="text" name="SetAdminLogin" autoComplete="new-username" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminLogin} /></div>
+						<div className="inputFieldCenter">Пароль: <input type="password" name="SetAdminPass" autoComplete="new-password" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPass} /></div>
+						<div className="inputFieldCenter">Повторите: <input type="password" name="SetAdminPassRepeat" autoComplete="new-password" onChange={this.onChangeHandler.bind(this)} value={this.state.AdminPassRepeat} /></div>
 					</form>
 				</div>
 				<div className="inputFieldCenter">

@@ -6,7 +6,6 @@
  */
 
 import _ from 'lodash';
-import CryptoJS from 'crypto-js';
 import React from 'react';
 
 var store = require('./iocom.store.js');
@@ -51,12 +50,12 @@ class AdminIoCommanderPanelAuth extends React.Component{
 		var AdminIoCommanderPanelAuth = new Array;
 		var AdminIoCommanderPanelAuthForm = new Array;
 		//поле ввода логина
-		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter">Логин: <input type="text" name="SetParamlogin" autocomplete="username" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
+		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter" key={core.generateUID()} >Логин: <input type="text" name="SetParamlogin" autoComplete="username" onChange={this.onChangeHandler.bind(this)} value={this.state.login} /></div>);
 		//поле ввода пароля
-		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter">Пароль: <input type="password" name="SetParamPassword" autocomplete="current-password" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
-		AdminIoCommanderPanelAuth.push(<form>{AdminIoCommanderPanelAuthForm}</form>);
+		AdminIoCommanderPanelAuthForm.push(<div className="inputFieldCenter" key={core.generateUID()} >Пароль: <input type="password" name="SetParamPassword" autoComplete="current-password" onChange={this.onChangeHandler.bind(this)} value={this.state.password} /></div>);
+		AdminIoCommanderPanelAuth.push(<form key={core.generateUID()} >{AdminIoCommanderPanelAuthForm}</form>);
 		//кнопка входа
-		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter"><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
+		AdminIoCommanderPanelAuth.push(<div className="inputFieldCenter" key={core.generateUID()} ><button onClick={this.onBtnClickHandler.bind(this)} id='submit'>Войти</button></div>);
 		
 		return (
 			<div className="AdminIoCommanderPanelAuth">

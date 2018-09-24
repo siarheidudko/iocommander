@@ -26,11 +26,12 @@ class AdminIoCommanderPanelBottomLeft extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.connectionStorage.subscribe(function(){
+		var cancel = store.connectionStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.OnlineUsers, store.connectionStorage.getState().users))){
 				self.setState({memory: _.clone(store.connectionStorage.getState().memory), cpu: _.clone(store.connectionStorage.getState().cpu)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	render() {

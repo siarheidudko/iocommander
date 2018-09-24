@@ -27,16 +27,17 @@ class tradeobj extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.serverStorage.subscribe(function(){
+		var cancel1 = store.serverStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.objects, _.keys(store.serverStorage.getState().users)))){
 				self.setState({objects: _.clone(_.keys(store.serverStorage.getState().users))});
 			}
 		});
-		store.adminpanelStorage.subscribe(function(){
+		var cancel2 = store.adminpanelStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.tradeobj,store.adminpanelStorage.getState().task.tradeobj))){
 				self.setState({tradeobj: _.clone(store.adminpanelStorage.getState().task.tradeobj)});
 			}
 		});
+		this.componentWillUnmount = function(){cancel1(); cancel2();};
 	}
 	
 	onChangeHandler(data){

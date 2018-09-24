@@ -25,11 +25,12 @@ class path extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.path !== store.adminpanelStorage.getState().task.path){
 				self.setState({path: _.clone(store.adminpanelStorage.getState().task.path)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

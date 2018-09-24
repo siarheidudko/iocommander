@@ -7,6 +7,7 @@
 
 import _ from 'lodash';
 import React from 'react';
+import CryptoJS from 'crypto-js';
 
 var store = require('./iocom.store.js');
 import core from './iocom.core.js';
@@ -30,11 +31,12 @@ class AdminIoCommanderPanel extends React.Component{
       
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.auth, store.adminpanelStorage.getState().auth))){
 				self.setState({auth: _.clone(store.adminpanelStorage.getState().auth)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
       
   	render() {

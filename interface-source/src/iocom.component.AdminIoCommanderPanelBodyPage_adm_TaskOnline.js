@@ -27,16 +27,17 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
  
  	componentDidMount() {
 	    var self = this;
-		store.connectionStorage.subscribe(function(){
+		var cancel1 = store.connectionStorage.subscribe(function(){
 			if((!(_.isEqual(self.state.usersOnline, store.connectionStorage.getState().users)) || !(_.isEqual(self.state.versions, store.connectionStorage.getState().versions)))&& (store.adminpanelStorage.getState().page === 'adm_TaskOnline')){
 				self.setState({usersOnline: _.clone(store.connectionStorage.getState().users), versions:  _.clone(store.connectionStorage.getState().versions)});
 			}
 		});
-		store.serverStorage.subscribe(function(){
+		var cancel2 = store.serverStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.usersAll, store.serverStorage.getState().users)) && (store.adminpanelStorage.getState().page === 'adm_TaskOnline')){
 				self.setState({usersAll: _.clone(store.serverStorage.getState().users)});
 			}
 		});
+		this.componentWillUnmount = function(){cancel1(); cancel2();};
 	}
 	
 	onChangeHandler(e){
@@ -49,9 +50,9 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
 		var adm_OnlineOff = new Array; 
 		for(var keyOnlineAll in this.state.usersAll){
 			if(typeof(store.connectionStorage.getState().users[keyOnlineAll]) !== 'undefined'){
-				adm_OnlineOn.push(<div className={"adm_OnlineOn0"}><div>{core.replacer(keyOnlineAll, false)}</div><div className={(store.connectionStorage.getState().versions[keyOnlineAll] !== store.connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(store.connectionStorage.getState().versions[keyOnlineAll]) === 'string')?store.connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
+				adm_OnlineOn.push(<div key={core.generateUID()} className={"adm_OnlineOn0"}><div>{core.replacer(keyOnlineAll, false)}</div><div className={(store.connectionStorage.getState().versions[keyOnlineAll] !== store.connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(store.connectionStorage.getState().versions[keyOnlineAll]) === 'string')?store.connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 			} else {
-				adm_OnlineOff.push(<div className={"adm_OnlineOff0"}><div>{core.replacer(keyOnlineAll, false)}</div><div className={(store.connectionStorage.getState().versions[keyOnlineAll] !== store.connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(store.connectionStorage.getState().versions[keyOnlineAll]) === 'string')?store.connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
+				adm_OnlineOff.push(<div key={core.generateUID()} className={"adm_OnlineOff0"}><div>{core.replacer(keyOnlineAll, false)}</div><div className={(store.connectionStorage.getState().versions[keyOnlineAll] !== store.connectionStorage.getState().version)?'textYELLOW':''}>Версия: {(typeof(store.connectionStorage.getState().versions[keyOnlineAll]) === 'string')?store.connectionStorage.getState().versions[keyOnlineAll]:'undefinied'}</div></div>);
 			}
 		}
 		

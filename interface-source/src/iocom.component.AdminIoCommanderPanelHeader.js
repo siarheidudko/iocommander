@@ -25,18 +25,18 @@ class AdminIoCommanderPanelHeader extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.connectionStorage.subscribe(function(){
+		var cancel = store.connectionStorage.subscribe(function(){
 			if(self.state.version !== store.connectionStorage.getState().version){
 				self.setState({version: _.clone(store.connectionStorage.getState().version)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	render() {
 		return (
 			<div className="AdminIoCommanderPanelHeader">
 				<h2> Администрирование IoCommander {(this.state.version !== '')?('v' + this.state.version):''} </h2>
-				<head><title>Администрирование IoCommander {(this.state.version !== '')?('v' + this.state.version):''}</title></head>
 			</div>
 		);
 	}

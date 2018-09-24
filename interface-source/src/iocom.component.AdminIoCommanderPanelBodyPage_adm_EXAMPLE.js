@@ -31,6 +31,10 @@ class AdminIoCommanderPanelBodyPage_adm_EXAMPLE extends React.Component{
 		});
 	}
 	
+	componentWillUnmount() {
+		this.componentDidMount = function(){};
+	}
+	
 	render() {
 
 		return ( 

@@ -26,7 +26,7 @@ class AdminIoCommanderPanelBodyPage_adm_delUser extends React.Component{
  
  	componentDidMount() {
 	    var self = this;
-		store.serverStorage.subscribe(function(){
+		var cancel = store.serverStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.users, store.serverStorage.getState().users)) && (store.adminpanelStorage.getState().page === 'adm_delUser')){
 				if(typeof(store.serverStorage.getState().users[self.state.SelectUser]) === 'undefined'){
 					self.setState({users: _.clone(store.serverStorage.getState().users), SelectUser: ""});
@@ -35,6 +35,7 @@ class AdminIoCommanderPanelBodyPage_adm_delUser extends React.Component{
 				}
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){
@@ -57,11 +58,11 @@ class AdminIoCommanderPanelBodyPage_adm_delUser extends React.Component{
 	render() {
 
 		var adm_delUserOption = new Array;
-		adm_delUserOption.push(<option value="">Выберите пользователя</option>);
+		adm_delUserOption.push(<option key={core.generateUID()} value="">Выберите пользователя</option>);
 		for(var keyUser in this.state.users){
-			adm_delUserOption.push(<option value={keyUser} selected={(this.state.SelectUser === keyUser)?true:false} >{core.replacer(keyUser, false)}</option>);
+			adm_delUserOption.push(<option key={core.generateUID()} value={keyUser} >{core.replacer(keyUser, false)}</option>);
 		}
-		var adm_delUser = <select size="1" name="SetSelectUser" onChange={this.onChangeHandler.bind(this)}> + {adm_delUserOption} + </select>;
+		var adm_delUser = <select size="1" name="SetSelectUser" onChange={this.onChangeHandler.bind(this)} value={this.state.SelectUser}> + {adm_delUserOption} + </select>;
 		
 		return ( 
 			<div>

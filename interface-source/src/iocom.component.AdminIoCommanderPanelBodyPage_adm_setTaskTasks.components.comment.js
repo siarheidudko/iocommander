@@ -25,11 +25,12 @@ class comment extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.comment !== store.adminpanelStorage.getState().task.comment){
 				self.setState({comment: _.clone(store.adminpanelStorage.getState().task.comment)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

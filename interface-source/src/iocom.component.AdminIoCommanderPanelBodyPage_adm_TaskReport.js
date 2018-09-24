@@ -26,11 +26,12 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
  
  	componentDidMount() {
 	    var self = this;
-		store.connectionStorage.subscribe(function(){
+		var cancel = store.connectionStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.report, store.connectionStorage.getState().report)) && (store.adminpanelStorage.getState().page === 'adm_TaskReport')){
 				self.setState({report: _.clone(store.connectionStorage.getState().report)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){
@@ -55,12 +56,12 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
 	render() {
 
 		var adm_TaskReportOption = new Array;
-		adm_TaskReportOption.push(<option value="">Выберите задачу</option>);
+		adm_TaskReportOption.push(<option key={core.generateUID()} value="">Выберите задачу</option>);
 		for(var keyTask in this.state.report){ 
 			var dateEpochToString = new Date(this.state.report[keyTask].datetime);
-			adm_TaskReportOption.push(<option value={keyTask} selected={(this.state.SelectReport === keyTask)?true:false} >{core.timeStamp(dateEpochToString) + '_' + this.state.report[keyTask].comment}</option>);
+			adm_TaskReportOption.push(<option key={core.generateUID()} value={keyTask} >{core.timeStamp(dateEpochToString) + '_' + this.state.report[keyTask].comment}</option>);
 		}
-		var adm_TaskReport = <p><select size="1" name="SetSelectReport" onChange={this.onChangeHandler.bind(this)}> + {adm_TaskReportOption} + </select></p>; 
+		var adm_TaskReport = <p><select size="1" name="SetSelectReport" onChange={this.onChangeHandler.bind(this)} value={this.state.SelectReport}> + {adm_TaskReportOption} + </select></p>; 
 		var adm_TaskReportResult = new Array;
 		if(this.state.SelectReport !== ""){
 			var tempStorage = this.state.report;
@@ -83,39 +84,39 @@ class AdminIoCommanderPanelBodyPage_adm_TaskReport extends React.Component{
 			if((typeof(tempStorage[this.state.SelectReport].dependencies) === 'string') && (tempStorage[this.state.SelectReport].dependencies !== '')){
 				reportTaskDEPEN = <div> Зависимости: {tempStorage[this.state.SelectReport].dependencies} </div>;
 			}
-			adm_TaskReportResult.push(<div className={'reportTableRow'}> {reportTaskUID} {reportTaskCOMPLETE} {reportTaskERRORS} {reportTaskTEXT} {reportTaskDEPEN}  <br /> </div>)
+			adm_TaskReportResult.push(<div key={core.generateUID()} className={'reportTableRow'}> {reportTaskUID} {reportTaskCOMPLETE} {reportTaskERRORS} {reportTaskTEXT} {reportTaskDEPEN}  <br /> </div>)
 			if(typeof(tempStorage[this.state.SelectReport]) !== 'undefined'){
 				var tempObjects = tempStorage[this.state.SelectReport].objects;
 				if(typeof(tempObjects) !== 'undefined'){
 					var adm_TaskReportResultRow = new Array;
-					adm_TaskReportResultRow.push(<div className="reportTableColumnName">Учетная запись</div>);
-					adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">Статус выполнения</div>);
-					adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">Вывод (ответ) консоли</div>);
-					adm_TaskReportResultRow.push(<div className="reportTableColumnDate">Дата создания</div>);
-					adm_TaskReportResultRow.push(<div className="reportTableColumndatetimeout">Выполнять после</div>);
-					adm_TaskReportResultRow.push(<div className="reportTableColumnDateCompl">Дата выполнения</div>);
-					adm_TaskReportResult.push(<div className="reportTableRow reportTableRowHeader">{adm_TaskReportResultRow}</div>);
+					adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnName">Учетная запись</div>);
+					adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnStatus">Статус выполнения</div>);
+					adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnAnswer">Вывод (ответ) консоли</div>);
+					adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnDate">Дата создания</div>);
+					adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumndatetimeout">Выполнять после</div>);
+					adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnDateCompl">Дата выполнения</div>);
+					adm_TaskReportResult.push(<div key={core.generateUID()} className="reportTableRow reportTableRowHeader">{adm_TaskReportResultRow}</div>);
 					adm_TaskReportResultRow = null;
 					for(var keyObject in tempObjects){
 						var adm_TaskReportResultRow = new Array;
-						adm_TaskReportResultRow.push(<div className="reportTableColumnName">{core.replacer(keyObject, false)}</div>);
-						adm_TaskReportResultRow.push(<div className="reportTableColumnStatus">{((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'Выполнено':'Не выполнено'}</div>);
-						adm_TaskReportResultRow.push(<div className="reportTableColumnAnswer">{(tempObjects[keyObject].answer === 'none')?'':tempObjects[keyObject].answer.split('\n').map( (it, i) => <div key={'x'+i}>{it}</div> )}</div>);
+						adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnName">{core.replacer(keyObject, false)}</div>);
+						adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnStatus">{((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'Выполнено':'Не выполнено'}</div>);
+						adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnAnswer">{(tempObjects[keyObject].answer === 'none')?'':tempObjects[keyObject].answer.split('\n').map( (it, i) => <div key={'x'+i}>{it}</div> )}</div>);
 						var dateEpochToString = new Date(tempObjects[keyObject].datetime);
-						adm_TaskReportResultRow.push(<div className="reportTableColumnDate">{core.timeStamp(dateEpochToString)}</div>);
+						adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnDate">{core.timeStamp(dateEpochToString)}</div>);
 						if((tempObjects[keyObject].datetimeout !== 0) && (typeof(tempObjects[keyObject].datetimeout) !== 'undefined')){
 							var dateEpochToStringTimeout = new Date(tempObjects[keyObject].datetimeout);
 						} else {
 							var dateEpochToStringTimeout = null; //т.к. таймштамп не сможет получить дату от Null, то вернет нули в эксепшн
 						}
-						adm_TaskReportResultRow.push(<div className="reportTableColumndatetimeout">{core.timeStamp(dateEpochToStringTimeout)}</div>);
+						adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumndatetimeout">{core.timeStamp(dateEpochToStringTimeout)}</div>);
 						if(tempObjects[keyObject].datetimecompl !== 0){
 							var dateEpochToStringCompl = new Date(tempObjects[keyObject].datetimecompl);
 						} else {
 							var dateEpochToStringCompl = null; //т.к. таймштамп не сможет получить дату от Null, то вернет нули в эксепшн
 						}
-						adm_TaskReportResultRow.push(<div className="reportTableColumnDateCompl">{core.timeStamp(dateEpochToStringCompl)}</div>);								
-						adm_TaskReportResult.push(<div className={'reportTableRow reportTableRow'+(((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'true':'false')}>{adm_TaskReportResultRow}</div>);
+						adm_TaskReportResultRow.push(<div key={core.generateUID()} className="reportTableColumnDateCompl">{core.timeStamp(dateEpochToStringCompl)}</div>);								
+						adm_TaskReportResult.push(<div key={core.generateUID()} className={'reportTableRow reportTableRow'+(((tempObjects[keyObject].complete === 'true') && (tempObjects[keyObject].tryval < 100))?'true':'false')}>{adm_TaskReportResultRow}</div>);
 					}
 				}
 			}

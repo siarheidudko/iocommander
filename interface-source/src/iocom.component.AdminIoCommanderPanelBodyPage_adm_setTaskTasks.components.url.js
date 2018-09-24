@@ -25,11 +25,12 @@ class url extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.url !== store.adminpanelStorage.getState().task.url){
 				self.setState({url: _.clone(store.adminpanelStorage.getState().task.url)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

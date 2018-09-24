@@ -27,16 +27,17 @@ class dependencies extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.connectionStorage.subscribe(function(){
+		var cancel1 = store.connectionStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.reportkeys, _.keys(store.connectionStorage.getState().report)))){
 				self.setState({reportkeys: _.clone(_.keys(store.connectionStorage.getState().report))});
 			}
 		});
-		store.adminpanelStorage.subscribe(function(){
+		var cancel2 = store.adminpanelStorage.subscribe(function(){
 			if(!(_.isEqual(self.state.dependencies,store.adminpanelStorage.getState().task.dependencies))){
 				self.setState({dependencies: _.clone(store.adminpanelStorage.getState().task.dependencies)});
 			}
 		});
+		this.componentWillUnmount = function(){cancel1(); cancel2();};
 	}
 	
 	onChangeHandler(data){

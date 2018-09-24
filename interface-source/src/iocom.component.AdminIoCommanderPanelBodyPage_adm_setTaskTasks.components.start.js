@@ -25,11 +25,12 @@ class start extends React.Component{
 	
 	componentDidMount() {
 		var self = this;
-		store.adminpanelStorage.subscribe(function(){
+		var cancel = store.adminpanelStorage.subscribe(function(){
 			if(self.state.start !== store.adminpanelStorage.getState().task.start){
 				self.setState({start: _.clone(store.adminpanelStorage.getState().task.start)});
 			}
 		});
+		this.componentWillUnmount = cancel;
 	}
 	
 	onChangeHandler(e){

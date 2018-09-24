@@ -197,45 +197,42 @@ function replacer(data_val, value_val){
 
 //функция отправки файлов на внутренний файл-сервер
 function SendFileToInternalFS(files, ParamOne, ParamFour, ParamSix, ParamSeven, ParamNine, timeOnCompl, ParamEight, ParamTwelve){
-	var result = new Promise(function(resolve){
-		var fd = new FormData();
-		fd.append(ParamOne, files[0]);
-		var xmlhttp=new XMLHttpRequest();
-		xmlhttp.onreadystatechange=function() {
-			if (this.readyState==4 && this.status==200) {
-				resolve(this.responseText);
-			} else if (this.readyState==4) {
-				if(typeof(this.responseText) === 'string'){
-					resolve(this.responseText);
-				} else {
-					resolve('unidentified error');
-				}
-			}
-			xmlhttp = null;
+	var result = new Promise(function(resolve, reject){
+		if((typeof(window.files) === 'object') && (typeof(files[0]) === 'object')){
+			var fd = new FormData();
+			fd.append(ParamOne, files[0]);
+			var serverlink = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + window.location.port + '/upload';
+			fetch(serverlink, {
+				method: "POST",
+				headers: {"Authorization": 'Basic ' + btoa(store.adminpanelStorage.getState().session.login + ':' + store.adminpanelStorage.getState().session.password)},
+				body: fd
+			}).then(function(response){
+				resolve(response.text());
+			}).catch(function(error){
+				reject(error);
+			});
+		} else {
+			popup('Файл не выбран!');
 		}
-		var serverlink = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + window.location.port + '/upload';
-		xmlhttp.open("POST",serverlink,true);
-		xmlhttp.setRequestHeader('Authorization', 'Basic ' + btoa(store.adminpanelStorage.getState().session.login + ':' + store.adminpanelStorage.getState().session.password));
-		xmlhttp.send(fd);
 	});
 	result.then(
-		function(value){
-			if(value === 'upload'){
+		function(resolve){
+			if(resolve === 'upload'){
 				var link = window.location.protocol.substr(0,window.location.protocol.length - 1) + '://' + window.location.hostname + ':' + store.connectionStorage.getState().fileport + '/' + ParamOne;
 				var tempTask = {uid:ParamOne, task: {nameTask:'getFileFromWWW', extLink:link, intLink:ParamFour, fileName: files[0].name, exec:ParamTwelve, complete:'false', answer:'', platform:ParamSix, dependencies:ParamSeven, comment:ParamNine, timeoncompl:timeOnCompl}};
 				for(var i=0;i<ParamEight.length;i++){
 					var EmitMessage = new Array(ParamEight[i], tempTask);
 					window.socket.emit('adm_setTask', EmitMessage);
 				}
-				store.adminpanelStorage.dispatch({type:'CLEAR_TASK'});
+				store.adminpanelStorage.dispatch({type:'CLEAR_TASK'}); 
 				popup("Задача отправлена на сервер!");
 			} else {
 				window.console.log("Проблема загрузки файла на внутренний сервер!");
-				popup(value);
+				popup(resolve);
 			}
-		}, 
-		function(error){
-			popup(error);
+		} 
+	).catch(function(reject){
+			popup(''+reject);
 	});
 }
 
