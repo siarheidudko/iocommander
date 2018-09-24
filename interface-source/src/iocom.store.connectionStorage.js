@@ -5,6 +5,7 @@
  *	https://github.com/siarheidudko/iocommander/LICENSE
  */
 
+import _ from 'lodash';
 import core from './iocom.core.js';
 
 "use strict"
